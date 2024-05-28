@@ -1,0 +1,41 @@
+@import "../../../Data/Variables.scss";
+
+.dialog-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  text-align: start;
+}
+
+.dialog-overlay-action-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+
+  button {
+    width: 100%;
+    padding: 8px 16px;
+    border: 2px solid $stroke-color;
+    border-radius: 12px;
+    background-color: $primary;
+    color: $text;
+    font-size: 16px;
+    cursor: pointer;
+
+    transition: 0.2s ease-in-out;
+
+    &:disabled {
+      opacity: 0.5;
+    }
+
+    &:hover {
+      border: 2px solid $selected-stroke-color;
+    }
+  }
+}

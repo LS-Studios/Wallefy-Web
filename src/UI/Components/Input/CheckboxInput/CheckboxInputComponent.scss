@@ -1,0 +1,22 @@
+@import "../../../../Data/Variables.scss";
+
+.checkbox-input-component {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 8px 12px;
+  border: 2px solid $primary;
+  border-radius: 12px;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  cursor: pointer;
+
+  :last-child {
+    height: 22px;
+    width: 22px;
+  }
+}

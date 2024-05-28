@@ -1,0 +1,130 @@
+@import "../../../../../Data/Variables.scss";
+
+:root {
+  --date-picker-calender-primary: #cccccc;
+  --date-picker-calender-disabled: rgba(204, 204, 204, 0.5);
+  --date-picker-calender-bg: #2C3A47;
+  --date-picker-calender-shadow: rgba(0, 0, 0, 0);
+  --date-picker-calender-today: rgba(204, 204, 204, 0.2);
+  --date-picker-calender-selected: rgba(204, 204, 204, 0.4);
+  --date-picker-calender-hover: rgba(204, 204, 204, 0.2);
+  --date-picker-calender-deselect: rgba(204, 204, 204, 0.5);
+}
+
+.date-picker.rmdp-wrapper,
+.date-picker .rmdp-month-picker,
+.date-picker .rmdp-year-picker,
+.date-picker .rmdp-time-picker div input,
+.rmdp-container .date-picker.ep-arrow::after {
+  background-color: var(--date-picker-calender-bg);
+  color: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-day:not(.rmdp-deactive),
+.date-picker .rmdp-time-picker div .rmdp-am,
+.date-picker .rmdp-header-values,
+.date-picker .rmdp-panel-header {
+  color: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-day.rmdp-range {
+  color: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-panel-body li {
+  color: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-day.rmdp-deactive,
+.date-picker .rmdp-day.rmdp-disabled {
+  color: var(--date-picker-calender-disabled);
+}
+
+.rmdp-container .date-picker.ep-arrow[direction="top"] {
+  border-bottom: 1px solid var(--date-picker-calender-bg);
+}
+
+.rmdp-container .date-picker.ep-arrow[direction="left"] {
+  border-right: 1px solid var(--date-picker-calender-bg);
+}
+
+.rmdp-container .date-picker.ep-arrow[direction="right"] {
+  border-left: 1px solid var(--date-picker-calender-bg);
+}
+
+.rmdp-container .date-picker.ep-arrow[direction="bottom"] {
+  border-top: 1px solid var(--date-picker-calender-bg);
+}
+
+.date-picker .rmdp-wrapper {
+  border: 1px solid var(--date-picker-calender-deselect);
+  box-shadow: 0 0 5px var(--date-picker-calender-deselect);
+}
+
+.date-picker .rmdp-panel-body li {
+  background-color: var(--date-picker-calender-primary);
+  box-shadow: 0 0 2px var(--date-picker-calender-deselect);
+}
+
+.date-picker .rmdp-week-day {
+  color: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-day.rmdp-deactive {
+  color: var(--date-picker-calender-disabled);
+}
+
+.date-picker .rmdp-range {
+  background-color: var(--date-picker-calender-selected);
+  box-shadow: 0 0 3px var(--date-picker-calender-shadow);
+}
+
+.date-picker .rmdp-arrow {
+  border: solid var(--date-picker-calender-primary);
+  border-width: 0 2px 2px 0;
+}
+
+.date-picker .rmdp-arrow-container:hover {
+  background-color: var(--date-picker-calender-hover);
+  box-shadow: 0 0 3px var(--date-picker-calender-deselect);
+}
+
+.date-picker .rmdp-panel-body::-webkit-scrollbar-thumb {
+  background: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-day.rmdp-today span {
+  background-color: transparent;
+  border: 2px solid var(--date-picker-calender-today);
+}
+
+.date-picker .rmdp-rtl .rmdp-panel {
+  border-left: unset;
+  border-right: 1px solid var(--date-picker-calender-deselect);
+}
+
+.date-picker .rmdp-day.rmdp-selected span:not(.highlight) {
+  background-color: var(--date-picker-calender-selected);
+  box-shadow: 0 0 3px var(--date-picker-calender-shadow);
+}
+
+.date-picker .rmdp-day:not(.rmdp-day-hidden) span:hover {
+  background-color: var(--date-picker-calender-hover) !important;
+}
+
+.date-picker .b-deselect {
+  color: var(--date-picker-calender-deselect);
+  background-color: white;
+}
+
+.date-picker .rmdp-action-button {
+  color: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-button:not(.rmdp-action-button) {
+  background-color: var(--date-picker-calender-primary);
+}
+
+.date-picker .rmdp-button:not(.rmdp-action-button):hover {
+  background-color: var(--date-picker-calender-deselect);
+}

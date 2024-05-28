@@ -1,0 +1,12 @@
+.create-transaction {
+  h2 {
+    font-size: 24px;
+    margin-bottom: 20px
+  }
+}
+
+.create-transaction-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px
+}

@@ -1,0 +1,23 @@
+@import "../../../Data/Variables.scss";
+
+.toast {
+  border: $stroke-color 2px solid;
+  background: $text;
+  color: $primary;
+  border-radius: 12px;
+  max-width: 480px;
+  position: relative;
+  padding: 12px;
+  margin: 8px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  z-index: 110;
+}
+
+.toastClose {
+  cursor: pointer;
+}

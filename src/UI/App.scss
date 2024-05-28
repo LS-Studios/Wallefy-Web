@@ -1,0 +1,16 @@
+@import "./../Data/Variables.scss";
+
+* {
+    scrollbar-color: $stroke-color $primary;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+
+    background-color: $background;
+
+    color: $text;
+
+    font-family: 'Lato';
+}

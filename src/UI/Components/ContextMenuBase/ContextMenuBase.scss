@@ -1,0 +1,27 @@
+@import "../../../Data/Variables.scss";
+
+.context-menu-base {
+    position: absolute;
+    z-index: 1000;
+    background-color: $primary;
+    border: 1px solid $stroke-color;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    padding: 6px 8px;
+
+  .context-menu-base-option {
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:hover {
+      background-color: $stroke-color;
+      border-radius: 4px;
+    }
+  }
+}

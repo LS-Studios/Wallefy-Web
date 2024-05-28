@@ -1,0 +1,29 @@
+:root {
+  --drop-dialog-border-color: #000000
+}
+
+.dropDialog {
+  position: relative;
+}
+
+.dialogHeightAdjust {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  width: 100%;
+
+  &.dropUp {
+    top: auto;
+    bottom: 100%;
+  }
+
+  &.show {
+    display: block;
+  }
+
+  &.wrapContent {
+    width: auto;
+  }
+}

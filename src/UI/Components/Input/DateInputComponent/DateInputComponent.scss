@@ -1,0 +1,16 @@
+@import "../../../../Data/Variables.scss";
+
+.date-input-component-input {
+  transition: 0.2s ease-in-out;
+
+  color-scheme: dark;
+
+  &.text {
+    @extend .text-input;
+    padding: 4px 0;
+    box-sizing: border-box;
+  }
+  &.box {
+    @extend .box-input;
+  }
+}

@@ -1,0 +1,60 @@
+@import "../../../Data/Variables.scss";
+
+.create-transaction-dialog-navigation {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  margin-bottom: 10px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    :first-child {
+      cursor: pointer;
+
+      border-radius: 100%;
+      border: 2px solid $stroke-color;
+      height: 24px;
+      width: 24px;
+      padding: 14px;
+
+      transition: 0.2s ease-in-out;
+
+      &.selected {
+        border: 2px solid $selected-stroke-color;
+        scale: 1.1;
+      }
+    }
+
+    span {
+      font-size: 16px;
+    }
+  }
+}
+
+.create-transaction-preset-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-width: 100px;
+
+  :first-child {
+    width: 24px;
+    height: 24px;
+    //background-color: red;
+  }
+
+  :last-child {
+      font-size: 14px;
+      text-align: center;
+  }
+}

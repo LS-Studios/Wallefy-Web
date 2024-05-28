@@ -1,0 +1,29 @@
+@import "../../../../Data/Variables.scss";
+
+.currency-input-component {
+  display: flex;
+  align-items: center;
+
+  &.box {
+    border: 2px solid $stroke-color;
+    border-radius: 12px;
+    padding: 8px 12px;
+  }
+
+  height: 26px;
+}
+
+.currency-input-component-input-text {
+  @extend .text-input;
+}
+
+.currency-input-component-input-box {
+  @extend .box-input;
+
+  border: none;
+  padding: 0;
+}
+
+.currency-input-component span {
+  margin-left: 8px;
+}

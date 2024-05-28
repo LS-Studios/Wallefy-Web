@@ -1,0 +1,39 @@
+@import "../../../../Data/Variables.scss";
+
+.create-transaction-preset-slot {
+  //flex: 1;
+  min-width: 200px;
+  height: 200px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  border: 2px solid $stroke-color;
+
+  cursor: pointer;
+
+  &:hover {
+    border: 2px solid $selected-stroke-color;
+
+    .create-transaction-preset-slot-icon {
+      width: 70px;
+      height: 70px;
+    }
+  }
+
+  .create-transaction-preset-slot-icon {
+    transition: 0.2s ease-in-out;
+
+    width: 55px;
+    height: 55px;
+    margin-bottom: 10px;
+    flex-grow: 1;
+  }
+
+  .create-transaction-preset-slot-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+}

@@ -1,0 +1,33 @@
+@import "../../../../Data/Variables.scss";
+
+.radio-input-component {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+
+  margin-top: 4px;
+}
+.radio-input-component button {
+  font-size: 16px;
+  border: 2px solid $stroke-color;
+  border-radius: 12px;
+  padding: 6px 4px;
+  width: 100%;
+
+  text-align: center;
+
+  transition: border 0.2s;
+
+  color: $text;
+  background-color: $primary;
+
+  cursor: pointer;
+
+  &.selected {
+    border: 2px solid $selected-stroke-color;
+    scale: 1.02;
+  }
+}

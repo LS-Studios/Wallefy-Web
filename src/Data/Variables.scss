@@ -1,0 +1,52 @@
+$primary: #2C3A47;
+$primary_selected: #CCCCCC;
+$background: #11161B;
+$stroke-color: rgba(204, 204, 204, 0.2);
+$selected-stroke-color: rgba(255, 255, 255, 0.5);
+$text: #CCCCCC;
+$input_underline: rgba(204, 204, 204, 0.5);
+$input_underline_focus: rgba(255, 255, 255, 0.65);
+$income_color: #4AF26F;
+$expenses_color: #FF0000;
+$error_color: #c43c3c;
+
+:export {
+    income_color: $income_color;
+    expenses_color: $expenses_color;
+    stroke_color: $stroke-color;
+    text_color: $text;
+    primary: $primary;
+    errorColor: $error_color;
+}
+
+.text-input {
+    width: 100%;
+    background-color: transparent;
+    color: $text;
+    font-size: 16px;
+    outline: none;
+    border: none;
+
+    background-image: linear-gradient($input_underline, $input_underline);
+    background-position: bottom 0px center;
+    background-size: calc(100%) 1px;
+    background-repeat: no-repeat;
+
+    &:focus {
+        background-image: linear-gradient($input_underline_focus, $input_underline_focus);
+    }
+}
+
+.box-input {
+    width: 100%;
+    background-color: transparent;
+    color: $text;
+    font-size: 16px;
+    outline: none;
+
+    border: 2px solid $stroke-color;
+    border-radius: 12px;
+    padding: 8px;
+
+    box-sizing: border-box;
+}

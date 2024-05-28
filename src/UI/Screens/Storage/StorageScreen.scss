@@ -1,0 +1,56 @@
+@import "../../../Data/Variables";
+
+.list-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px
+}
+
+.screen-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 80px;
+
+    span {
+        text-decoration: none;
+        color: $text;
+
+        padding: 12px;
+        border: 2px solid $primary;
+        border-radius: 24px;
+
+        width: 200px;
+        text-align: center;
+
+        cursor: pointer;
+
+        transition: 0.2s ease-in-out;
+
+        &.selected {
+            border: 1px solid $primary_selected;
+
+            * {
+                transition: 0.2s ease-in-out;
+                //scale: 1.1;
+            }
+        }
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+}
+
+.screen-list-items {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    width: 100%;
+}

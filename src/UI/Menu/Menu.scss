@@ -1,0 +1,79 @@
+@import "./../../Data/Variables.scss";
+
+.menu {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  width: 300px;
+
+  background-color: $primary;
+}
+
+.menu-app-title {
+  padding: 12px 24px;
+  font-size: 1.5em;
+  font-weight: bold;
+  color: $text;
+}
+
+.menu-divider {
+  margin-top: 0;
+  margin-bottom: 0;
+  opacity: 0.5;
+  width: 95%;
+}
+
+.menu-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.menu-navigation {
+  padding: 12px 24px;
+
+  &.main ul {
+    display: flex;
+    flex-direction: column;
+    gap: 8px
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+
+    &:not(:last-child) {
+      padding-bottom: 12px;
+      cursor: pointer;
+    }
+
+    &:hover {
+      opacity: 0.6;
+    }
+  }
+
+  .menu-nav-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  a {
+    color: $text;
+    text-decoration: none;
+
+    width: 100%;
+
+    font-size: 18px;
+
+    margin-left: 12px;
+  }
+}

@@ -1,0 +1,30 @@
+
+@import "../../../../Data/Variables";
+
+.create-transaction-dialog-repetition-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.create-transaction-dialog-repetition-amount-times-row {
+  display: flex;
+  gap: 10px;
+
+  align-items: center;
+
+  input {
+    text-align: center;
+  }
+}
+
+.create-transaction-dialog-repetition-rate-times-row {
+  display: flex;
+  gap: 10px;
+
+  align-items: center;
+
+  input {
+    text-align: center;
+  }
+}

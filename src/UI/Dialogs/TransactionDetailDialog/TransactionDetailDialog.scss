@@ -1,0 +1,51 @@
+@import "../../../Data/Variables.scss";
+
+.transaction-detail-dialog {
+  border: 2px solid $stroke-color;
+  border-radius: 12px;
+  //padding: 16px;
+
+  .transaction-detail-dialog-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+
+    box-sizing: border-box;
+
+    &:not(:last-child) {
+      border-bottom: 2px solid $stroke-color;
+    }
+
+    text-align: left;
+
+    width: 100%;
+
+    .transaction-detail-dialog-row-labels {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 4px;
+
+      .transaction-detail-dialog-row-label {
+        border-radius: 22px;
+        border: 2px solid $stroke-color;
+        padding: 2px 6px;
+      }
+    }
+
+    #transaction-detail-dialog-row-title {
+      width: 200px;
+      font-weight: bold;
+      border-right: 2px solid $stroke-color;
+      padding: 12px;
+    }
+
+    #transaction-detail-dialog-row-value {
+      width: 100%;
+      word-break: break-all;
+      padding: 8px;
+    }
+  }
+}
