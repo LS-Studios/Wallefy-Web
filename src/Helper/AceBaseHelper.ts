@@ -15,7 +15,11 @@ export const addDBItem = <T extends DBItem>(path: string, item: T) => {
 }
 
 export const deleteDBItem = <T extends DBItem>(path: string, item: T) => {
-    getDatabase().ref(path).child(item.uid).remove()
+    return new Promise<void>((resolve, reject) => {
+        getDatabase().ref(path).child(item.uid).remove().then(() => {
+            resolve()
+        })
+    })
 }
 
 export const deleteDBItemByUid = (path: string, uid: string) => {
@@ -59,17 +63,14 @@ export const getDBItemsOnChange = <T extends DBItem>(path: string, onChange: (it
     })
 }
 
-export const getDBItems = <T extends DBItem>(path: string, onChange: (item: T[]) => void) => {
-    getDatabase().ref(path).get((snapshot: DataSnapshot) => {
-        if (!snapshot.exists()) {
-            onChange([])
-            return;
-        }
-        const items: T[] = []
-        Object.values(snapshot.val()).forEach((account) => {
-            items.push(account as T)
-            return true
+export const getDBItemByUid = <T extends DBItem>(path: string, uid: string) => {
+    return new Promise<T | null>((resolve, reject) => {
+        getDatabase().ref(path).child(uid).get((snapshot: DataSnapshot) => {
+            if (!snapshot.exists()) {
+                resolve(null)
+                return;
+            }
+            resolve(snapshot.val())
         })
-        onChange(items)
     })
 }

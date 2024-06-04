@@ -26,6 +26,8 @@ const TransactionGroup = ({
                         key={index}
                         transaction={transaction}
                         transactionPartners={transactionPartners}
+                        isStart={index === 0}
+                        isEnd={index === transactionGroup.transactions.length - 1 || transactionGroup.transactions.length === 1}
                     />
                 ))}
             </div>

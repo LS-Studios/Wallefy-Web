@@ -6,6 +6,7 @@ import DatePicker from "./DatePicker/DatePicker";
 import {formatDate, formatDateToStandardString, getDateFromStandardString} from "../../../../Helper/DateHelper";
 import DropDialog from "../../Dropdialog/DropDialog";
 import {DateObject} from "react-multi-date-picker";
+import {DayOfWeekModel} from "../../../../Data/Transactions/DayOfWeekModel";
 
 const DateInputComponent = ({
     title,
@@ -13,12 +14,14 @@ const DateInputComponent = ({
     onValueChange,
     minDate,
     maxDate,
+    disabledWeekDays
 }: {
     title?: string,
     value: Date,
     onValueChange: (value: Date) => void,
     minDate?: string | number | Date | DateObject | undefined,
     maxDate?: string | number | Date | DateObject | undefined,
+    disabledWeekDays?: DayOfWeekModel[] | undefined
 }) => {
     const inputRef = React.createRef<HTMLInputElement>();
 
@@ -50,6 +53,10 @@ const DateInputComponent = ({
     }
 
     useEffect(() => {
+        setPickerDate(formatDateToStandardString(value));
+    }, [value]);
+
+    useEffect(() => {
         onValueChange(getDateFromStandardString(pickerDate));
     }, [pickerDate]);
 
@@ -76,6 +83,7 @@ const DateInputComponent = ({
                     setDate={onDatePickerDateChange}
                     minDate={minDate}
                     maxDate={maxDate}
+                    disabledWeekDays={disabledWeekDays}
                 />
             }
         >

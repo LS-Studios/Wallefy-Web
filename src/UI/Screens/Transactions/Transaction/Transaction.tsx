@@ -9,24 +9,24 @@ import TransactionDetailDialog from "../../../Dialogs/TransactionDetailDialog/Tr
 import {DialogModel} from "../../../../Data/Providers/DialogModel";
 import {TransactionType} from "../../../../Data/Transactions/TransactionType";
 import {TransactionPartnerModel} from "../../../../Data/TransactionPartnerModel";
-import {CategoryModel} from "../../../../Data/CategoryModel";
-import {LabelModel} from "../../../../Data/LabelModel";
 
 const Transaction = ({
     transaction,
     transactionPartners,
-    isDetail = false
+    isStart,
+    isEnd,
  }: {
     transaction: TransactionModel,
     transactionPartners: TransactionPartnerModel[] | null,
-    isDetail?: boolean,
+    isStart: boolean,
+    isEnd: boolean,
 }) => {
     const dialog = useDialog();
 
     const openTransactionDetail = () => {
         dialog.open(
             new DialogModel(
-                "StorageItem detail",
+                "Transaction detail",
                 <TransactionDetailDialog
                     transaction={transaction}
                     preFetchedTransactionPartners={transactionPartners}
@@ -38,10 +38,10 @@ const Transaction = ({
     return (
         <div
             className="transaction"
-            onClick={openTransactionDetail}
             style={{
-                border: isDetail ? `2px solid ${variables.stroke_color}` : `2px solid ${variables.primary}`
+                borderRadius: isStart && isEnd ? "12px" : isStart ? "12px 12px 0 0" : isEnd ? "0 0 12px 12px" : 0,
             }}
+            onClick={openTransactionDetail}
         >
             <div className="transaction-block-1">
                 <span id="transaction-name">{transaction.name}</span>
@@ -51,9 +51,7 @@ const Transaction = ({
             </div>
             <span
                 id="transaction-amount"
-                style={{
-                    color: transaction.transactionType === TransactionType.INCOME ? variables.income_color : variables.expenses_color
-                }}
+                className={transaction.transactionType === TransactionType.INCOME ? "transaction-income" : "transaction-expense"}
             >{(transaction.transactionType === TransactionType.EXPENSE ? "-" : "") + formatCurrency(transaction.transactionAmount || 0, transaction.currencyCode)}</span>
         </div>
     );

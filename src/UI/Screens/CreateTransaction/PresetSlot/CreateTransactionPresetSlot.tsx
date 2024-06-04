@@ -30,6 +30,7 @@ const CreateTransactionPresetSlot = ({
                 "Create transaction",
                 <CreateTransactionDialog
                     transaction={preset.presetTransaction}
+                    preset={preset}
                 />,
             )
         )
@@ -45,13 +46,12 @@ const CreateTransactionPresetSlot = ({
 
                 }, isBasic),
                 new ContentAction("Delete", () => {
-                    deleteDBItem(DatabaseRoutes.CUSTOM_PRESETS, preset)
-                    deleteDBItem(DatabaseRoutes.STANDARD_PRESETS, preset)
+                    deleteDBItem(DatabaseRoutes.PRESETS, preset)
                 })
             ])}
         >
             <Icon className="create-transaction-preset-slot-icon" />
-            <span className="create-transaction-preset-slot-title">{preset.presetTransaction.name}</span>
+            <span className="create-transaction-preset-slot-title">{preset.name}</span>
         </div>
     </>
 };

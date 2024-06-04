@@ -9,22 +9,27 @@ import AccountsOverlay from "./Screens/Accounts/AccountsOverlay"
 import {getDatabase} from "../Database/AceBaseDatabase";
 import {AceBase} from "acebase";
 import StorageOverlay from "./Screens/Storage/StorageOverlay";
+import {RoutePath} from "../Data/Menu/RoutePath";
+import TransactionOverviewOverlay from "./Screens/TransactionOverview/TransactionOverviewOverlay";
 
 function App() {
     return (
         <Providers>
             <Menu />
             <Routes>
-                <Route path="/create-transaction" element={
+                <Route path={RoutePath.CREATE_TRANSACTION} element={
                     <CreateTransactionOverlay />
                 } />
-                <Route path="/transactions/:tab" element={
+                <Route path={RoutePath.TRANSACTION_OVERVIEW} element={
+                    <TransactionOverviewOverlay />
+                } />
+                <Route path={RoutePath.TRANSACTIONS} element={
                     <TransactionsOverlay />
                 } />
-                <Route path="/storage" element={
+                <Route path={RoutePath.STORAGE} element={
                     <StorageOverlay />
                 } />
-                <Route path="/accounts" element={
+                <Route path={RoutePath.ACCOUNTS} element={
                     <AccountsOverlay />
                 } />
             </Routes>

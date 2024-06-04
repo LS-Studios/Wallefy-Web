@@ -1,14 +1,28 @@
+//Dark
 $primary: #2C3A47;
-$primary_selected: #CCCCCC;
 $background: #11161B;
+$outline-color: #797979;
 $stroke-color: rgba(204, 204, 204, 0.2);
 $selected-stroke-color: rgba(255, 255, 255, 0.5);
 $text: #CCCCCC;
-$input_underline: rgba(204, 204, 204, 0.5);
-$input_underline_focus: rgba(255, 255, 255, 0.65);
-$income_color: #4AF26F;
-$expenses_color: #FF0000;
+$income_color: #425e2f;
+$income_text_color: #77f329;
+$expenses_color: #5e2f31;
+$expenses_text_color: #ff0000;
 $error_color: #c43c3c;
+
+//Bright
+//$primary: #ffffff;
+//$background: #f5f5f5;
+//$outline-color: #565656;
+//$stroke-color: #dddddd;
+//$selected-stroke-color: #a6a6a6;
+//$text: #292929;
+//$income_color: #e4eddb;
+//$income_text_color: #356b00;
+//$expenses_color: #eddbdb;
+//$expenses_text_color: #6b0000;
+//$error_color: #c43c3c;
 
 :export {
     income_color: $income_color;
@@ -27,13 +41,13 @@ $error_color: #c43c3c;
     outline: none;
     border: none;
 
-    background-image: linear-gradient($input_underline, $input_underline);
+    background-image: linear-gradient($stroke-color, $stroke-color);
     background-position: bottom 0px center;
     background-size: calc(100%) 1px;
     background-repeat: no-repeat;
 
     &:focus {
-        background-image: linear-gradient($input_underline_focus, $input_underline_focus);
+        background-image: linear-gradient($selected-stroke-color, $selected-stroke-color);
     }
 }
 

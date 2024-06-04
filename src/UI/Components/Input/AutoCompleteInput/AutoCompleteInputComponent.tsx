@@ -3,44 +3,46 @@ import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './AutoCompleteInputComponent.scss';
 import DropDialog from "../../Dropdialog/DropDialog";
 import {MdClose} from "react-icons/md";
-import {InputValueIdModel} from "../../../../Data/Input/InputValueIdModel";
+import {InputNameValueModel} from "../../../../Data/Input/InputNameValueModel";
 import {getInputValueUidByUid} from "../../../../Helper/HandyFunctionHelper";
 import {useContextMenu} from "../../../../Providers/ContextMenuProvider";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {deleteDBItem, deleteDBItemByUid} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
 
-const AutoCompleteInputComponent = ({
+function AutoCompleteInputComponent<T>({
     title,
     value,
     onValueChange,
     suggestions,
+    fetchSuggestionsOnOpen,
     valueFormatter,
     suggestionUlStyle,
     suggestionElement,
     placeholder = "",
     type = "text",
     allowCreatingNew = false,
-    onDelete,
+    contextMenuOptions,
     enabled,
     setEnabled,
     style,
 }: {
     title: string,
-    value: InputValueIdModel | InputValueIdModel[] | null,
-    onValueChange: (value: InputValueIdModel | InputValueIdModel[] | null) => void,
-    suggestions: InputValueIdModel[] | null,
+    value: InputNameValueModel<T> | InputNameValueModel<T>[] | null,
+    onValueChange: (value: InputNameValueModel<T> | InputNameValueModel<T>[] | null) => void,
+    suggestions?: InputNameValueModel<T>[] | null,
+    fetchSuggestionsOnOpen?: () => Promise<InputNameValueModel<T>[]>,
     valueFormatter?: (value: string) => string,
     suggestionUlStyle?: CSSProperties,
-    suggestionElement?: (suggestion: InputValueIdModel) => React.ReactElement
+    suggestionElement?: (suggestion: InputNameValueModel<T>) => React.ReactElement
     placeholder?: string,
     type?: string,
     allowCreatingNew?: boolean,
-    onDelete?: (value: InputValueIdModel) => void,
+    contextMenuOptions?: (value: InputNameValueModel<T>) => ContentAction[],
     enabled?: boolean,
     setEnabled?: (enabled: boolean) => void,
     style?: CSSProperties,
-}) => {
+}) {
     const contextMenu = useContextMenu()
 
     const inputRef = React.createRef<HTMLInputElement>();
@@ -51,64 +53,89 @@ const AutoCompleteInputComponent = ({
     const [inputIsExpanded, setInputIsExpanded] = useState<Boolean>(false)
 
     const [userInput, setUserInput] = useState<string>(Array.isArray(value) ? "" : value?.name || "")
+    const [changeUserInputOnValueChange, setChangeUserInputOnValueChange] = useState<boolean>(true)
     const [activeSuggestion, setActiveSuggestion] = useState<number | null>(null)
-    const [filteredSuggestions, setFilteredSuggestions] = useState<InputValueIdModel[] | null>(null)
+    const [suggestionsToWorkWith, setSuggestionsToWorkWith] = useState<InputNameValueModel<T>[] | null>(null)
+    const [filteredSuggestions, setFilteredSuggestions] = useState<InputNameValueModel<T>[] | null>(null)
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
 
     useEffect(() => {
-        if (suggestions) setFilteredSuggestions(suggestions)
+        if (showSuggestions && fetchSuggestionsOnOpen) {
+            setSuggestionsToWorkWith(null)
+            setTimeout(() => {
+                fetchSuggestionsOnOpen().then((suggestions) => {
+                    setSuggestionsToWorkWith(suggestions)
+                })
+            }, 1000)
+        } else if (fetchSuggestionsOnOpen) {
+            setSuggestionsToWorkWith([])
+        }
+    }, [showSuggestions]);
+
+    useEffect(() => {
+        if (suggestions) {
+            setSuggestionsToWorkWith(suggestions)
+        }
     }, [suggestions]);
 
     useEffect(() => {
-        setUserInput(Array.isArray(value) ? "" : value?.name || "")
+        setFilteredSuggestions(suggestionsToWorkWith)
+    }, [suggestionsToWorkWith]);
+
+    useEffect(() => {
+        if (changeUserInputOnValueChange) {
+            setUserInput(Array.isArray(value) ? "" : value?.name || "")
+            setChangeUserInputOnValueChange(true)
+            //TODO could cause problem, if value is not fetched yet and user puts something in
+        }
     }, [value]);
 
-    const valueIsSelected = (suggestion: InputValueIdModel) => {
+    const valueIsSelected = (suggestion: InputNameValueModel<T>) => {
         if (Array.isArray(value)) {
             return value.map((v) => v.name).includes(suggestion.name);
-            //TODO could cause problems if two suggestions have the same name
         } else {
             return value?.name === suggestion.name;
         }
     }
 
-    const applySuggestion = (suggestion: InputValueIdModel) => {
-        if (!suggestion) return;
+    const applySuggestion = (selectedSuggestion: number) => {
+        const suggestion = filteredSuggestions![selectedSuggestion]
 
-        if (allowCreatingNew && activeSuggestion === 0) {
+        setChangeUserInputOnValueChange(false)
+        if (allowCreatingNew && !suggestion.value) {
             if (Array.isArray(value)) {
-                onValueChange([...value, new InputValueIdModel(userInput, null)]);
+                onValueChange([...value, new InputNameValueModel<T>(userInput, null)]);
                 setUserInput("");
             } else {
-                onValueChange(new InputValueIdModel(userInput, null));
+                onValueChange(new InputNameValueModel<T>(userInput, null));
             }
         } else if (valueIsSelected(suggestion)) {
             if (Array.isArray(value)) {
+
                 const newValue = value.filter((v) => v.name !== suggestion.name);
                 onValueChange(newValue);
 
                 setUserInput("");
             } else {
-                setUserInput("");
                 onValueChange(null);
             }
         } else {
             if (Array.isArray(value)) {
                 onValueChange([...value, suggestion]);
-
                 setUserInput("");
             } else {
-                setUserInput(suggestion.name);
                 onValueChange(suggestion);
             }
         }
 
-        setFilteredSuggestions(suggestions);
+        setFilteredSuggestions(suggestionsToWorkWith);
     }
 
     const changeFocus = (newFocusValue: boolean) => {
         if (!Array.isArray(value) && !value) {
             setUserInput("")
+        } else {
+            setUserInput(Array.isArray(value) ? "" : value?.name || "")
         }
 
         if (newFocusValue) {
@@ -127,41 +154,44 @@ const AutoCompleteInputComponent = ({
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const userInput = e.currentTarget.value;
 
-        const filteredSuggestions = suggestions?.filter(
+        const filteredSuggestions = suggestionsToWorkWith?.filter(
             suggestion =>
                 suggestion.name.toLowerCase().indexOf(userInput.toLowerCase()) > -1
         ) || [];
 
         if (userInput) {
             setActiveSuggestion(0)
-            if (allowCreatingNew) filteredSuggestions.unshift(new InputValueIdModel("Als neue Option hinzufügen", null))
+            if (allowCreatingNew) filteredSuggestions.unshift(new InputNameValueModel<T>("Als neue Option hinzufügen", null))
         } else {
             setActiveSuggestion(null)
         }
 
         setFilteredSuggestions(filteredSuggestions);
 
-        setUserInput(userInput);
-
-        if (!Array.isArray(value) && value?.uid) {
+        if (!Array.isArray(value)) {
             onValueChange(null);
         }
+
+        setUserInput(userInput);
     }
 
-    const selectSuggestion = (suggestion: InputValueIdModel) => {
-        if (!valueIsSelected(suggestion)) {
+    const selectSuggestion = (selectedSuggestion: number) => {
+        const suggestion = filteredSuggestions![selectedSuggestion];
+
+        if (!suggestion?.value || !valueIsSelected(suggestion)) {
             setActiveSuggestion(null);
             setShowSuggestions(false);
         }
 
-        applySuggestion(suggestion);
+        applySuggestion(selectedSuggestion);
     }
 
     const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
         if (!filteredSuggestions) return;
 
         if (e.key === "Enter") {
-            applySuggestion(filteredSuggestions[activeSuggestion!]);
+            if (activeSuggestion !== null) applySuggestion(activeSuggestion!);
+
             setShowSuggestions(false)
 
             setActiveSuggestion(null);
@@ -249,17 +279,10 @@ const AutoCompleteInputComponent = ({
                         { filteredSuggestions.length ? filteredSuggestions.map((suggestion, index) => {
                             return <li
                                 key={index}
-                                onClick={(e) => selectSuggestion(suggestion)}
+                                onClick={(e) => selectSuggestion(index)}
                                 className={(Array.isArray(value) ? value.includes(suggestion) : value === suggestion) ? "active" : index === activeSuggestion ? "selected" : ""}
                                 onContextMenu={(e) => {
-                                    onDelete && contextMenu.handleOnContextMenu(e, [
-                                        new ContentAction(
-                                            "Delete",
-                                            () => {
-                                                onDelete(suggestion)
-                                            }
-                                        )
-                                    ])
+                                    contextMenuOptions && contextMenu.handleOnContextMenu(e, contextMenuOptions(suggestion))
                                 }}
                             >
                                 { suggestionElement ? suggestionElement(suggestion) : <>
@@ -281,7 +304,7 @@ const AutoCompleteInputComponent = ({
             <InputBaseComponent
                 title={title}
                 onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                    if (enabled === undefined) changeFocus(!showSuggestions)
+                    if (enabled === undefined) inputRef.current?.focus()
                     else if (enabled) changeFocus(false)
                 }}
                 labelClassName={enabled === undefined ? (inputIsExpanded ? "input-is-expanded" : "") : ""}
@@ -300,7 +323,10 @@ const AutoCompleteInputComponent = ({
                                 className="auto-complete-multi-selection-tag"
                                 onClick={(e: React.MouseEvent<HTMLSpanElement>) => {
                                     e.stopPropagation();
-                                    applySuggestion(tag)
+                                    if (!filteredSuggestions) return;
+
+                                    const suggestionIndex = filteredSuggestions?.indexOf(tag)
+                                    suggestionIndex !== -1 && applySuggestion(suggestionIndex!)
                                 }}
                             >
                                 <span>{tag.name}</span>
@@ -316,11 +342,13 @@ const AutoCompleteInputComponent = ({
                         placeholder={placeholder}
                         onChange={(e) => onChange(e)}
                         onKeyDown={onKeyDown}
-                        // onClick={() => inputRef.current?.blur()}
-                        // onFocusCapture={(e) => {
-                        //     e.preventDefault()
-                        //     changeFocus(true)
+                        onFocus={(e) => {
+                            changeFocus(true)
+                        }}
+                        // onBlur={(e) => {
+                        //     changeFocus(false)
                         // }}
+                        //TODO make, that blur closes the suggestions but selecting is still possible
                     />
                 </div>
             </InputBaseComponent>

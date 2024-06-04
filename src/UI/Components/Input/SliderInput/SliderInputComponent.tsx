@@ -3,6 +3,7 @@ import './SliderInputComponent.scss';
 
 // @ts-ignore
 import variables from '../../../../Data/Variables.scss';
+import {useTimeout} from "../../../../CustomHooks/useTimeout";
 
 const SliderInputComponent = ({
     fromValue,
@@ -29,7 +30,7 @@ const SliderInputComponent = ({
     }
 
     function fillSlider() {
-        const rangeDistance = Number(toSliderRef.current!.max)-Number(toSliderRef.current!.min);
+        const rangeDistance = Number(toSliderRef.current!.max) - Number(toSliderRef.current!.min);
         const fromPosition = Number(fromSliderRef.current!.value) - Number(toSliderRef.current!.min);
         const toPosition = Number(toSliderRef.current!.value) - Number(toSliderRef.current!.min);
         toSliderRef.current!.style.background = `linear-gradient(
@@ -51,8 +52,16 @@ const SliderInputComponent = ({
     }
 
     const controlFrom = () => {
-        const [from, to] = getParsed(fromSliderRef.current!, toSliderRef.current!);
         fillSlider();
+    }
+
+    const controlTo = () => {
+        fillSlider();
+        setToggleAccessible(toSliderRef.current!);
+    }
+
+    const onChangeFrom = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const [from, to] = getParsed(fromSliderRef.current!, toSliderRef.current!);
         if (from > to) {
             onFromValueChange(to);
         } else {
@@ -60,16 +69,19 @@ const SliderInputComponent = ({
         }
     }
 
-    const controlTo = () => {
+    const onChangeTo = (e: React.ChangeEvent<HTMLInputElement>) => {
         const [from, to] = getParsed(fromSliderRef.current!, toSliderRef.current!);
-        fillSlider();
-        setToggleAccessible(toSliderRef.current!);
         if (from <= to) {
             onToValueChange(to)
         } else {
             onToValueChange(from)
         }
     }
+
+    useTimeout(() => {
+        fillSlider();
+        setToggleAccessible(toSliderRef.current!);
+    }, 50)
 
     useEffect(() => {
         controlFrom();
@@ -87,6 +99,7 @@ const SliderInputComponent = ({
                 type="range"
                 value={fromValue}
                 onInput={controlFrom}
+                onChange={onChangeFrom}
                 min={min}
                 max={max}
             />
@@ -96,6 +109,7 @@ const SliderInputComponent = ({
                 type="range"
                 value={toValue}
                 onInput={controlTo}
+                onChange={onChangeTo}
                 min={min}
                 max={max}
             />

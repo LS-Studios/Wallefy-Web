@@ -19,31 +19,31 @@ const ContentOverlay = ({
     return (
         <div className="content-overlay">
             <div className="content-overlay-header">
-                <div className="content-overlay-header-account">
-                    Privates Konto
+                <div className="content-overlay-navigation">
+                    <div className="content-overlay-header-navigation-account">
+                        Privates Konto
+                    </div>
+                    <div className="content-overlay-header-navigation-actions">
+                        <a><MdOutlineHome /> Home</a>
+                        <a><MdPowerSettingsNew /> Logout</a>
+                    </div>
                 </div>
-                <div className="content-overlay-header-actions">
-                    <a><MdOutlineHome /> Home</a>
-                    <a><MdPowerSettingsNew /> Logout</a>
-                </div>
-            </div>
-            <div className="content-overlay-content">
-                <div className="content-overlay-content-header">
-                    <div className="content-overlay-content-header-title">
+                <div className="content-overlay-header-content">
+                    <div className="content-overlay-header-content-title">
                         { titleIcon }
                         { title }
                     </div>
-                    <div className="content-overlay-content-header-actions">
+                    <div className="content-overlay-header-content-actions">
                         { actions.map((action, index) => {
                             if (action.type === ContentActionType.BUTTON) {
                                 const buttonAction = action as ContentAction;
-                                return <a key={index} className="content-overlay-content-header-actions-button-action" onClick={buttonAction.action}>
+                                return <a key={index} className="content-overlay-header-content-actions-button" onClick={buttonAction.action}>
                                     {buttonAction.icon}
                                     {buttonAction.name}
                                 </a>
                             } else if (action.type === ContentActionType.SEARCH) {
-                                return <div className="content-overlay-content-header-actions-search-action">
-                                    <MdSearch className="content-overlay-content-header-actions-search-icon" />
+                                return <div className="content-overlay-header-content-actions-search-action">
+                                    <MdSearch className="content-overlay-header-content-actions-search-icon" />
                                     <input type="text" placeholder={(action as ContentSearchAction).placeholder} onChange={(e) => {
                                         const searchAction = action as ContentSearchAction;
                                         searchAction.onSearchTextChanged(e.target.value);
@@ -52,11 +52,11 @@ const ContentOverlay = ({
                             } else {
                                 return null;
                             }
-                            })}
+                        })}
                     </div>
                 </div>
+                <hr className="content-overlay-divider"/>
             </div>
-            <hr className="content-overlay-divider"/>
             <div className="content-overlay-body">
                 { children }
             </div>

@@ -4,4 +4,8 @@
   background-color: $stroke-color;
   height: 2px;
   width: 100%;
+
+  &.outlineColor {
+    background-color: $outline-color;
+  }
 }

@@ -5,12 +5,12 @@ import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import StorageScreen from "./StorageScreen";
 import ContentOverlay from "../../ContentOverlay/ContentOverlay";
 import {useDialog} from "../../../Providers/DialogProvider";
-import FilterTransactionsDialog from "../../Dialogs/SortTransactionsDialog/FilterTransactionsDialog";
+import FilterTransactionsDialog from "../../Dialogs/FilterTransactionsDialog/FilterTransactionsDialog";
 import {DialogModel} from "../../../Data/Providers/DialogModel";
 import {SortType} from "../../../Data/SortType";
 import {InputOptionModel} from "../../../Data/Input/InputOptionModel";
 import {FilterModel} from "../../../Data/FilterModel";
-import SortTransactionsDialog from "../../Dialogs/FilterTransactionsDialog/SortTransactionsDialog";
+import SortTransactionsDialog from "../../Dialogs/SortTransactionsDialog/SortTransactionsDialog";
 
 const StorageOverlay = () => {
     const dialog = useDialog()

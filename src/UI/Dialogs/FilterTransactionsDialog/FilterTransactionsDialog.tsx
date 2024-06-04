@@ -17,13 +17,15 @@ import AutoCompleteInputComponent from "../../Components/Input/AutoCompleteInput
 import {PriceRange} from "../../../Data/PriceRange";
 import CurrencyInputComponent from "../../Components/Input/CurrencyInput/CurrencyInputComponent";
 import SliderInputComponent from "../../Components/Input/SliderInput/SliderInputComponent";
-import {InputValueIdModel} from "../../../Data/Input/InputValueIdModel";
+import {InputNameValueModel} from "../../../Data/Input/InputNameValueModel";
 import {getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {CategoryModel} from "../../../Data/CategoryModel";
 import {LabelModel} from "../../../Data/LabelModel";
 import {TransactionPartnerModel} from "../../../Data/TransactionPartnerModel";
 import {getInputValueUidsByUids} from "../../../Helper/HandyFunctionHelper";
+import {getTransactionAmount} from "../../../Helper/TransactionHelper";
+import usePrevious from "../../../CustomHooks/usePrevious";
 
 const FilterTransactionsDialog = ({
     currentFilter,
@@ -34,22 +36,42 @@ const FilterTransactionsDialog = ({
 }) => {
     const dialog = useDialog();
 
-    const [filter, setFilter] = React.useState<FilterModel>(currentFilter);
-    const [categories, setCategories] = React.useState<InputValueIdModel[] | null>(null);
-    const [labels, setLabels] = React.useState<InputValueIdModel[] | null>(null);
-    const [transactionPartners, setTransactionPartners] = React.useState<InputValueIdModel[] | null>(null);
+    const [filter, setFilter] = React.useState<FilterModel>(structuredClone(currentFilter));
+    const previousPriceRange = usePrevious(filter.priceRange);
+
+    const [categories, setCategories] = React.useState<InputNameValueModel<CategoryModel>[] | null>(null);
+    const [labels, setLabels] = React.useState<InputNameValueModel<LabelModel>[] | null>(null);
+    const [transactionPartners, setTransactionPartners] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null);
+
+    const [priceRangeMin, setPriceRangeMin] = React.useState<number>(0);
+    const [priceRangeMax, setPriceRangeMax] = React.useState<number>(0);
 
     useEffect(() => {
         getDBItemsOnChange(DatabaseRoutes.CATEGORIES, (categories: CategoryModel[]) => {
-            setCategories(categories.map(category => new InputValueIdModel(category.name, category.uid)))
+            setCategories(categories.map(category => new InputNameValueModel(category.name, category)))
         })
         getDBItemsOnChange(DatabaseRoutes.LABELS, (labels: LabelModel[]) => {
-            setLabels(labels.map(label => new InputValueIdModel(label.name, label.uid)))
+            setLabels(labels.map(label => new InputNameValueModel(label.name, label)))
         })
         getDBItemsOnChange(DatabaseRoutes.TRANSACTION_PARTNERS, (partners: TransactionPartnerModel[]) => {
-            setTransactionPartners(partners.map(partner => new InputValueIdModel(partner.name, partner.uid)))
+            setTransactionPartners(partners.map(partner => new InputNameValueModel(partner.name, partner)))
+        })
+        getDBItemsOnChange(DatabaseRoutes.TRANSACTIONS, (transactions: TransactionModel[]) => {
+            const minPrice = Math.min(...transactions.map(transaction => getTransactionAmount(transaction)!));
+            const maxPrice = Math.max(...transactions.map(transaction => getTransactionAmount(transaction)!));
+            setPriceRangeMin(minPrice);
+            setPriceRangeMax(maxPrice);
         })
     }, []);
+
+    useEffect(() => {
+        if (filter.priceRange && previousPriceRange === null) {
+            updateFilter((oldFilter) => {
+                oldFilter.priceRange = new PriceRange(priceRangeMin, priceRangeMax);
+                return oldFilter;
+            })
+        }
+    }, [filter.priceRange]);
 
     const updateFilter = (updater: (oldFilter: FilterModel) => FilterModel) => {
         setFilter((current) => {
@@ -75,7 +97,7 @@ const FilterTransactionsDialog = ({
             ),
         ]}>
             <InputBaseComponent
-                title="StorageItem type"
+                title="Transaction type"
                 enabled={filter.transactionType !== null}
                 setEnabled={(enabled) => {
                     updateFilter((oldFilter) => {
@@ -120,7 +142,7 @@ const FilterTransactionsDialog = ({
                         value={filter.dateRange ? getDateFromStandardString(filter.dateRange!.endDate) : new Date()}
                         onValueChange={(value) => {
                             updateFilter((oldFilter) => {
-                                oldFilter.dateRange = new DateRange(formatDateToStandardString(value), oldFilter.dateRange?.endDate || formatDateToStandardString(new Date()));
+                                oldFilter.dateRange = new DateRange(oldFilter.dateRange?.startDate || formatDateToStandardString(new Date()), formatDateToStandardString(value));
                                 return oldFilter;
                             });
                         }}
@@ -139,40 +161,44 @@ const FilterTransactionsDialog = ({
             >
                 <div className="filter-transaction-dialog-price-range">
                     <CurrencyInputComponent
-                        value={filter.priceRange?.startPrice}
+                        value={filter.priceRange?.minPrice}
                         onValueChange={(value) => {
                             updateFilter((oldFilter) => {
-                                oldFilter.priceRange = new PriceRange(value, oldFilter.priceRange?.endPrice || 0);
+                                oldFilter.priceRange = new PriceRange(value, oldFilter.priceRange?.maxPrice || 0);
                                 return oldFilter;
                             });
                         }}
+                        allowNegativeValue={true}
                     />
                     <span>to</span>
                     <CurrencyInputComponent
-                        value={filter.priceRange?.endPrice}
+                        value={filter.priceRange?.maxPrice}
                         onValueChange={(value) => {
                             updateFilter((oldFilter) => {
-                                oldFilter.priceRange = new PriceRange(oldFilter.priceRange?.startPrice || 0, value);
+                                oldFilter.priceRange = new PriceRange(oldFilter.priceRange?.minPrice || 0, value);
                                 return oldFilter;
                             });
                         }}
                     />
                 </div>
                 <SliderInputComponent
-                    fromValue={filter.priceRange ? filter.priceRange!.startPrice : 0}
+                    fromValue={filter.priceRange ? filter.priceRange!.minPrice : 0}
                     onFromValueChange={(value) => {
                         updateFilter((oldFilter) => {
-                            oldFilter.priceRange = new PriceRange(value, oldFilter.priceRange?.endPrice || 0);
+                            oldFilter.priceRange = new PriceRange(value, oldFilter.priceRange?.maxPrice || 0);
                             return oldFilter;
                         });
                     }}
-                    toValue={filter.priceRange ? filter.priceRange!.endPrice : 0}
+                    toValue={filter.priceRange ? filter.priceRange!.maxPrice : 0}
                     onToValueChange={(value) => {
+                        console.log("to", value)
                         updateFilter((oldFilter) => {
-                            oldFilter.priceRange = new PriceRange(oldFilter.priceRange?.startPrice || 0, value);
+                            oldFilter.priceRange = new PriceRange(oldFilter.priceRange?.minPrice || 0, value);
                             return oldFilter;
                         });
                     }}
+                    min={priceRangeMin}
+                    max={priceRangeMax}
                 />
             </InputBaseComponent>
             <AutoCompleteInputComponent
@@ -187,7 +213,7 @@ const FilterTransactionsDialog = ({
                 value={getInputValueUidsByUids(filter.categories || [], categories)}
                 onValueChange={(value) => {
                     updateFilter((oldFilter) => {
-                        oldFilter.categories = (value as InputValueIdModel[]).map(category => category.uid!);
+                        oldFilter.categories = (value as InputNameValueModel<CategoryModel>[]).map(category => category.value?.uid!);
                         return oldFilter;
                     })
                 }}
@@ -205,14 +231,14 @@ const FilterTransactionsDialog = ({
                 value={getInputValueUidsByUids(filter.labels || [], labels)}
                 onValueChange={(value) => {
                     updateFilter((oldFilter) => {
-                        oldFilter.labels = (value as InputValueIdModel[]).map(label => label.uid!);
+                        oldFilter.labels = (value as InputNameValueModel<LabelModel>[]).map(label => label.value?.uid!);
                         return oldFilter;
                     })
                 }}
                 suggestions={labels}
             />
             <AutoCompleteInputComponent
-                title="StorageItem partners"
+                title="Transaction partners"
                 enabled={filter.transactionPartners !== null}
                 setEnabled={(enabled) => {
                     updateFilter((oldFilter) => {
@@ -223,7 +249,7 @@ const FilterTransactionsDialog = ({
                 value={getInputValueUidsByUids(filter.transactionPartners || [], transactionPartners)}
                 onValueChange={(value) => {
                     updateFilter((oldFilter) => {
-                        oldFilter.transactionPartners = (value as InputValueIdModel[]).map(partner => partner.uid!);
+                        oldFilter.transactionPartners = (value as InputNameValueModel<TransactionPartnerModel>[]).map(partner => partner.value?.uid!);
                         return oldFilter;
                     })
                 }}

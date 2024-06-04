@@ -1,14 +1,25 @@
 @import "../../../../../Data/Variables.scss";
 
 :root {
+  //Dark
   --date-picker-calender-primary: #cccccc;
-  --date-picker-calender-disabled: rgba(204, 204, 204, 0.5);
+  --date-picker-calender-disabled: #7c8389;
   --date-picker-calender-bg: #2C3A47;
-  --date-picker-calender-shadow: rgba(0, 0, 0, 0);
-  --date-picker-calender-today: rgba(204, 204, 204, 0.2);
-  --date-picker-calender-selected: rgba(204, 204, 204, 0.4);
-  --date-picker-calender-hover: rgba(204, 204, 204, 0.2);
-  --date-picker-calender-deselect: rgba(204, 204, 204, 0.5);
+  --date-picker-calender-shadow: #2c3a47;
+  --date-picker-calender-today: #4c5762;
+  --date-picker-calender-selected: #6c757d;
+  --date-picker-calender-hover: #5b606b;
+  --date-picker-calender-deselect: #cccccc;
+
+  //Bright
+  //--date-picker-calender-primary: #292929;
+  //--date-picker-calender-disabled: #b0b0b0;
+  //--date-picker-calender-bg: #ffffff;
+  //--date-picker-calender-shadow: #ffffff;
+  //--date-picker-calender-today: #dddddd;
+  //--date-picker-calender-selected: #dddddd;
+  //--date-picker-calender-hover: #dddddd;
+  //--date-picker-calender-deselect: #292929;
 }
 
 .date-picker.rmdp-wrapper,
@@ -87,6 +98,7 @@
 .date-picker .rmdp-arrow-container:hover {
   background-color: var(--date-picker-calender-hover);
   box-shadow: 0 0 3px var(--date-picker-calender-deselect);
+  color: var(--date-picker-calender-primary);
 }
 
 .date-picker .rmdp-panel-body::-webkit-scrollbar-thumb {
@@ -96,6 +108,7 @@
 .date-picker .rmdp-day.rmdp-today span {
   background-color: transparent;
   border: 2px solid var(--date-picker-calender-today);
+  color: var(--date-picker-calender-primary);
 }
 
 .date-picker .rmdp-rtl .rmdp-panel {
@@ -106,10 +119,12 @@
 .date-picker .rmdp-day.rmdp-selected span:not(.highlight) {
   background-color: var(--date-picker-calender-selected);
   box-shadow: 0 0 3px var(--date-picker-calender-shadow);
+  color: var(--date-picker-calender-primary);
 }
 
 .date-picker .rmdp-day:not(.rmdp-day-hidden) span:hover {
   background-color: var(--date-picker-calender-hover) !important;
+  color: var(--date-picker-calender-primary);
 }
 
 .date-picker .b-deselect {
@@ -127,4 +142,5 @@
 
 .date-picker .rmdp-button:not(.rmdp-action-button):hover {
   background-color: var(--date-picker-calender-deselect);
+  color: var(--date-picker-calender-primary);
 }

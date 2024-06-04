@@ -11,37 +11,48 @@ import {InputOptionModel} from "../../../Data/Input/InputOptionModel";
 import CurrencyInputComponent from "../../Components/Input/CurrencyInput/CurrencyInputComponent";
 import AutoCompleteInputComponent from "../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
 import BasicsTab from "./BasicsTab/BasicsTab";
-import {Route, Routes} from "react-router-dom";
 import RepetitionTab from "./RepetitionTab/RepetitionTab";
 import DescriptionTab from "./DescriptionTab/DescriptionTab";
 import {useDialog} from "../../../Providers/DialogProvider";
 import {TransactionModel} from "../../../Data/Transactions/TransactionModel";
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
-import {addDBItem, updateDBItem} from "../../../Helper/AceBaseHelper";
+import {
+    addDBItem,
+    getDBItemByUid,
+    getDBItemsOnChange,
+    updateDBItem
+} from "../../../Helper/AceBaseHelper";
 import {TransactionPresetModel} from "../../../Data/CreateScreen/TransactionPresetModel";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {CreateTransactionInputErrorModel} from "../../../Data/CreateScreen/CreateTransactionInputErrorModel";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {InputValueIdModel} from "../../../Data/Input/InputValueIdModel";
+import {InputNameValueModel} from "../../../Data/Input/InputNameValueModel";
 import {CategoryModel} from "../../../Data/CategoryModel";
 import {LabelModel} from "../../../Data/LabelModel";
 import {TransactionPartnerModel} from "../../../Data/TransactionPartnerModel";
+import structuredClone from '@ungap/structured-clone';
 
 const CreateTransactionDialog = ({
     transaction,
-    isPreset = false
+    isPreset = false,
+    preset
  }: {
     transaction?: TransactionModel,
-    isPreset?: boolean
+    isPreset?: boolean,
+    preset?: TransactionPresetModel,
 }) => {
     const dialog = useDialog()
     const toast = useToast()
 
     const [currentTab, setCurrentTab] = React.useState<number>(0);
-    const [presetIcon, setPresetIcon] = React.useState<InputValueIdModel | null>(null)
-    const [workTransaction, setWorkTransaction] = React.useState<TransactionModel>(transaction || new TransactionModel())
+    const [presetIcon, setPresetIcon] = React.useState<InputNameValueModel<string> | null>(null)
+    const [presetName, setPresetName] = React.useState<string>("")
+
+    const [workTransaction, setWorkTransaction] = React.useState<TransactionModel>(structuredClone(transaction) || new TransactionModel())
     const [inputError, setInputError] = React.useState<CreateTransactionInputErrorModel>(new CreateTransactionInputErrorModel())
+
+    const [labels, setLabels] = React.useState<LabelModel[]>([])
 
     const updateTransaction = (updater: (oldTransaction: TransactionModel) => TransactionModel) => {
         setWorkTransaction((current) => {
@@ -59,6 +70,8 @@ const CreateTransactionDialog = ({
                     isPreset={isPreset}
                     presetIcon={presetIcon}
                     setPresetIcon={setPresetIcon}
+                    presetName={presetName}
+                    setPresetName={setPresetName}
                     workTransaction={workTransaction}
                     updateTransaction={updateTransaction}
                 />;
@@ -117,49 +130,75 @@ const CreateTransactionDialog = ({
     const addNewValues = () => {
         const promises: Promise<any>[] = []
 
-        if (workTransaction.newTransactionPartner) {
+        if (!workTransaction.transactionExecutorUid && workTransaction.newTransactionPartner) {
             promises.push(
                 addDBItem(
                     DatabaseRoutes.TRANSACTION_PARTNERS,
                     new TransactionPartnerModel(workTransaction.newTransactionPartner, false)
                 ).then((newTransactionPartner) => {
-                    updateTransaction((oldTransaction) => {
-                        oldTransaction.transactionExecutorUid = newTransactionPartner.uid
-                        return oldTransaction
-                    })
+                    workTransaction.transactionExecutorUid = newTransactionPartner.uid
                 })
             )
         }
 
-        if (workTransaction.newCategory) {
+        if (!workTransaction.categoryUid && workTransaction.newCategory) {
             promises.push(
                 addDBItem(
                     DatabaseRoutes.CATEGORIES,
                     new CategoryModel(workTransaction.newCategory)
                 ).then((newCategory) => {
-                    updateTransaction((oldTransaction) => {
-                        oldTransaction.categoryUid = newCategory.uid
-                        return oldTransaction
-                    })
+                    workTransaction.categoryUid = newCategory.uid
                 })
             )
         }
 
-        if (workTransaction.newLabels.length > 0) {
-            workTransaction.newLabels.forEach(label => {
-                promises.push(
-                    addDBItem(DatabaseRoutes.LABELS, new LabelModel(label)).then((newLabel) => {
-                        updateTransaction((oldTransaction) => {
-                            oldTransaction.labels.push(newLabel.uid)
-                            return oldTransaction
-                        })
-                    })
-                )
-            })
-        }
-
+        const newLabels = workTransaction.newLabels.filter((newLabel) => !labels.map(label => label.name).includes(newLabel))
+        newLabels.forEach(label => {
+            promises.push(
+                addDBItem(DatabaseRoutes.LABELS, new LabelModel(label)).then((newLabel) => {
+                    workTransaction.labels.push(newLabel.uid)
+                })
+            )
+        })
         return promises
     }
+
+    useEffect(() => {
+        getDBItemsOnChange(DatabaseRoutes.LABELS, setLabels)
+    }, []);
+
+    useEffect(() => {
+        if (workTransaction.transactionExecutorUid) {
+            getDBItemByUid(DatabaseRoutes.TRANSACTION_PARTNERS, workTransaction.transactionExecutorUid).then((partner) => {
+                if (!partner) {
+                    setWorkTransaction((oldTransaction) => {
+                        oldTransaction.transactionExecutorUid = null
+                        return oldTransaction
+                    })
+                }
+            })
+        }
+        if (workTransaction.categoryUid) {
+            getDBItemByUid(DatabaseRoutes.CATEGORIES, workTransaction.categoryUid).then((category) => {
+                if (!category) {
+                    setWorkTransaction((oldTransaction) => {
+                        oldTransaction.categoryUid = null
+                        return oldTransaction
+                    })
+                }
+            })
+        }
+        workTransaction.labels.forEach((labelUid) => {
+            getDBItemByUid(DatabaseRoutes.LABELS, labelUid).then((label) => {
+                if (!label) {
+                    setWorkTransaction((oldTransaction) => {
+                        oldTransaction.labels = oldTransaction.labels.filter((uid) => uid !== labelUid)
+                        return oldTransaction
+                    })
+                }
+            })
+        })
+    }, [workTransaction]);
 
     return (
         <DialogOverlay actions={currentTab === 2 ? (!transaction?.uid || isPreset ? [
@@ -167,26 +206,42 @@ const CreateTransactionDialog = ({
             new ContentAction("Create", () => {
                 setInputError(new CreateTransactionInputErrorModel())
 
-                if (isPreset) {
-                    addDBItem(DatabaseRoutes.CUSTOM_PRESETS, new TransactionPresetModel(
-                        presetIcon?.uid!,
-                        workTransaction
-                    )).then(() => {
-                        dialog.closeCurrent();
-                    })
-                } else {
-                    if (!validateInput()) return
+                if (!isPreset && !validateInput()) return
 
-                    Promise.all(addNewValues()).then(() => {
-                        workTransaction.newCategory = null
+                Promise.all(addNewValues()).then(() => {
+                    if (isPreset) {
+                        addDBItem(DatabaseRoutes.PRESETS, new TransactionPresetModel(
+                            presetIcon?.value!,
+                            presetName,
+                            workTransaction
+                        )).then(() => {
+                            dialog.closeCurrent();
+                        })
+                    } else {
+                        workTransaction.newTransactionPartner = null
                         workTransaction.newCategory = null
                         workTransaction.newLabels = []
 
                         addDBItem(DatabaseRoutes.TRANSACTIONS, workTransaction).then(() => {
-                            dialog.closeCurrent();
+                            if (!preset) {
+                                dialog.closeCurrent();
+                                return
+                            }
+
+                            updateDBItem(DatabaseRoutes.PRESETS, {
+                                ...preset,
+                                presetTransaction: {
+                                    ...preset!.presetTransaction,
+                                    transactionExecutorUid: preset!.presetTransaction.transactionExecutorUid ? workTransaction.transactionExecutorUid : null,
+                                    categoryUid: preset!.presetTransaction.categoryUid ? workTransaction.categoryUid : null,
+                                    labels: preset!.presetTransaction.labels.length ? workTransaction.labels : [],
+                                } as TransactionModel
+                            } as TransactionPresetModel).then(() => {
+                                dialog.closeCurrent();
+                            })
                         })
-                    })
-                }
+                    }
+                })
             }),
         ] : [
             new ContentAction("Back", () => setCurrentTab(currentTab - 1)),
@@ -197,8 +252,6 @@ const CreateTransactionDialog = ({
                     workTransaction.newTransactionPartner = null
                     workTransaction.newCategory = null
                     workTransaction.newLabels = []
-
-                    console.log(workTransaction.transactionExecutorUid)
 
                     updateDBItem(DatabaseRoutes.TRANSACTIONS, workTransaction).then(() => {
                         dialog.closeCurrent();

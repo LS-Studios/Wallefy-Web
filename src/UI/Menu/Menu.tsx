@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import './Menu.scss';
 import {
     MdAddCircleOutline, MdHelpOutline, MdInventory,
@@ -8,6 +8,7 @@ import {
     MdSettings
 } from "react-icons/md";
 import Divider from "../Components/Divider/Divider";
+import {RoutePath} from "../../Data/Menu/RoutePath";
 const Menu = () => {
     return (
         <div className="menu">
@@ -15,11 +16,11 @@ const Menu = () => {
             <Divider />
             <nav className="menu-navigation main">
                 <ul>
-                    <li><MdAddCircleOutline className="menu-nav-icon"/> <a href="/create-transaction">Create transaction</a></li>
-                    <li><MdOutlineBarChart className="menu-nav-icon"/> <a href="/transaction-overview">Transaction overview</a></li>
-                    <li><MdOutlineMonetizationOn className="menu-nav-icon"/> <a href="/transactions/presets">Transactions</a></li>
-                    <li><MdInventory className="menu-nav-icon"/> <a href="/storage">Storage</a></li>
-                    <li><MdOutlineAccountCircle className="menu-nav-icon"/> <a href="/accounts">Accounts</a></li>
+                    <li id={window.location.pathname === RoutePath.CREATE_TRANSACTION ? "selected" : ""}><MdAddCircleOutline className="menu-nav-icon"/> <a href={RoutePath.CREATE_TRANSACTION}>Create transaction</a></li>
+                    <li id={window.location.pathname === RoutePath.TRANSACTION_OVERVIEW ? "selected" : ""}><MdOutlineBarChart className="menu-nav-icon"/> <a href={RoutePath.TRANSACTION_OVERVIEW}>Transaction overview</a></li>
+                    <li id={window.location.pathname === RoutePath.TRANSACTIONS ? "selected" : ""}><MdOutlineMonetizationOn className="menu-nav-icon"/> <a href={RoutePath.TRANSACTIONS}>Transactions</a></li>
+                    <li id={window.location.pathname === RoutePath.STORAGE ? "selected" : ""}><MdInventory className="menu-nav-icon"/> <a href={RoutePath.STORAGE}>Storage</a></li>
+                    <li id={window.location.pathname === RoutePath.ACCOUNTS ? "selected" : ""}><MdOutlineAccountCircle className="menu-nav-icon"/> <a href={RoutePath.ACCOUNTS}>Accounts</a></li>
                 </ul>
             </nav>
             <div className="menu-bottom">

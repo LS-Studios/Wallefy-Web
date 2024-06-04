@@ -8,7 +8,7 @@ import {LabelModel} from "../../../Data/LabelModel";
 import {StorageItemModel} from "../../../Data/StorageItemModel";
 import StorageItem from "./StorageItem/StorageItem";
 
-import './StorageScreen.scss';
+import '../TransactionListScreen.scss';
 
 const StorageScreen = ({
     searchValue,
@@ -17,23 +17,23 @@ const StorageScreen = ({
 }) => {
     const [currentTab, setCurrentTab] = React.useState<number>(0);
 
-    const [storageItems, setStorageItems] = React.useState<StorageItemModel<any>[]>([]);
+    const [storageItems, setStorageItems] = React.useState<StorageItemModel[]>([]);
 
     useEffect(() => {
         switch (currentTab) {
             case 0:
                 getDBItemsOnChange(DatabaseRoutes.TRANSACTION_PARTNERS, (transactionPartners: TransactionPartnerModel[]) => {
-                    setStorageItems(transactionPartners.map(transactionPartner => new StorageItemModel(transactionPartner, transactionPartner.name)));
+                    setStorageItems(transactionPartners.map(transactionPartner => new StorageItemModel(transactionPartner, DatabaseRoutes.TRANSACTION_PARTNERS)));
                 })
                 break;
             case 1:
                 getDBItemsOnChange(DatabaseRoutes.CATEGORIES, (categories: CategoryModel[]) => {
-                    setStorageItems(categories.map(category => new StorageItemModel(category, category.name)));
+                    setStorageItems(categories.map(category => new StorageItemModel(category, DatabaseRoutes.CATEGORIES)));
                 })
                 break;
             case 2:
                 getDBItemsOnChange(DatabaseRoutes.LABELS, (labels: LabelModel[]) => {
-                    setStorageItems(labels.map(label => new StorageItemModel(label, label.name)));
+                    setStorageItems(labels.map(label => new StorageItemModel(label, DatabaseRoutes.LABELS)));
                 })
                 break;
         }

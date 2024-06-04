@@ -19,6 +19,8 @@ import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../../Data/TransactionPartnerModel";
 import {CategoryModel} from "../../../Data/CategoryModel";
 import {LabelModel} from "../../../Data/LabelModel";
+import {getTransactionAmount} from "../../../Helper/TransactionHelper";
+import transaction from "../../Screens/Transactions/Transaction/Transaction";
 
 const TransactionDetailDialog = ({
     transaction,
@@ -30,16 +32,12 @@ const TransactionDetailDialog = ({
     const dialog = useDialog()
     const toast = useToast()
 
-    const [detailTransaction, setDetailTransaction] = React.useState<TransactionModel>(transaction)
+    const [detailTransaction, setDetailTransaction] = React.useState<TransactionModel>(structuredClone(transaction))
     const [transactionPartners, setTransactionPartners] = React.useState<TransactionPartnerModel[] | null>(preFetchedTransactionPartners)
     const [categories, setCategories] = React.useState<CategoryModel[] | null>(null)
     const [labels, setLabels] = React.useState<LabelModel[] | null>(null)
 
     useEffect(() => {
-        getDBItemOnChange(DatabaseRoutes.TRANSACTIONS + "/" + transaction.uid, (newTransaction: TransactionModel | null) => {
-            setDetailTransaction(newTransaction || transaction)
-        })
-
         getDBItemsOnChange(DatabaseRoutes.TRANSACTION_PARTNERS, setTransactionPartners)
         getDBItemsOnChange(DatabaseRoutes.CATEGORIES, setCategories)
         getDBItemsOnChange(DatabaseRoutes.LABELS, setLabels)
@@ -52,7 +50,7 @@ const TransactionDetailDialog = ({
         },
         {
             title: "Amount",
-            value: (detailTransaction.transactionType === TransactionType.EXPENSE ? '-' : '') + formatCurrency(detailTransaction.transactionAmount || 0, detailTransaction.currencyCode)
+            value: formatCurrency(getTransactionAmount(detailTransaction) || 0, detailTransaction.currencyCode)
         },
         {
             title: "Receiver",
@@ -68,7 +66,13 @@ const TransactionDetailDialog = ({
         },
         {
             title: "Labels",
-            value: labels ? detailTransaction.labels.map(labelUid => labels.find(label => label.uid === labelUid)?.name) : "Loading..."
+            value: labels ? detailTransaction.labels.reduce((result: string[], labelUid) => {
+                const foundLabel = labels.find(label => label.uid === labelUid)
+                if (foundLabel) {
+                    result.push(foundLabel.name)
+                }
+                return result
+            }, []) : "Loading..."
         },
         {
             title: "Notes",
@@ -76,10 +80,10 @@ const TransactionDetailDialog = ({
         },
         {
             title: "Repetition",
-            value: new RepetitionHelper(detailTransaction.repetition).toSpeakableText()
+            value: new RepetitionHelper(detailTransaction).toSpeakableText()
         }, {
             title: "Next repetition",
-            value: !detailTransaction.history && (detailTransaction.repetition.repetitionAmount || 2) > 1 ? speakableDate(getDateFromStandardString(new RepetitionHelper(transaction.repetition).calculateNextRepetitionDate(detailTransaction.date))) : null
+            value: !detailTransaction.history && (detailTransaction.repetition.repetitionAmount || 2) > 1 ? speakableDate(getDateFromStandardString(new RepetitionHelper(detailTransaction).calculateNextRepetitionDate()!)) : null
         }
     ]
 
@@ -90,7 +94,7 @@ const TransactionDetailDialog = ({
                 () => {
                     dialog.open(
                         new DialogModel(
-                            "Edit transaction",
+                            "Edit detailTransaction",
                             <CreateTransactionDialog transaction={detailTransaction} />
                         )
                     )
@@ -100,7 +104,7 @@ const TransactionDetailDialog = ({
                 "Copy",
                 () => {
                     navigator.clipboard.writeText(JSON.stringify(detailTransaction))
-                    toast.open("StorageItem copied to clipboard")
+                    toast.open("detailTransaction copied to clipboard")
                 }
             ),
             new ContentAction(

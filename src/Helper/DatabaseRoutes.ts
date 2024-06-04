@@ -4,6 +4,6 @@ export enum DatabaseRoutes {
     LABELS = "labels",
     TRANSACTION_PARTNERS = "transaction-partners",
     TRANSACTIONS = "transactions",
-    STANDARD_PRESETS = "transaction-presets/standard",
-    CUSTOM_PRESETS = "transaction-presets/custom",
+    PAST_TRANSACTIONS = "past-transactions",
+    PRESETS = "transaction-presets",
 }

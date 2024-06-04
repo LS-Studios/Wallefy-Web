@@ -1,19 +1,20 @@
-import {InputValueIdModel} from "../Data/Input/InputValueIdModel";
+import {InputNameValueModel} from "../Data/Input/InputNameValueModel";
+import {DBItem} from "../Data/DBItem";
 
-export const getInputValueUidByUid = (uid: string | null, options: InputValueIdModel[] | null, newValue?: string | null): InputValueIdModel | null => {
+export const getInputValueUidByUid = <T extends DBItem>(uid: string | null, options: InputNameValueModel<T>[] | null, newValue?: string | null): InputNameValueModel<T> | null => {
     if (options === null) return null
-    if (!uid && newValue) return new InputValueIdModel(newValue, null)
-    else return options.find(option => option.uid === uid) || null
+    if (!uid && newValue) return new InputNameValueModel<T>(newValue, null)
+    else return options.find(option => option.value?.uid === uid) || null
 }
 
-export const getInputValueUidsByUids = (uids: string[], options: InputValueIdModel[] | null, newValues?: string[]): InputValueIdModel[] | null => {
+export const getInputValueUidsByUids = <T extends DBItem>(uids: string[], options: InputNameValueModel<T>[] | null, newValues?: string[]): InputNameValueModel<T>[] | null => {
     if (options === null) return null
 
-    const newOptions: InputValueIdModel[] = options.filter(option => uids.includes(option.uid!))
+    const newOptions: InputNameValueModel<T>[] = options.filter(option => uids.includes(option.value?.uid!))
 
     if (newValues) {
-        newValues.forEach((newValue) => {
-            newOptions.push(new InputValueIdModel(newValue, null))
+        newValues.filter(newValue => !options.map(option => option.name).includes(newValue)).forEach(newValue => {
+            newOptions.push(new InputNameValueModel<T>(newValue, null))
         })
     }
 

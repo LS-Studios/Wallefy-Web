@@ -1,0 +1,44 @@
+@import "../../../../Data/Variables.scss";
+
+.transaction-overview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  gap: 10px;
+
+  border: 2px solid $outline-color;
+  border-radius: 12px;
+}
+
+.transaction-overview-card-title-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 8px;
+  gap: 8px;
+
+  position: relative;
+
+  font-weight: bold;
+  font-size: 20px;
+
+  :first-child {
+    position: absolute;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.transaction-overview-card-value-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  :first-child {
+    font-weight: bold;
+  }
+}

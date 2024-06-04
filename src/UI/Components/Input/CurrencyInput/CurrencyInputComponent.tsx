@@ -8,11 +8,13 @@ const CurrencyInputComponent = ({
     title,
     value,
     onValueChange,
+    allowNegativeValue = false,
     style,
 }: {
     title?: string,
     value: number | undefined | null,
     onValueChange: (value: number) => void,
+    allowNegativeValue?: boolean,
     style?: CSSProperties,
 }) => {
     const inputRef = React.createRef<HTMLInputElement>();
@@ -35,7 +37,7 @@ const CurrencyInputComponent = ({
             decimalsLimit={2}
             decimalScale={2}
             fixedDecimalLength={2}
-            allowNegativeValue={false}
+            allowNegativeValue={allowNegativeValue}
             onKeyDown={onKeyDown}
         />
         <span>EUR</span>

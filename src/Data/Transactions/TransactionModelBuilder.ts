@@ -29,8 +29,9 @@ export class TransactionModelBuilder {
         return this;
     }
 
-    setCategoryUid(categoryUid: string): TransactionModelBuilder {
-        this.model.categoryUid = categoryUid;
+    setCategory(category: string): TransactionModelBuilder {
+        this.model.categoryUid = category;
+        this.model.newCategory = category;
         return this;
     }
 
@@ -56,6 +57,7 @@ export class TransactionModelBuilder {
 
     setTransactionExecutor(executor: string | null): TransactionModelBuilder {
         this.model.transactionExecutorUid = executor;
+        this.model.newTransactionPartner = executor;
         return this;
     }
 
@@ -71,6 +73,7 @@ export class TransactionModelBuilder {
 
     setLabels(labels: string[]): TransactionModelBuilder {
         this.model.labels = labels;
+        this.model.newLabels = labels;
         return this;
     }
 

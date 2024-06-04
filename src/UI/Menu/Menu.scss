@@ -7,6 +7,8 @@
   top: 0;
   width: 300px;
 
+  z-index: 100;
+
   background-color: $primary;
 }
 
@@ -46,10 +48,17 @@
     margin: 0;
   }
 
+  #selected {
+    font-weight: bold;
+    opacity: 1;
+  }
+
   li {
     display: flex;
     justify-content: start;
     align-items: center;
+
+    opacity: 0.8;
 
     &:not(:last-child) {
       padding-bottom: 12px;

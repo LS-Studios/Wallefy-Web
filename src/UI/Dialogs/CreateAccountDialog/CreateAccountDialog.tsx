@@ -19,7 +19,7 @@ import {
 } from "../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../../Data/TransactionPartnerModel";
-import {InputValueIdModel} from "../../../Data/Input/InputValueIdModel";
+import {InputNameValueModel} from "../../../Data/Input/InputNameValueModel";
 import {getInputValueUidsByUids} from "../../../Helper/HandyFunctionHelper";
 import {CreateAccountInputErrorModel} from "../../../Data/Account/CreateAccountInputErrorModel";
 // @ts-ignore
@@ -39,13 +39,13 @@ const CreateAccountDialog = ({
         new InputOptionModel("Public", AccountVisibility.PUBLIC)
     ];
 
-    const [workAccount, setWorkAccount] = React.useState<AccountModel>(account || new AccountModel())
-    const [transactionPartners, setTransactionPartners] = React.useState<InputValueIdModel[] | null>(null)
+    const [workAccount, setWorkAccount] = React.useState<AccountModel>( structuredClone(account) || new AccountModel())
+    const [transactionPartners, setTransactionPartners] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
     const [inputError, setInputError] = React.useState<CreateAccountInputErrorModel>(new CreateAccountInputErrorModel())
 
     useEffect(() => {
         getDBItemsOnChange(DatabaseRoutes.TRANSACTION_PARTNERS, (partners: TransactionPartnerModel[]) => {
-            setTransactionPartners(partners.map(partner => new InputValueIdModel(partner.name, partner.uid)))
+            setTransactionPartners(partners.map(partner => new InputNameValueModel(partner.name, partner)))
         })
     }, []);
 
@@ -131,7 +131,7 @@ const CreateAccountDialog = ({
                     value={getInputValueUidsByUids(workAccount.userIds || [], transactionPartners) || []}
                     onValueChange={(value) => {
                         updateAccount((oldAccount) => {
-                            oldAccount.userIds = (value as InputValueIdModel[]).map(option => option.uid!);
+                            oldAccount.userIds = (value as InputNameValueModel<TransactionPartnerModel>[]).map(option => option.value?.uid!);
                             return oldAccount;
                         });
                     }}

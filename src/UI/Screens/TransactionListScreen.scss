@@ -1,4 +1,4 @@
-@import "../../../Data/Variables";
+@import "../../Data/Variables";
 
 .list-screen {
     display: flex;
@@ -20,7 +20,7 @@
         color: $text;
 
         padding: 12px;
-        border: 2px solid $primary;
+        border: 2px solid $stroke-color;
         border-radius: 24px;
 
         width: 200px;
@@ -31,12 +31,7 @@
         transition: 0.2s ease-in-out;
 
         &.selected {
-            border: 1px solid $primary_selected;
-
-            * {
-                transition: 0.2s ease-in-out;
-                //scale: 1.1;
-            }
+            border: 2px solid $outline-color;
         }
 
         &:hover {
@@ -50,7 +45,29 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 16px;
 
     width: 100%;
+}
+
+.screen-list-item {
+    width: 100%;
+
+    background-color: transparent;
+    padding: 12px;
+    outline: 2px solid $outline-color;
+    border-radius: 12px;
+    color: $text;
+
+    font-size: 16px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    box-sizing: border-box;
+
+    cursor: pointer;
+
+    transition: 0.2s ease-in-out;
 }

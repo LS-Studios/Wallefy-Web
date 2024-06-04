@@ -19,20 +19,16 @@ import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 const CreateTransactionScreen = () => {
     const dialog = useDialog()
 
-    const [standardPresets, setStandardPresets] = React.useState<TransactionPresetModel[]>([])
     const [presets, setPresets] = React.useState<TransactionPresetModel[]>([])
 
     useEffect(() => {
         // defaultPresets.forEach((preset) => {
-        //     addDBItem("transaction-presets/standard", preset)
+        //     addDBItem(DatabaseRoutes.PRESETS, preset)
         // })
     }, []);
 
     useEffect(() => {
-        getDBItemsOnChange(DatabaseRoutes.STANDARD_PRESETS, (presets: TransactionPresetModel[]) => {
-            setStandardPresets(presets)
-        })
-        getDBItemsOnChange(DatabaseRoutes.CUSTOM_PRESETS, (presets: TransactionPresetModel[]) => {
+        getDBItemsOnChange(DatabaseRoutes.PRESETS, (presets: TransactionPresetModel[]) => {
             setPresets(presets)
         })
     }, []);
@@ -40,17 +36,6 @@ const CreateTransactionScreen = () => {
     return (
         <div className="create-transaction">
             <h2>Vorlagen</h2>
-            <h3>Grundlegend</h3>
-            <div className="create-transaction-presets">
-                {standardPresets.map((preset, index) => (
-                    <CreateTransactionPresetSlot
-                        key={index}
-                        preset={preset}
-                        isBasic={true}
-                    />
-                ))}
-            </div>
-            <h3>Variable</h3>
             <div className="create-transaction-presets">
                 {presets.map((preset, index) => (
                     <CreateTransactionPresetSlot

@@ -1,9 +1,13 @@
 import React from 'react';
 import "./Divider.scss";
 
-const Divider = () => {
+const Divider = ({
+    useOutlineColor = false,
+}: {
+    useOutlineColor?: boolean;
+}) => {
     return (
-        <div className="divider" />
+        <div className={"divider" + (useOutlineColor ? " outlineColor" : "")} />
     );
 };
 

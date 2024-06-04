@@ -1,11 +1,12 @@
 import {DBItem} from "./DBItem";
+import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
 
-export class StorageItemModel<T extends DBItem> {
-    item: T;
-    name: string;
+export class StorageItemModel {
+    item: DBItem;
+    itemType: DatabaseRoutes;
 
-    constructor(item: T, name: string) {
+    constructor(item: DBItem, itemType: DatabaseRoutes) {
         this.item = item;
-        this.name = name;
+        this.itemType = itemType;
     }
 }

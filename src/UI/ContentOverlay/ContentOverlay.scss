@@ -1,15 +1,20 @@
 @import "../../Data/Variables.scss";
 
 .content-overlay {
+  //width: 100%;
   margin-left: 360px;
   margin-right: 60px;
 }
 
-.content-overlay-content {
-    padding: 24px;
+.content-overlay-header {
+  width: 100%;
+  background-color: $background;
+  position: sticky;
+  z-index: 10;
+  top: 0;
 }
 
-.content-overlay-header {
+.content-overlay-navigation {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -17,11 +22,11 @@
 
   margin: 0 42px;
 
-  .content-overlay-header-account {
+  .content-overlay-header-navigation-account {
     font-style: italic;
   }
 
-  .content-overlay-header-actions {
+  .content-overlay-header-navigation-actions {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -51,13 +56,7 @@
   }
 }
 
-.content-overlay-content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.content-overlay-content-header-title {
+.content-overlay-header-content-title {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -70,17 +69,21 @@
   font-weight: bold;
 }
 
-.content-overlay-content {
-  margin: 0 42px;
+.content-overlay-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin: 24px 42px;
 }
 
-.content-overlay-content-header-actions {
+.content-overlay-header-content-actions {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.content-overlay-content-header-actions-button-action {
+.content-overlay-header-content-actions-button {
   //border: 1px solid $stroke;
   background-color: $primary;
   border-radius: 24px;
@@ -108,7 +111,7 @@
   }
 }
 
-.content-overlay-content-header-actions-search-action {
+.content-overlay-header-content-actions-search-action {
   //border: 1px solid $stroke;
   background-color: $primary;
   border-radius: 24px;
@@ -137,7 +140,7 @@
     }
   }
 
-  .content-overlay-content-header-actions-search-icon {
+  .content-overlay-header-content-actions-search-icon {
     width: 22px;
     height: 22px;
     margin-right: 6px;

@@ -6,9 +6,11 @@ export class TransactionPresetModel implements DBItem {
     uid: string;
     icon: string | null;
     presetTransaction: TransactionModel;
+    name: string = "";
 
-    constructor(icon?: string, presetTransaction?: TransactionModel) {
-        this.uid = uuid();
+    constructor(icon: string, name: string, presetTransaction: TransactionModel, uid?: string) {
+        this.uid = uid || uuid();
+        this.name = name;
         this.icon = icon || null;
         this.presetTransaction = presetTransaction || new TransactionModel();
     }
