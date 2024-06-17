@@ -30,11 +30,6 @@ export function formatDateToStandardString(date: Date) {
     ].join('-');
 }
 
-export const getDateFromStandardString = (stringDate: string) => {
-    const splitList = stringDate.split("-")
-    return new Date(splitList[0] + "-" + splitList[1] + "-" + splitList[2])
-}
-
 export const getStartOfWeekDayValue = (date: Date) => {
     date = new Date(date)
     const day = date.getDay()

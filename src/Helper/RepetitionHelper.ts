@@ -1,5 +1,5 @@
 import {RepetitionRateType} from "../Data/Transactions/RepetitionRateType";
-import {formatDateToStandardString, getDateFromStandardString, getWeekDayNameShort} from "./DateHelper";
+import {formatDateToStandardString, getWeekDayNameShort} from "./DateHelper";
 import {DayOfWeekModel} from "../Data/Transactions/DayOfWeekModel";
 import {RepetitionModel} from "../Data/Transactions/RepetitionModel";
 import {deleteDBItem, deleteDBItemByUid} from "./AceBaseHelper";
@@ -71,10 +71,10 @@ export class RepetitionHelper {
             case RepetitionRateType.WEEK:
                 let nextDay = this.addDays(this.transactionDate, 1)
 
-                while (!this.repetition.repetitionDaysInWeek.includes((getDateFromStandardString(nextDay).getDay()) as DayOfWeekModel)) {
+                while (!this.repetition.repetitionDaysInWeek.includes((new Date(nextDay).getDay()) as DayOfWeekModel)) {
                     nextDay = this.addDays(nextDay, 1)
 
-                    if (this.repetition.repetitionRate && (getDateFromStandardString(nextDay).getDay()) === DayOfWeekModel.MONDAY) {
+                    if (this.repetition.repetitionRate && (new Date(nextDay).getDay()) === DayOfWeekModel.MONDAY) {
                         nextDay = this.addWeeks(nextDay, this.repetition.repetitionRate - 1)
                     }
                 }
@@ -141,7 +141,7 @@ export class RepetitionHelper {
     }
 
     private addDays(transactionDate: string, days: number) {
-        const result = getDateFromStandardString(transactionDate)
+        const result = new Date(transactionDate)
         result.setDate(result.getDate() + days);
         return formatDateToStandardString(result);
     }
@@ -151,13 +151,13 @@ export class RepetitionHelper {
     }
 
     private addMonths(transactionDate: string, months: number) {
-        const result = getDateFromStandardString(transactionDate)
+        const result = new Date(transactionDate)
         result.setMonth(result.getMonth() + months);
         return formatDateToStandardString(result);
     }
 
     private addYears(transactionDate: string, years: number) {
-        const result = getDateFromStandardString(transactionDate)
+        const result = new Date(transactionDate)
         result.setFullYear(result.getFullYear() + years);
         return formatDateToStandardString(result);
     }

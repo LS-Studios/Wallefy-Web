@@ -7,8 +7,8 @@ import {FilterModel} from "../../../Data/FilterModel";
 import {getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../../Data/TransactionPartnerModel";
-import {formatDateToStandardString, getDateFromStandardString} from "../../../Helper/DateHelper";
-import {calculateFutureTransactions, getTransactionAmount} from "../../../Helper/TransactionHelper";
+import {formatDateToStandardString} from "../../../Helper/DateHelper";
+import {calculateNFutureTransactions, getTransactionAmount} from "../../../Helper/TransactionHelper";
 import {TransactionType} from "../../../Data/Transactions/TransactionType";
 import LoadMoreButton from "./LoadMoreButton/LoadMoreButton";
 
@@ -40,7 +40,7 @@ const TransactionsScreen = ({
     useEffect(() => {
         switch (currentTab) {
             case 0:
-                getDBItemsOnChange(DatabaseRoutes.PAST_TRANSACTIONS, setHistoryTransactions)
+                getDBItemsOnChange(DatabaseRoutes.HISTORY_TRANSACTIONS, setHistoryTransactions)
                 break;
             default:
                 getDBItemsOnChange(DatabaseRoutes.TRANSACTIONS, setPresetTransactions)
@@ -66,14 +66,12 @@ const TransactionsScreen = ({
         if (futureTransactions.length >= futureTransactionsAmount) return
         if (currentTab !== 2) return
 
-        const {nextFutureTransactions, transactionQueue} = calculateFutureTransactions(futureTransactionsQueue || presetTransactions, futureTransactionsAmount - futureTransactions.length);
+        const {nextFutureTransactions, transactionQueue} = calculateNFutureTransactions(futureTransactionsQueue || presetTransactions, futureTransactionsAmount - futureTransactions.length);
         setFutureTransactions([...futureTransactions, ...nextFutureTransactions])
         setFutureTransactionsQueue(transactionQueue)
     }, [presetTransactions, futureTransactionsAmount]);
 
     useEffect(() => {
-        const transactionGroups: TransactionGroupModel[] = [];
-
         let filteredTransactions = []
 
         //Search
@@ -83,7 +81,7 @@ const TransactionsScreen = ({
         switch (sortValue) {
             case SortType.NEWEST_FIRST:
                 filteredTransactions.sort((a, b) => {
-                    return getDateFromStandardString(a.date) > getDateFromStandardString(b.date) ? 1 : -1;
+                    return new Date(a.date) > new Date(b.date) ? 1 : -1;
                 })
                 break;
             case SortType.PRICE_HIGH_TO_LOW:
@@ -116,7 +114,7 @@ const TransactionsScreen = ({
                 }
             }
             if (filterValue.dateRange) {
-                if (getDateFromStandardString(transaction.date) < getDateFromStandardString(filterValue.dateRange.startDate) || getDateFromStandardString(transaction.date) > getDateFromStandardString(filterValue.dateRange.endDate)) {
+                if (new Date(transaction.date) < new Date(filterValue.dateRange.startDate) || new Date(transaction.date) > new Date(filterValue.dateRange.endDate)) {
                     return false
                 }
             }
@@ -139,44 +137,36 @@ const TransactionsScreen = ({
             return
         }
 
-        let date = filteredTransactions[0].date;
-        let subTransactions = [filteredTransactions[0]];
+        filteredTransactions.sort((a, b) => new Date(a.date) > new Date(b.date) ? 1 : -1);
 
-        filteredTransactions.forEach((transaction, index) => {
-            if (index === 0) return;
+        const transactionMap: { [key: string]: TransactionModel[] } = {};
 
-            if (transaction.date === date) {
-                subTransactions.push(transaction);
-            } else {
-                subTransactions.sort((a, b) => {
-                    return a.name > b.name ? 1 : -1;
-                })
-                transactionGroups.push(
-                    new TransactionGroupModel(
-                        date,
-                        subTransactions,
-                        getDateFromStandardString(date).getMonth() !== getDateFromStandardString(transaction.date).getMonth() ||
-                            getDateFromStandardString(date).getFullYear() !== getDateFromStandardString(transaction.date).getFullYear() ||
-                                transactionGroups.length === 0
-                    )
-                );
-                date = transaction.date;
-                subTransactions = [transaction]
+        filteredTransactions.forEach((transaction) => {
+            if (!transactionMap[transaction.date]) {
+                transactionMap[transaction.date] = []
             }
-        });
-
-        subTransactions.sort((a, b) => {
-            return a.name > b.name ? 1 : -1;
+            transactionMap[transaction.date].push(transaction)
         })
-        console.log(date, subTransactions)
-        transactionGroups.push(
-            new TransactionGroupModel(
+
+        let previousMonth: number | null = null;
+        let previousYear: number | null = null;
+
+        const transactionGroups = Object.keys(transactionMap).map(date => {
+            const dateObj = new Date(date);
+            const currentMonth = dateObj.getMonth();
+            const currentYear = dateObj.getFullYear();
+
+            const isStartOfMonth = previousMonth !== currentMonth || previousYear !== currentYear;
+
+            previousMonth = currentMonth;
+            previousYear = currentYear;
+
+            return {
                 date,
-                subTransactions,
-                getDateFromStandardString(date).getMonth() !== getDateFromStandardString(transactionGroups[transactionGroups.length - 1].date).getMonth() ||
-                getDateFromStandardString(date).getFullYear() !== getDateFromStandardString(transactionGroups[transactionGroups.length - 1].date).getFullYear()
-            )
-        );
+                transactions: transactionMap[date],
+                isStartOfMonth
+            };
+        });
 
         setTransactionGroups(transactionGroups);
     }, [transactions, searchValue, sortValue, filterValue]);

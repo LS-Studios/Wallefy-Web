@@ -17,7 +17,6 @@ import {TransactionModel} from "../../../../Data/Transactions/TransactionModel";
 import {RepetitionModel} from "../../../../Data/Transactions/RepetitionModel";
 import {
     formatDateToStandardString,
-    getDateFromStandardString,
     getWeekDayNameShort
 } from "../../../../Helper/DateHelper";
 import {useToast} from "../../../../Providers/Toast/ToastProvider";
@@ -145,7 +144,7 @@ const RepetitionTab = ({
     useEffectNotInitial(() => {
         if (workTransaction.repetition.repetitionRateType === RepetitionRateType.WEEK) {
             updateTransaction((oldTransaction) => {
-                let date = getDateFromStandardString(oldTransaction.date);
+                let date = new Date(oldTransaction.date);
                 oldTransaction.date = formatDateToStandardString(adjustDateBasedOnWeekDay(date, workTransaction.repetition.repetitionDaysInWeek[0]));
                 return oldTransaction;
             });
@@ -163,7 +162,7 @@ const RepetitionTab = ({
             }
 
             updateTransaction((oldTransaction) => {
-                let date = getDateFromStandardString(oldTransaction.date);
+                let date = new Date(oldTransaction.date);
                 oldTransaction.date = formatDateToStandardString(adjustDateBasedOnWeekDay(date, workTransaction.repetition.repetitionDaysInWeek[0]));
                 return oldTransaction;
             });
@@ -303,7 +302,7 @@ const RepetitionTab = ({
             { workTransaction.repetition.executionType !== ExecutionType.NOW && !workTransaction.repetition.isPending && <>
                 <DateInputComponent
                     title={workTransaction.repetition.executionType === ExecutionType.LATER ? "Start date" : "Execution date"}
-                    value={getDateFromStandardString(workTransaction.date)}
+                    value={new Date(workTransaction.date)}
                     onValueChange={(value) => {
                         updateTransaction((oldTransaction) => {
                             oldTransaction.date = formatDateToStandardString(value);

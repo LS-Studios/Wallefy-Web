@@ -1,0 +1,11 @@
+.transaction-overview-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.transaction-overview-screen-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}

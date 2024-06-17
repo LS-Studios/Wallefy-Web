@@ -38,8 +38,8 @@ export const updateDBItem = <T extends DBItem>(path: string, item: T) => {
     })
 }
 
-export const getDBItemOnChange = <T extends DBItem>(path: string, onChange: (item: T | null) => void) => {
-    getDatabase().ref(path).on('value', (snapshot: DataSnapshot) => {
+export const getDBItemOnChange = <T extends DBItem>(rootPath: string, itemUid: string, onChange: (item: T | null) => void) => {
+    getDatabase().ref(rootPath).child(itemUid).on('value', (snapshot: DataSnapshot) => {
         if (!snapshot.exists()) {
             onChange(null)
             return;

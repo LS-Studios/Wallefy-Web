@@ -3,7 +3,7 @@ import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './DateInputComponent.scss';
 import {MdDateRange} from "react-icons/md";
 import DatePicker from "./DatePicker/DatePicker";
-import {formatDate, formatDateToStandardString, getDateFromStandardString} from "../../../../Helper/DateHelper";
+import {formatDate, formatDateToStandardString} from "../../../../Helper/DateHelper";
 import DropDialog from "../../Dropdialog/DropDialog";
 import {DateObject} from "react-multi-date-picker";
 import {DayOfWeekModel} from "../../../../Data/Transactions/DayOfWeekModel";
@@ -57,7 +57,7 @@ const DateInputComponent = ({
     }, [value]);
 
     useEffect(() => {
-        onValueChange(getDateFromStandardString(pickerDate));
+        onValueChange(new Date(pickerDate));
     }, [pickerDate]);
 
     const dateInput = <input

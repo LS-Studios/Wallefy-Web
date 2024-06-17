@@ -1,0 +1,23 @@
+@import "../../../../../Data/Variables.scss";
+
+.chart-tool-tip {
+  position: absolute;
+  z-index: 1000;
+  background-color: $primary;
+  border: 1px solid $stroke-color;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  width: 200px;
+
+  left: 20px;
+  top: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  span {
+    padding: 8px;
+  }
+}

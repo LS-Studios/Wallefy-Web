@@ -19,7 +19,7 @@ import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import {
     addDBItem,
-    getDBItemByUid,
+    getDBItemByUid, getDBItemOnChange,
     getDBItemsOnChange,
     updateDBItem
 } from "../../../Helper/AceBaseHelper";
@@ -49,7 +49,7 @@ const CreateTransactionDialog = ({
     const [presetIcon, setPresetIcon] = React.useState<InputNameValueModel<string> | null>(null)
     const [presetName, setPresetName] = React.useState<string>("")
 
-    const [workTransaction, setWorkTransaction] = React.useState<TransactionModel>(structuredClone(transaction) || new TransactionModel())
+    const [workTransaction, setWorkTransaction] = React.useState<TransactionModel>(new TransactionModel())
     const [inputError, setInputError] = React.useState<CreateTransactionInputErrorModel>(new CreateTransactionInputErrorModel())
 
     const [labels, setLabels] = React.useState<LabelModel[]>([])
@@ -164,6 +164,12 @@ const CreateTransactionDialog = ({
     }
 
     useEffect(() => {
+        if (transaction) {
+            getDBItemOnChange(DatabaseRoutes.TRANSACTIONS, transaction.uid, (changedTransaction) => {
+                setWorkTransaction(changedTransaction as TransactionModel)
+            })
+        }
+
         getDBItemsOnChange(DatabaseRoutes.LABELS, setLabels)
     }, []);
 

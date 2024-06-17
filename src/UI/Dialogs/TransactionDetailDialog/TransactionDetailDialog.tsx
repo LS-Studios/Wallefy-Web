@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {TransactionModel} from "../../../Data/Transactions/TransactionModel";
 import TextInputComponent from "../../Components/Input/TextInput/TextInputComponent";
-import {formatDate, getDateFromStandardString, speakableDate} from "../../../Helper/DateHelper";
+import {formatDate, speakableDate} from "../../../Helper/DateHelper";
 
 import './TransactionDetailDialog.scss';
 import {TransactionType} from "../../../Data/Transactions/TransactionType";
@@ -58,7 +58,7 @@ const TransactionDetailDialog = ({
         },
         {
             title: "Date",
-            value: speakableDate(getDateFromStandardString(detailTransaction.date))
+            value: speakableDate(new Date(detailTransaction.date))
         },
         {
             title: "Category",
@@ -83,7 +83,7 @@ const TransactionDetailDialog = ({
             value: new RepetitionHelper(detailTransaction).toSpeakableText()
         }, {
             title: "Next repetition",
-            value: !detailTransaction.history && (detailTransaction.repetition.repetitionAmount || 2) > 1 ? speakableDate(getDateFromStandardString(new RepetitionHelper(detailTransaction).calculateNextRepetitionDate()!)) : null
+            value: !detailTransaction.history && (detailTransaction.repetition.repetitionAmount || 2) > 1 ? speakableDate(new Date(new RepetitionHelper(detailTransaction).calculateNextRepetitionDate()!)) : null
         }
     ]
 

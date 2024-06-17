@@ -12,7 +12,7 @@ import InputBaseComponent from "../../Components/Input/InputBase/InputBaseCompon
 import {TransactionModel} from "../../../Data/Transactions/TransactionModel";
 import {DateRange} from "../../../Data/DateRange";
 import DateInputComponent from "../../Components/Input/DateInputComponent/DateInputComponent";
-import {formatDateToStandardString, getDateFromStandardString} from "../../../Helper/DateHelper";
+import {formatDateToStandardString} from "../../../Helper/DateHelper";
 import AutoCompleteInputComponent from "../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
 import {PriceRange} from "../../../Data/PriceRange";
 import CurrencyInputComponent from "../../Components/Input/CurrencyInput/CurrencyInputComponent";
@@ -129,7 +129,7 @@ const FilterTransactionsDialog = ({
             >
                 <div className="filter-transaction-dialog-date-range">
                     <DateInputComponent
-                        value={filter.dateRange ? getDateFromStandardString(filter.dateRange!.startDate) : new Date()}
+                        value={filter.dateRange ? new Date(filter.dateRange!.startDate) : new Date()}
                         onValueChange={(value) => {
                             updateFilter((oldFilter) => {
                                 oldFilter.dateRange = new DateRange(formatDateToStandardString(value), oldFilter.dateRange?.endDate || formatDateToStandardString(new Date()));
@@ -139,7 +139,7 @@ const FilterTransactionsDialog = ({
                     />
                     <span>to</span>
                     <DateInputComponent
-                        value={filter.dateRange ? getDateFromStandardString(filter.dateRange!.endDate) : new Date()}
+                        value={filter.dateRange ? new Date(filter.dateRange!.endDate) : new Date()}
                         onValueChange={(value) => {
                             updateFilter((oldFilter) => {
                                 oldFilter.dateRange = new DateRange(oldFilter.dateRange?.startDate || formatDateToStandardString(new Date()), formatDateToStandardString(value));

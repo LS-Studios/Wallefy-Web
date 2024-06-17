@@ -5,11 +5,11 @@ $outline-color: #797979;
 $stroke-color: rgba(204, 204, 204, 0.2);
 $selected-stroke-color: rgba(255, 255, 255, 0.5);
 $text: #CCCCCC;
-$income_color: #425e2f;
-$income_text_color: #77f329;
-$expenses_color: #5e2f31;
-$expenses_text_color: #ff0000;
-$error_color: #c43c3c;
+$income-color: #425e2f;
+$income-text-color: #77f329;
+$expenses-color: #5e2f31;
+$expenses-text-color: #ff0000;
+$error-color: #c43c3c;
 
 //Bright
 //$primary: #ffffff;
@@ -24,13 +24,22 @@ $error_color: #c43c3c;
 //$expenses_text_color: #6b0000;
 //$error_color: #c43c3c;
 
+$income-bar-color: #497538;
+$income-bar-past-color: #99975252;
+$expenses-bar-color: #975252;
+$expenses-bar-past_color: #99497538;
+
 :export {
-    income_color: $income_color;
-    expenses_color: $expenses_color;
+    income_color: $income-color;
+    expenses_color: $expenses-color;
     stroke_color: $stroke-color;
     text_color: $text;
     primary: $primary;
-    errorColor: $error_color;
+    error_color: $error-color;
+    income_bar_color: $income-bar-color;
+    income_bar_past_color: $income-bar-past-color;
+    expenses_bar_color: $expenses-bar-color;
+    expenses_bar_past_color: $expenses-bar-past_color;
 }
 
 .text-input {
