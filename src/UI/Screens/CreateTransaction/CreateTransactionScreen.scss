@@ -10,3 +10,9 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px
 }
+
+.create-transaction-no-presets {
+  width: 400px;
+  font-size: 18px;
+  font-style: italic;
+}

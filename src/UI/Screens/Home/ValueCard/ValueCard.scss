@@ -1,0 +1,36 @@
+@import "../../../../Data/Variables.scss";
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  border: 2px solid var(--outline-color);
+  border-radius: 12px;
+}
+
+.card-title-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 8px;
+  gap: 8px;
+
+  position: relative;
+
+  font-weight: bold;
+  font-size: 20px;
+
+  :first-child {
+    position: absolute;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.value-card-value {
+  font-size: 20px;
+  padding: 8px;
+}

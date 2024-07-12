@@ -1,32 +1,36 @@
 import React from 'react';
 import './Transaction.scss';
-import {TransactionModel} from "../../../../Data/Transactions/TransactionModel";
+import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
 // @ts-ignore
 import variables from "../../../../Data/Variables.scss"
-import {formatCurrency} from "../../../../Helper/CurrencyHelper";
+import {formatCurrency, formatCurrencyFromTransaction} from "../../../../Helper/CurrencyHelper";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import TransactionDetailDialog from "../../../Dialogs/TransactionDetailDialog/TransactionDetailDialog";
-import {DialogModel} from "../../../../Data/Providers/DialogModel";
-import {TransactionType} from "../../../../Data/Transactions/TransactionType";
-import {TransactionPartnerModel} from "../../../../Data/TransactionPartnerModel";
+import {DialogModel} from "../../../../Data/DataModels/DialogModel";
+import {TransactionType} from "../../../../Data/EnumTypes/TransactionType";
+import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/TransactionPartnerModel";
+import {useSettings} from "../../../../Providers/SettingsProvider";
 
 const Transaction = ({
     transaction,
     transactionPartners,
     isStart,
     isEnd,
+    translate
  }: {
     transaction: TransactionModel,
     transactionPartners: TransactionPartnerModel[] | null,
     isStart: boolean,
     isEnd: boolean,
+    translate: (string: string) => string
 }) => {
     const dialog = useDialog();
+    const settings = useSettings()
 
     const openTransactionDetail = () => {
         dialog.open(
             new DialogModel(
-                "Transaction detail",
+                translate("transaction-details"),
                 <TransactionDetailDialog
                     transaction={transaction}
                     preFetchedTransactionPartners={transactionPartners}
@@ -52,7 +56,7 @@ const Transaction = ({
             <span
                 id="transaction-amount"
                 className={transaction.transactionType === TransactionType.INCOME ? "transaction-income" : "transaction-expense"}
-            >{(transaction.transactionType === TransactionType.EXPENSE ? "-" : "") + formatCurrency(transaction.transactionAmount || 0, transaction.currencyCode)}</span>
+            >{formatCurrencyFromTransaction(transaction, settings?.language)}</span>
         </div>
     );
 };

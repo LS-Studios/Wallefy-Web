@@ -1,73 +1,121 @@
-//Dark
-$primary: #2C3A47;
-$background: #11161B;
-$outline-color: #797979;
-$stroke-color: rgba(204, 204, 204, 0.2);
-$selected-stroke-color: rgba(255, 255, 255, 0.5);
-$text: #CCCCCC;
-$income-color: #425e2f;
-$income-text-color: #77f329;
-$expenses-color: #5e2f31;
-$expenses-text-color: #ff0000;
-$error-color: #c43c3c;
+:root {
+    --primary-dark: #2C3A47;
+    --primary-light: #ffffff;
+    --background-dark: #11161B;
+    --background-light: #f5f5f5;
+    --outline-color: #797979;
+    --stroke-color-dark: rgba(204, 204, 204, 0.2);
+    --stroke-color-light: #dddddd;
+    --disabled-stroke-color: rgba(204, 204, 204, 0.15);
+    --selected-stroke-color: rgba(255, 255, 255, 0.5);
+    --text-dark: #CCCCCC;
+    --text-light: #292929;
+    --income-color: #425e2f;
+    --income-text-color: #77f329;
+    --expenses-color: #5e2f31;
+    --expenses-text-color: #ff0000;
+    --error-color: #c43c3c;
+    --income-bar-color: #497538;
+    --income-bar-not-selected-color: rgba(73, 117, 56, 0.5);
+    --income-bar-past-color: #99975252;
+    --income-bar-past-not-selected-color: #9997522F;
+    --expenses-bar-color: #975252;
+    --expenses-bar-not-selected-color: #97525208;
+    --expenses-bar-past_color: #99497538;
+    --expenses-bar-not-selected-past_color: #9949751A
+}
 
-//Bright
-//$primary: #ffffff;
-//$background: #f5f5f5;
-//$outline-color: #565656;
-//$stroke-color: #dddddd;
-//$selected-stroke-color: #a6a6a6;
-//$text: #292929;
-//$income_color: #e4eddb;
-//$income_text_color: #356b00;
-//$expenses_color: #eddbdb;
-//$expenses_text_color: #6b0000;
-//$error_color: #c43c3c;
+.dark-theme {
+    --primary: var(--primary-dark);
+    --background: var(--background-dark);
+    --outline-color: #797979;
+    --stroke-color: var(--stroke-color-dark);
+    --disabled-stroke-color: rgba(204, 204, 204, 0.15);
+    --selected-stroke-color: rgba(255, 255, 255, 0.5);
+    --text: var(--text-dark);
+    --income-color: #425e2f;
+    --income-text-color: #77f329;
+    --expenses-color: #5e2f31;
+    --expenses-text-color: #ff0000;
 
-$income-bar-color: #497538;
-$income-bar-past-color: #99975252;
-$expenses-bar-color: #975252;
-$expenses-bar-past_color: #99497538;
+    --date-picker-calender-primary: #cccccc;
+    --date-picker-calender-disabled: #7c8389;
+    --date-picker-calender-bg: #2C3A47;
+    --date-picker-calender-shadow: #2c3a47;
+    --date-picker-calender-today: #4c5762;
+    --date-picker-calender-selected: #6c757d;
+    --date-picker-calender-hover: #5b606b;
+    --date-picker-calender-deselect: #cccccc;
+}
+
+.light-theme {
+    --primary: var(--primary-light);
+    --background: var(--background-light);
+    --outline-color: #565656;
+    --stroke-color: #dddddd;
+    --disabled-stroke-color: #dddddd;
+    --selected-stroke-color: #8f8f8f;
+    --text: var(--text-light);
+    --income_color: #e4eddb;
+    --income_text_color: #356b00;
+    --expenses_color: #eddbdb;
+    --expenses_text_color: #6b0000;
+
+    --date-picker-calender-primary: #292929;
+    --date-picker-calender-disabled: #b0b0b0;
+    --date-picker-calender-bg: #ffffff;
+    --date-picker-calender-shadow: #ffffff;
+    --date-picker-calender-today: #dddddd;
+    --date-picker-calender-selected: #dddddd;
+    --date-picker-calender-hover: #dddddd;
+    --date-picker-calender-deselect: #292929;
+}
 
 :export {
-    income_color: $income-color;
-    expenses_color: $expenses-color;
-    stroke_color: $stroke-color;
-    text_color: $text;
-    primary: $primary;
-    error_color: $error-color;
-    income_bar_color: $income-bar-color;
-    income_bar_past_color: $income-bar-past-color;
-    expenses_bar_color: $expenses-bar-color;
-    expenses_bar_past_color: $expenses-bar-past_color;
+    background_color: var(--background);
+    income_color: var(--income-color);
+    expenses_color: var(--expenses-color);
+    stroke_color: var(--stroke-color);
+    disabled_stroke_color: var(--disabled-stroke-color);
+    text_color: var(--text);
+    primary: var(--primary);
+    error_color: var(--error-color);
+    income_bar_color: var(--income-bar-color);
+    income_bar_not_selected_color: var(--income-bar-not-selected-color);
+    income_bar_past_color: var(--income-bar-past-color);
+    income_bar_past_not_selected_color: var(--income-bar-past-not-selected-color);
+    expenses_bar_color: var(--expenses-bar-color);
+    expenses_bar_not_selected_color: var(--expenses-bar-not-selected-color);
+    expenses_bar_past_color: var(--expenses-bar-past_color);
+    expenses_bar_not_selected_past_color: var(--expenses-bar-not-selected-past_color);
 }
 
 .text-input {
     width: 100%;
     background-color: transparent;
-    color: $text;
+    color: var(--text);
     font-size: 16px;
     outline: none;
     border: none;
 
-    background-image: linear-gradient($stroke-color, $stroke-color);
+    background-image: linear-gradient(var(--stroke-color), var(--stroke-color));
     background-position: bottom 0px center;
     background-size: calc(100%) 1px;
     background-repeat: no-repeat;
 
     &:focus {
-        background-image: linear-gradient($selected-stroke-color, $selected-stroke-color);
+        background-image: linear-gradient(var(--selected-stroke-color), var(--selected-stroke-color));
     }
 }
 
 .box-input {
     width: 100%;
     background-color: transparent;
-    color: $text;
+    color: var(--text);
     font-size: 16px;
     outline: none;
 
-    border: 2px solid $stroke-color;
+    border: 2px solid var(--stroke-color);
     border-radius: 12px;
     padding: 8px;
 

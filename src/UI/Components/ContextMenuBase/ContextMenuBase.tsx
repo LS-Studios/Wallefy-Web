@@ -1,19 +1,20 @@
 import React from 'react';
-import {ContextMenuModel} from "../../../Data/Providers/ContextMenuModel";
+import {ContextMenuModel} from "../../../Data/DataModels/ContextMenuModel";
 
 import './ContextMenuBase.scss';
-import {ContentAction} from "../../../Data/ContentAction/ContentAction";
-import { useClickAway } from "@uidotdev/usehooks";
+import {useClickAway} from "@uidotdev/usehooks";
+import Spinner from "../Spinner/Spinner";
+import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
 
 const ContextMenuBase = ({
     contextMenu,
     setContextMenu
 }: {
     contextMenu: ContextMenuModel,
-    setContextMenu: (contextMenu: ContextMenuModel) => void
+    setContextMenu: (contextMenu: ContextMenuModel | null) => void
 }) => {
     const ref = useClickAway(() => {
-        setContextMenu(new ContextMenuModel())
+        setContextMenu(null)
     }) as React.RefObject<HTMLDivElement>
 
     return (
@@ -30,12 +31,14 @@ const ContextMenuBase = ({
                     key={i}
                     className={"context-menu-base-option " + (option.disabled ? "disabled" : "")}
                     onClick={() => {
-                        setContextMenu(new ContextMenuModel())
+                        setContextMenu(null)
                         option.action()
                     }}
                 >
-                    {option.icon}
-                    <span>{option.name}</span>
+                    { option.loading ? <Spinner type={SpinnerType.CYCLE} /> : <>
+                        {option.icon}
+                        <span>{option.name}</span>
+                    </> }
                 </div>
             ))}
         </div>

@@ -1,0 +1,23 @@
+@import "../../../../Data/Variables.scss";
+
+.button-input {
+  padding: 8px 12px;
+  border: 2px solid var(--stroke-color);
+  border-radius: 12px;
+
+  background-color: transparent;
+  color: var(--text);
+
+  width: 100%;
+  font-size: 18px;
+
+  box-sizing: border-box;
+
+  cursor: pointer;
+
+  transition: 0.2s ease-in-out;
+
+  &:hover {
+    border: 2px solid var(--selected-stroke-color);
+  }
+}

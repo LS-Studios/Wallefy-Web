@@ -1,10 +1,18 @@
-import React, {PropsWithChildren} from 'react';
+import React, {PropsWithChildren, useEffect} from 'react';
 import './ContentOverlay.scss';
 import {MdAddCircleOutline, MdCreate, MdOutlineHome, MdPowerSettingsNew, MdSearch} from "react-icons/md";
 import {ContentAction} from "../../Data/ContentAction/ContentAction";
 import {ContentActionInterface} from "../../Data/ContentAction/ContentActionInterface";
-import {ContentActionType} from "../../Data/ContentAction/ContentActionType";
+import {ContentActionType} from "../../Data/EnumTypes/ContentActionType";
 import {ContentSearchAction} from "../../Data/ContentAction/ContentSearchAction";
+import {AccountModel} from "../../Data/DatabaseModels/AccountModel";
+import {getDBItemOnChange, getDBItemsOnChange, getDBObject, setDBObject} from "../../Helper/AceBaseHelper";
+import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
+import {SettingsModel} from "../../Data/DataModels/SettingsModel";
+import {useNavigate} from "react-router-dom";
+import {useTranslation} from "../../CustomHooks/useTranslation";
+import {useCurrentAccount} from "../../Providers/AccountProvider";
+import Menu from "../Menu/Menu";
 
 const ContentOverlay = ({
     title,
@@ -16,16 +24,24 @@ const ContentOverlay = ({
     titleIcon: React.ReactNode;
     actions: ContentActionInterface[];
 }>) => {
-    return (
+    const translate = useTranslation()
+    const navigate = useNavigate()
+
+    const currentAccount = useCurrentAccount()
+
+    return <>
+        <Menu />
         <div className="content-overlay">
             <div className="content-overlay-header">
                 <div className="content-overlay-navigation">
-                    <div className="content-overlay-header-navigation-account">
-                        Privates Konto
+                    <div className="content-overlay-header-navigation-account" onClick={() => navigate("/accounts")}>
+                        {currentAccount?.name}
                     </div>
                     <div className="content-overlay-header-navigation-actions">
-                        <a><MdOutlineHome /> Home</a>
-                        <a><MdPowerSettingsNew /> Logout</a>
+                        <a onClick={() => navigate("/home")}><MdOutlineHome/> {translate("home")}</a>
+                        <a onClick={() => {
+                            setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
+                        }}><MdPowerSettingsNew /> {translate("logout")}</a>
                     </div>
                 </div>
                 <div className="content-overlay-header-content">
@@ -61,7 +77,7 @@ const ContentOverlay = ({
                 { children }
             </div>
         </div>
-    );
+    </>
 };
 
 export default ContentOverlay;

@@ -1,5 +1,37 @@
 @import "../../../../Data/Variables.scss";
 
+.date-input-component-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &.text {
+    @extend .text-input;
+    box-sizing: border-box;
+  }
+  &.box {
+    @extend .box-input;
+  }
+
+  :last-child {
+    margin-left: 8px;
+    width: 24px;
+    height: 24px;
+    opacity: 0.8;
+  }
+
+  box-sizing: border-box;
+
+  .date-input-component-input {
+    &.text {
+      background-image: none;
+    }
+    &.box {
+      @extend .box-input;
+    }
+  }
+}
+
 .date-input-component-input {
   transition: 0.2s ease-in-out;
 

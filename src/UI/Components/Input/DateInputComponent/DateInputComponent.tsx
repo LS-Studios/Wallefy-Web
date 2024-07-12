@@ -1,12 +1,12 @@
 import React, {CSSProperties, useEffect, useState} from 'react';
 import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './DateInputComponent.scss';
-import {MdDateRange} from "react-icons/md";
+import {MdCalendarMonth, MdDateRange} from "react-icons/md";
 import DatePicker from "./DatePicker/DatePicker";
-import {formatDate, formatDateToStandardString} from "../../../../Helper/DateHelper";
+import {formatDate, formatDateToStandardString, getMonthAndYear} from "../../../../Helper/DateHelper";
 import DropDialog from "../../Dropdialog/DropDialog";
 import {DateObject} from "react-multi-date-picker";
-import {DayOfWeekModel} from "../../../../Data/Transactions/DayOfWeekModel";
+import {DayOfWeekModel} from "../../../../Data/DataModels/Reptition/DayOfWeekModel";
 
 const DateInputComponent = ({
     title,
@@ -14,14 +14,16 @@ const DateInputComponent = ({
     onValueChange,
     minDate,
     maxDate,
-    disabledWeekDays
+    disabledWeekDays,
+    onlyMonthPicker
 }: {
     title?: string,
     value: Date,
     onValueChange: (value: Date) => void,
     minDate?: string | number | Date | DateObject | undefined,
     maxDate?: string | number | Date | DateObject | undefined,
-    disabledWeekDays?: DayOfWeekModel[] | undefined
+    disabledWeekDays?: DayOfWeekModel[] | undefined,
+    onlyMonthPicker?: boolean
 }) => {
     const inputRef = React.createRef<HTMLInputElement>();
 
@@ -62,16 +64,21 @@ const DateInputComponent = ({
 
     const dateInput = <input
         ref={inputRef}
-        className={"date-input-component-input " + (title ? "text" : "box") }
+        className={"date-input-component-input " + (title ? "text" : "box")}
         onClick={openDatePicker}
-        type="date"
+        type={onlyMonthPicker ? "text" : "date"}
         spellCheck="false"
         autoComplete="false"
-        value={pickerDate}
+        value={onlyMonthPicker ? getMonthAndYear(new Date(pickerDate), "DE") : pickerDate}
         onChange={onInputDateChange}
-        onBlur={() =>inputRef.current?.blur()}
+        onBlur={() => inputRef.current?.blur()}
         onKeyDown={onKeyDown}
     />
+
+    const dateInputContainer = onlyMonthPicker ? <div className={"date-input-component-input-container " + (title ? "text" : "box")}>
+        {dateInput}
+        <MdCalendarMonth onClick={openDatePicker}/>
+    </div> : dateInput
 
     return (
         <DropDialog
@@ -84,12 +91,13 @@ const DateInputComponent = ({
                     minDate={minDate}
                     maxDate={maxDate}
                     disabledWeekDays={disabledWeekDays}
+                    onlyMonthPicker={onlyMonthPicker}
                 />
             }
         >
-            { title ? <InputBaseComponent title={title}>
-                { dateInput }
-            </InputBaseComponent> : dateInput }
+            {title ? <InputBaseComponent title={title} onClick={openDatePicker}>
+                { dateInputContainer }
+            </InputBaseComponent> : dateInputContainer}
         </DropDialog>
     );
 };

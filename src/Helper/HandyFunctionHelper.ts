@@ -1,5 +1,5 @@
-import {InputNameValueModel} from "../Data/Input/InputNameValueModel";
-import {DBItem} from "../Data/DBItem";
+import {InputNameValueModel} from "../Data/DataModels/Input/InputNameValueModel";
+import {DBItem} from "../Data/DatabaseModels/DBItem";
 
 export const getInputValueUidByUid = <T extends DBItem>(uid: string | null, options: InputNameValueModel<T>[] | null, newValue?: string | null): InputNameValueModel<T> | null => {
     if (options === null) return null

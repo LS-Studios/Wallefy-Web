@@ -1,9 +1,11 @@
 import "./DialogBase.scss"
 
-import React from 'react';
+import React, {useRef} from 'react';
 import {PropsWithChildren} from "react";
 import {MdClose} from "react-icons/md";
 import Divider from "../../Components/Divider/Divider";
+import {useClickAway} from "@uidotdev/usehooks";
+import {ContextMenuModel} from "../../../Data/DataModels/ContextMenuModel";
 
 const DialogBase = ({
     title,

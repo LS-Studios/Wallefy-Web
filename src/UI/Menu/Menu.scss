@@ -9,14 +9,14 @@
 
   z-index: 100;
 
-  background-color: $primary;
+  background-color: var(--primary);
 }
 
 .menu-app-title {
   padding: 12px 24px;
   font-size: 1.5em;
   font-weight: bold;
-  color: $text;
+  color: var(--text);
 }
 
 .menu-divider {
@@ -34,7 +34,7 @@
 }
 
 .menu-navigation {
-  padding: 12px 24px;
+  padding: 12px 0;
 
   &.main ul {
     display: flex;
@@ -58,12 +58,24 @@
     justify-content: start;
     align-items: center;
 
+    width: 100%;
+
+    font-size: 18px;
+
     opacity: 0.8;
 
-    &:not(:last-child) {
-      padding-bottom: 12px;
-      cursor: pointer;
+    * {
+        margin-right: 12px
     }
+
+    padding-left: 18px;
+
+    box-sizing: border-box;
+
+    padding-top: 6px;
+    padding-bottom: 6px;
+
+    cursor: pointer;
 
     &:hover {
       opacity: 0.6;
@@ -73,16 +85,5 @@
   .menu-nav-icon {
     width: 24px;
     height: 24px;
-  }
-
-  a {
-    color: $text;
-    text-decoration: none;
-
-    width: 100%;
-
-    font-size: 18px;
-
-    margin-left: 12px;
   }
 }

@@ -1,0 +1,22 @@
+.option-dialog {
+  width: 100%;
+
+  .option-dialog-item {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+
+    cursor: pointer;
+
+    #option-dialog-item-name {
+        font-size: 17px;
+    }
+
+    #option-dialog-item-icon {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}

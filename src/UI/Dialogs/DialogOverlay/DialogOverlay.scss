@@ -21,10 +21,10 @@
   button {
     width: 100%;
     padding: 8px 16px;
-    border: 2px solid $stroke-color;
+    border: 2px solid var(--stroke-color);
     border-radius: 12px;
-    background-color: $primary;
-    color: $text;
+    background-color: var(--primary);
+    color: var(--text);
     font-size: 16px;
     cursor: pointer;
 
@@ -35,7 +35,7 @@
     }
 
     &:hover {
-      border: 2px solid $selected-stroke-color;
+      border: 2px solid var(--selected-stroke-color);
     }
   }
 }

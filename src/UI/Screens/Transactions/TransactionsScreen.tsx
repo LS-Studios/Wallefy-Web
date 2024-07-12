@@ -1,16 +1,29 @@
 import React, {useEffect} from 'react';
-import {TransactionModel} from "../../../Data/Transactions/TransactionModel";
-import {TransactionGroupModel} from "../../../Data/Transactions/TransactionGroupModel";
+import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
+import {TransactionGroupModel} from "../../../Data/DataModels/TransactionGroupModel";
 import TransactionGroup from "./TransactionGroup/TransactionGroup";
-import {SortType} from "../../../Data/SortType";
-import {FilterModel} from "../../../Data/FilterModel";
+import {SortType} from "../../../Data/EnumTypes/SortType";
+import {FilterModel} from "../../../Data/DataModels/FilterModel";
 import {getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {TransactionPartnerModel} from "../../../Data/TransactionPartnerModel";
-import {formatDateToStandardString} from "../../../Helper/DateHelper";
-import {calculateNFutureTransactions, getTransactionAmount} from "../../../Helper/TransactionHelper";
-import {TransactionType} from "../../../Data/Transactions/TransactionType";
+import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
+import {calculateNFutureTransactions, groupTransactions} from "../../../Helper/TransactionHelper";
 import LoadMoreButton from "./LoadMoreButton/LoadMoreButton";
+import {getTransactionAmount} from "../../../Helper/CurrencyHelper";
+import {useTranslation} from "../../../CustomHooks/useTranslation";
+import {useTransactions} from "../../../CustomHooks/useTransactions";
+import {useSettings} from "../../../Providers/SettingsProvider";
+import {useCurrentAccount} from "../../../Providers/AccountProvider";
+import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import Spinner from "../../Components/Spinner/Spinner";
+import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
+import {getDataSetPath} from "acebase/dist/types/test/dataset";
+import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
+import {AccountType} from "../../../Data/EnumTypes/AccountType";
+import {useHistoryTransactions} from "../../../CustomHooks/useHistoryTransactions";
+import {useDebts} from "../../../CustomHooks/useDebts";
+import {DebtGroupModel} from "../../../Data/DataModels/DebtGroupModel";
+import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 
 const TransactionsScreen = ({
     searchValue,
@@ -21,79 +34,76 @@ const TransactionsScreen = ({
     sortValue: SortType,
     filterValue: FilterModel
 }) => {
-    const [currentTab, setCurrentTab] = React.useState<number>(0);
+    const settings = useSettings()
+    const translate = useTranslation()
+    const getDatabaseRoute = useDatabaseRoute()
+    const currentAccount = useCurrentAccount()
 
-    const [historyTransactions, setHistoryTransactions] = React.useState<TransactionModel[]>([]);
-    const [presetTransactions, setPresetTransactions] = React.useState<TransactionModel[]>([]);
+    const [currentTab, setCurrentTab] = React.useState<number>(1);
+
+    const historyTransactions = useHistoryTransactions()
+    const presetTransactions = useTransactions()
+    const debtTransactions = useDebts()
+    const transactionPartners = useTransactionPartners()
+
     const [futureTransactions, setFutureTransactions] = React.useState<TransactionModel[]>([]);
     const [futureTransactionsAmount, setFutureTransactionsAmount] = React.useState<number>(30);
-    const [futureTransactionsQueue, setFutureTransactionsQueue] = React.useState<TransactionModel[] | null>(null);
-    const [transactions, setTransactions] = React.useState<TransactionModel[]>([]);
-    const [transactionGroups, setTransactionGroups] = React.useState<TransactionGroupModel[]>([])
-    const [transactionPartners, setTransactionPartners] = React.useState<TransactionPartnerModel[] | null>(null)
-
-
-    useEffect(() => {
-        getDBItemsOnChange(DatabaseRoutes.TRANSACTION_PARTNERS, setTransactionPartners)
-    }, [])
+    const [transactions, setTransactions] = React.useState<TransactionModel[] | null>(null);
+    const [transactionGroups, setTransactionGroups] = React.useState<TransactionGroupModel[] | null>(null)
 
     useEffect(() => {
         switch (currentTab) {
             case 0:
-                getDBItemsOnChange(DatabaseRoutes.HISTORY_TRANSACTIONS, setHistoryTransactions)
-                break;
-            default:
-                getDBItemsOnChange(DatabaseRoutes.TRANSACTIONS, setPresetTransactions)
-                break;
-        }
-    }, [currentTab]);
-
-    useEffect(() => {
-        switch (currentTab) {
-            case 0:
-                setTransactions(historyTransactions)
+                if (historyTransactions) setTransactions(historyTransactions)
                 break;
             case 1:
-                setTransactions(presetTransactions)
+                if (presetTransactions) setTransactions(presetTransactions)
                 break;
             case 2:
-                setTransactions(futureTransactions)
+                if (futureTransactions) setTransactions(futureTransactions)
                 break;
         }
-    }, [historyTransactions, presetTransactions, futureTransactions, currentTab]);
+    }, [historyTransactions, presetTransactions, futureTransactions, debtTransactions, currentTab]);
 
     useEffect(() => {
-        if (futureTransactions.length >= futureTransactionsAmount) return
-        if (currentTab !== 2) return
+        if (currentTab !== 2 || !presetTransactions || !getDatabaseRoute) return
 
-        const {nextFutureTransactions, transactionQueue} = calculateNFutureTransactions(futureTransactionsQueue || presetTransactions, futureTransactionsAmount - futureTransactions.length);
-        setFutureTransactions([...futureTransactions, ...nextFutureTransactions])
-        setFutureTransactionsQueue(transactionQueue)
-    }, [presetTransactions, futureTransactionsAmount]);
+        const nextFutureTransactions = calculateNFutureTransactions(getDatabaseRoute, presetTransactions, futureTransactionsAmount);
+        setFutureTransactions(nextFutureTransactions)
+    }, [getDatabaseRoute, presetTransactions, futureTransactionsAmount]);
 
     useEffect(() => {
+        if (!currentAccount) return
+
         let filteredTransactions = []
+
+        if (transactions === null) {
+            setTransactionGroups(null)
+            return
+        }
 
         //Search
         filteredTransactions = transactions.filter((transaction) => transaction.name.toLowerCase().includes(searchValue.toLowerCase()))
 
         //Sort
-        switch (sortValue) {
-            case SortType.NEWEST_FIRST:
-                filteredTransactions.sort((a, b) => {
-                    return new Date(a.date) > new Date(b.date) ? 1 : -1;
-                })
-                break;
-            case SortType.PRICE_HIGH_TO_LOW:
-                filteredTransactions.sort((a, b) => {
-                    return (getTransactionAmount(a) || 0) < (getTransactionAmount(b) || 0) ? 1 : -1;
-                })
-                break;
-            case SortType.PRICE_LOW_TO_HIGH:
-                filteredTransactions.sort((a, b) => {
-                    return (getTransactionAmount(a) || 0) > (getTransactionAmount(b) || 0) ? 1 : -1;
-                })
-                break;
+        const sortTransactions = (transactions: TransactionModel[]) => {
+            switch (sortValue) {
+                case SortType.NEWEST_FIRST:
+                    transactions.sort((a, b) => {
+                        return new Date(a.date) > new Date(b.date) ? 1 : -1;
+                    })
+                    break;
+                case SortType.PRICE_HIGH_TO_LOW:
+                    transactions.sort((a, b) => {
+                        return (getTransactionAmount(a, currentAccount?.currencyCode) || 0) < (getTransactionAmount(b, currentAccount?.currencyCode) || 0) ? 1 : -1;
+                    })
+                    break;
+                case SortType.PRICE_LOW_TO_HIGH:
+                    transactions.sort((a, b) => {
+                        return (getTransactionAmount(a, currentAccount?.currencyCode) || 0) > (getTransactionAmount(b, currentAccount?.currencyCode) || 0) ? 1 : -1;
+                    })
+                    break;
+            }
         }
 
         //Filter
@@ -119,7 +129,7 @@ const TransactionsScreen = ({
                 }
             }
             if (filterValue.priceRange) {
-                if ((getTransactionAmount(transaction) || 0) < filterValue.priceRange.minPrice || (getTransactionAmount(transaction) || 0) > filterValue.priceRange.maxPrice) {
+                if ((getTransactionAmount(transaction, filterValue.priceRange.currency) || 0) < filterValue.priceRange.minPrice || (getTransactionAmount(transaction, filterValue.priceRange.currency) || 0) > filterValue.priceRange.maxPrice) {
                     return false
                 }
             }
@@ -132,69 +142,83 @@ const TransactionsScreen = ({
             return true
         })
 
+        // Group
         if (filteredTransactions.length <= 0) {
             setTransactionGroups([])
             return
         }
 
-        filteredTransactions.sort((a, b) => new Date(a.date) > new Date(b.date) ? 1 : -1);
+        sortTransactions(filteredTransactions)
 
-        const transactionMap: { [key: string]: TransactionModel[] } = {};
+        const groups: TransactionGroupModel[] = [];
 
-        filteredTransactions.forEach((transaction) => {
-            if (!transactionMap[transaction.date]) {
-                transactionMap[transaction.date] = []
+        const pausedTransactions = filteredTransactions.filter(transaction => transaction.repetition.isPaused)
+        pausedTransactions.length > 0 && groups.push(
+            new TransactionGroupModel(
+                translate("paused"),
+                pausedTransactions
+            )
+        )
+
+        const pendingTransactions = filteredTransactions.filter(transaction => transaction.repetition.isPending)
+        pendingTransactions.length > 0 && groups.push(
+            new TransactionGroupModel(
+                translate("pending"),
+                pendingTransactions
+            )
+        )
+
+        setTransactionGroups(groupTransactions(
+            [
+                ...pausedTransactions,
+                ...pendingTransactions,
+                ...filteredTransactions.filter(transaction => {
+                    return !transaction.repetition.isPending && !transaction.repetition.isPaused
+                })
+            ],
+            (date, transactions) => {
+                return new TransactionGroupModel(date, transactions as TransactionModel[])
+            },
+            (transactions) => {
+                sortTransactions(transactions as TransactionModel[])
             }
-            transactionMap[transaction.date].push(transaction)
-        })
-
-        let previousMonth: number | null = null;
-        let previousYear: number | null = null;
-
-        const transactionGroups = Object.keys(transactionMap).map(date => {
-            const dateObj = new Date(date);
-            const currentMonth = dateObj.getMonth();
-            const currentYear = dateObj.getFullYear();
-
-            const isStartOfMonth = previousMonth !== currentMonth || previousYear !== currentYear;
-
-            previousMonth = currentMonth;
-            previousYear = currentYear;
-
-            return {
-                date,
-                transactions: transactionMap[date],
-                isStartOfMonth
-            };
-        });
-
-        setTransactionGroups(transactionGroups);
-    }, [transactions, searchValue, sortValue, filterValue]);
+        ) as TransactionGroupModel[]);
+    }, [transactions, currentAccount, searchValue, sortValue, filterValue]);
 
     return (
         <div className="list-screen">
             <div className="screen-tabs">
                 <span className={currentTab === 0 ? "selected" : ""} onClick={() => {
                     setCurrentTab(0)
-                }}>Past</span>
+                }}>{translate("past")}</span>
                 <span className={currentTab === 1 ? "selected" : ""} onClick={() => {
                     setCurrentTab(1)
-                }}>Presets</span>
+                }}>{translate("presets")}</span>
                 <span className={currentTab === 2 ? "selected" : ""} onClick={() => {
                     setCurrentTab(2)
-                }}>Upcoming</span>
+                }}>{translate("upcoming")}</span>
             </div>
             <div className="screen-list-items">
-                {
-                    transactionGroups.map((transactionGroup, index) => (
-                        <TransactionGroup key={index} transactionGroup={transactionGroup} transactionPartners={transactionPartners} />
-                    ))
-                }
-                { currentTab === 2 && transactions.length > 0 && <LoadMoreButton onClick={() => {
-                    setFutureTransactionsAmount((oldValue) => {
-                        return oldValue + 30
-                    })
-                }} /> }
+                { transactionGroups ? (
+                    transactionGroups.length > 0 ? <>
+                        {
+                            transactionGroups.map((transactionGroup, index) => (
+                                <TransactionGroup
+                                    key={index}
+                                    transactionGroup={transactionGroup}
+                                    transactionPartners={transactionPartners}
+                                    settings={settings}
+                                    translate={translate}
+                                />
+                            ))
+                        }
+                        {currentTab === 2 && <LoadMoreButton onClick={() => {
+                            setFutureTransactionsAmount((oldValue) => {
+                                return oldValue + 30
+                            })
+                        }}/>}
+                    </> : <span className="no-items">{translate("no-transactions-found")}</span>
+                ) : <Spinner type={SpinnerType.CYCLE} /> }
             </div>
         </div>
     );

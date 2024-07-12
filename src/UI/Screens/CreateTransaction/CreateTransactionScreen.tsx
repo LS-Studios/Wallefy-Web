@@ -1,25 +1,15 @@
 import React, {useEffect} from 'react';
 import './CreateTransactionScreen.scss';
-import {useDialog} from "../../../Providers/DialogProvider";
-import {ExecutionType} from "../../../Data/Transactions/ExecutionType";
-import {addDBItem, getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
-import {TransactionModel} from "../../../Data/Transactions/TransactionModel";
-import {TransactionModelBuilder} from "../../../Data/Transactions/TransactionModelBuilder";
-import {RepetitionModelBuilder} from "../../../Data/Transactions/RepetitionModelBuilder";
-import {RepetitionRateType} from "../../../Data/Transactions/RepetitionRateType";
-import {TransactionType} from "../../../Data/Transactions/TransactionType";
-import {TransactionPresetModel} from "../../../Data/CreateScreen/TransactionPresetModel";
 import CreateTransactionPresetSlot from "./PresetSlot/CreateTransactionPresetSlot";
-import {ContentAction} from "../../../Data/ContentAction/ContentAction";
-import ContextMenuBase from "../../Components/ContextMenuBase/ContextMenuBase";
-import {ContextMenuModel} from "../../../Data/Providers/ContextMenuModel";
-import {defaultPresets} from "../../../Helper/ExampleDataHelper";
-import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
+import {useTranslation} from "../../../CustomHooks/useTranslation";
+import {usePresets} from "../../../CustomHooks/usePresets";
+import Spinner from "../../Components/Spinner/Spinner";
+import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
 
 const CreateTransactionScreen = () => {
-    const dialog = useDialog()
+    const translate = useTranslation()
 
-    const [presets, setPresets] = React.useState<TransactionPresetModel[]>([])
+    const presets = usePresets()
 
     useEffect(() => {
         // defaultPresets.forEach((preset) => {
@@ -27,23 +17,20 @@ const CreateTransactionScreen = () => {
         // })
     }, []);
 
-    useEffect(() => {
-        getDBItemsOnChange(DatabaseRoutes.PRESETS, (presets: TransactionPresetModel[]) => {
-            setPresets(presets)
-        })
-    }, []);
-
     return (
         <div className="create-transaction">
-            <h2>Vorlagen</h2>
+            <h2>{translate("presets")}</h2>
             <div className="create-transaction-presets">
-                {presets.map((preset, index) => (
-                    <CreateTransactionPresetSlot
-                        key={index}
-                        preset={preset}
-                        isBasic={false}
-                    />
-                ))}
+                { presets ? (
+                    presets.length > 0 ? presets.map((preset, index) => (
+
+                        <CreateTransactionPresetSlot
+                            key={index}
+                            preset={preset}
+                            isBasic={false}
+                        />
+                    )) : <span className="create-transaction-no-presets">{translate("no-presets")}</span>
+                ) : <Spinner type={SpinnerType.CYCLE} />}
             </div>
         </div>
     );

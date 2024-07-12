@@ -1,10 +1,18 @@
-import {RepetitionRateType} from "../Data/Transactions/RepetitionRateType";
-import {formatDateToStandardString, getWeekDayNameShort} from "./DateHelper";
-import {DayOfWeekModel} from "../Data/Transactions/DayOfWeekModel";
-import {RepetitionModel} from "../Data/Transactions/RepetitionModel";
+import {RepetitionRateType} from "../Data/EnumTypes/RepetitionRateType";
+import {
+    addDays,
+    addMonths,
+    addWeeks,
+    addYears,
+    formatDate,
+    formatDateToStandardString,
+    getWeekDayNameShort
+} from "./DateHelper";
+import {DayOfWeekModel} from "../Data/DataModels/Reptition/DayOfWeekModel";
+import {RepetitionModel} from "../Data/DataModels/Reptition/RepetitionModel";
 import {deleteDBItem, deleteDBItemByUid} from "./AceBaseHelper";
 import {DatabaseRoutes} from "./DatabaseRoutes";
-import {TransactionModel} from "../Data/Transactions/TransactionModel";
+import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
 
 export class RepetitionHelper {
     transactionUid: string;
@@ -55,9 +63,9 @@ export class RepetitionHelper {
         }
     }
 
-    calculateNextRepetitionDate(deleteFromDB: boolean = false): string | null {
-        if (this.repetition.isPending || this.repetition.isPaused) {
-            return this.transactionDate;
+    calculateNextRepetitionDate(getDatabaseRoute: (databaseRoute: DatabaseRoutes) => string, ignorePausedOrPending: boolean = false, deleteFromDB: boolean = false): string | null {
+        if (!ignorePausedOrPending && (this.repetition.isPending || this.repetition.isPaused)) {
+            return null;
         }
 
         const newRepetitionAmount = !this.repetition.repetitionAmount ? null : this.repetition.repetitionAmount - 1
@@ -66,30 +74,46 @@ export class RepetitionHelper {
 
         switch (this.repetition.repetitionRateType) {
             case RepetitionRateType.DAY:
-                newRepetitionDate = this.addDays(this.transactionDate, this.repetition.repetitionRate || 1);
+                newRepetitionDate = formatDateToStandardString(
+                    addDays(new Date(this.transactionDate), this.repetition.repetitionRate || 1)
+                );
                 break;
             case RepetitionRateType.WEEK:
-                let nextDay = this.addDays(this.transactionDate, 1)
+                let nextDay = formatDateToStandardString(
+                    addDays(new Date(this.transactionDate), 1)
+                )
 
                 while (!this.repetition.repetitionDaysInWeek.includes((new Date(nextDay).getDay()) as DayOfWeekModel)) {
-                    nextDay = this.addDays(nextDay, 1)
+                    nextDay = formatDateToStandardString(
+                        addDays(new Date(nextDay), 1)
+                    )
 
                     if (this.repetition.repetitionRate && (new Date(nextDay).getDay()) === DayOfWeekModel.MONDAY) {
-                        nextDay = this.addWeeks(nextDay, this.repetition.repetitionRate - 1)
+                        nextDay = formatDateToStandardString(
+                            addWeeks(new Date(nextDay), this.repetition.repetitionRate - 1)
+                        )
                     }
                 }
                 newRepetitionDate = nextDay;
                 break;
             case RepetitionRateType.MONTH:
-                newRepetitionDate = this.addMonths(this.transactionDate, this.repetition.repetitionRate || 1);
+                newRepetitionDate = formatDateToStandardString(
+                    addMonths(new Date(this.transactionDate), this.repetition.repetitionRate || 1)
+                )
                 break;
             case RepetitionRateType.YEAR:
-                newRepetitionDate = this.addYears(this.transactionDate, this.repetition.repetitionRate || 1);
+                newRepetitionDate =
+                    formatDateToStandardString(
+                        addYears(new Date(this.transactionDate), this.repetition.repetitionRate || 1)
+                    )
                 break;
         }
 
         if (deleteFromDB && newRepetitionAmount !== null && newRepetitionAmount === 0) {
-            deleteDBItemByUid(DatabaseRoutes.TRANSACTIONS, this.transactionUid)
+            deleteDBItemByUid(
+                getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
+                this.transactionUid
+            )
         }
 
         if (newRepetitionAmount !== null && newRepetitionAmount <= 0) return null;
@@ -138,27 +162,5 @@ export class RepetitionHelper {
             default:
                 return this.endings4[this.repetition.repetitionRateType];
         }
-    }
-
-    private addDays(transactionDate: string, days: number) {
-        const result = new Date(transactionDate)
-        result.setDate(result.getDate() + days);
-        return formatDateToStandardString(result);
-    }
-
-    private addWeeks(transactionDate: string, weeks: number) {
-        return this.addDays(transactionDate, weeks * 7);
-    }
-
-    private addMonths(transactionDate: string, months: number) {
-        const result = new Date(transactionDate)
-        result.setMonth(result.getMonth() + months);
-        return formatDateToStandardString(result);
-    }
-
-    private addYears(transactionDate: string, years: number) {
-        const result = new Date(transactionDate)
-        result.setFullYear(result.getFullYear() + years);
-        return formatDateToStandardString(result);
     }
 }

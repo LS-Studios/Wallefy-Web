@@ -1,5 +1,5 @@
 import React from 'react';
-import {AccountModel} from "../../../../Data/Account/AccountModel";
+import {AccountModel} from "../../../../Data/DatabaseModels/AccountModel";
 
 import './Account.scss';
 // @ts-ignore
@@ -7,16 +7,19 @@ import variables from "../../../../Data/Variables.scss";
 import {formatCurrency} from "../../../../Helper/CurrencyHelper";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import CreateAccountDialog from "../../../Dialogs/CreateAccountDialog/CreateAccountDialog";
-import {DialogModel} from "../../../../Data/Providers/DialogModel";
-import {AccountVisibility} from "../../../../Data/Account/AccountVisibility";
+import {DialogModel} from "../../../../Data/DataModels/DialogModel";
+import {AccountVisibilityType} from "../../../../Data/EnumTypes/AccountVisibilityType";
 import {MdPeople, MdPerson} from "react-icons/md";
+import {useSettings} from "../../../../Providers/SettingsProvider";
 
 const Account = ({
-     account
+     account,
  }: {
     account: AccountModel
 }) => {
     const dialog = useDialog()
+
+    const settings = useSettings()
 
     const openAccountDialog = () => {
         dialog.open(
@@ -30,12 +33,12 @@ const Account = ({
     }
 
     return (
-        <div className="account" onClick={openAccountDialog}>
+        <div className={"account " + (settings?.currentAccountUid === account.uid ? "active" : "")} onClick={openAccountDialog}>
             <div className="account-head">
-                {account.visibility === AccountVisibility.PUBLIC ? <MdPeople /> : <MdPerson />}
+                {account.visibility === AccountVisibilityType.PUBLIC ? <MdPeople /> : <MdPerson />}
                 <span id="account-name">{account.name}</span>
             </div>
-            <span id="account-balance">{formatCurrency(account.balance || 0, account.currencyCode)}</span>
+            <span id="account-balance">{formatCurrency(account.balance || 0, settings?.language, account.currencyCode)}</span>
         </div>
     );
 };

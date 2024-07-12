@@ -1,9 +1,8 @@
 @import "../../../Data/Variables.scss";
 
 .transaction-detail-dialog {
-  border: 2px solid $stroke-color;
+  border: 2px solid var(--stroke-color);
   border-radius: 12px;
-  //padding: 16px;
 
   .transaction-detail-dialog-row {
     display: flex;
@@ -15,7 +14,7 @@
     box-sizing: border-box;
 
     &:not(:last-child) {
-      border-bottom: 2px solid $stroke-color;
+      border-bottom: 2px solid var(--stroke-color);
     }
 
     text-align: left;
@@ -30,22 +29,33 @@
 
       .transaction-detail-dialog-row-label {
         border-radius: 22px;
-        border: 2px solid $stroke-color;
+        border: 2px solid var(--stroke-color);
         padding: 2px 6px;
       }
     }
 
     #transaction-detail-dialog-row-title {
-      width: 200px;
+      width: 265px;
       font-weight: bold;
-      border-right: 2px solid $stroke-color;
-      padding: 12px;
+      padding: 8px;
+      border-right: 2px solid var(--stroke-color);
     }
 
     #transaction-detail-dialog-row-value {
       width: 100%;
       word-break: break-all;
       padding: 8px;
+    }
+
+    &.expand-on-right {
+      #transaction-detail-dialog-row-title {
+        border-right: none;
+      }
+
+      #transaction-detail-dialog-row-value {
+        border-left: 2px solid var(--stroke-color);
+        margin-left: -6px;
+      }
     }
   }
 }

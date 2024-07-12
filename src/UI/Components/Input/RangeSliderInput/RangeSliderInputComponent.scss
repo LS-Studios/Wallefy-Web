@@ -1,0 +1,11 @@
+@import "../../../../Data/Variables.scss";
+@import "../SliderInput/SliderInputComponent.scss";
+
+.range-slider-input-component {
+  @extend .slider-input-component;
+
+  #fromSlider {
+    height: 0;
+    z-index: 3;
+  }
+}

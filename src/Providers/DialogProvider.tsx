@@ -1,6 +1,6 @@
 import React, {useState, useMemo, PropsWithChildren, useContext} from 'react';
 import uuid from "react-uuid";
-import {DialogModel} from "../Data/Providers/DialogModel";
+import {DialogModel} from "../Data/DataModels/DialogModel";
 import DialogBase from "../UI/Provider/DialogBase/DialogBase";
 import {DialogContext} from "./Contexts";
 

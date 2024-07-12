@@ -164,7 +164,7 @@ export const formatValue = (options: FormatValueOptions): string => {
 /**
  * Before converting to Number, decimal separator has to be .
  */
-const replaceDecimalSeparator = (
+export const replaceDecimalSeparator = (
   value: string,
   decimalSeparator: FormatValueOptions['decimalSeparator'],
   isNegative: boolean

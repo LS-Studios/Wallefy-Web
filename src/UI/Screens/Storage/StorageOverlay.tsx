@@ -6,24 +6,26 @@ import StorageScreen from "./StorageScreen";
 import ContentOverlay from "../../ContentOverlay/ContentOverlay";
 import {useDialog} from "../../../Providers/DialogProvider";
 import FilterTransactionsDialog from "../../Dialogs/FilterTransactionsDialog/FilterTransactionsDialog";
-import {DialogModel} from "../../../Data/Providers/DialogModel";
-import {SortType} from "../../../Data/SortType";
-import {InputOptionModel} from "../../../Data/Input/InputOptionModel";
-import {FilterModel} from "../../../Data/FilterModel";
-import SortTransactionsDialog from "../../Dialogs/SortTransactionsDialog/SortTransactionsDialog";
+import {DialogModel} from "../../../Data/DataModels/DialogModel";
+import {SortType} from "../../../Data/EnumTypes/SortType";
+import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel";
+import {FilterModel} from "../../../Data/DataModels/FilterModel";
+import OptionDialog from "../../Dialogs/OptionDialog/OptionDialog";
+import {useTranslation} from "../../../CustomHooks/useTranslation";
 
 const StorageOverlay = () => {
+    const translate = useTranslation()
     const dialog = useDialog()
 
     const [searchValue, setSearchValue] = useState<string>("")
 
     return (
         <ContentOverlay
-            title="Storage"
+            title={translate("storage")}
             titleIcon={<MdInventory />}
             actions={[
                 new ContentSearchAction(
-                    "Search for transactions",
+                    translate("search-in-storage"),
                     (searchText) => {
                         setSearchValue(searchText);
                     }

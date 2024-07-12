@@ -1,39 +1,58 @@
 import React, {useEffect} from 'react';
 
 import './CreateTransactionPresetSlot.scss';
-import {TransactionModel} from "../../../../Data/Transactions/TransactionModel";
+import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
 import {useDialog} from "../../../../Providers/DialogProvider";
-import {DialogModel} from "../../../../Data/Providers/DialogModel";
+import {DialogModel} from "../../../../Data/DataModels/DialogModel";
 import CreateTransactionDialog from "../../../Dialogs/CreateTransactionDialog/CreateTransactionDialog";
-import {TransactionPresetModel} from "../../../../Data/CreateScreen/TransactionPresetModel";
+import {TransactionPresetModel} from "../../../../Data/DatabaseModels/TransactionPresetModel";
 import * as MDIcons from "react-icons/md";
-import {ContextMenuModel} from "../../../../Data/Providers/ContextMenuModel";
+import {ContextMenuModel} from "../../../../Data/DataModels/ContextMenuModel";
 import ContextMenuBase from "../../../Components/ContextMenuBase/ContextMenuBase";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {useContextMenu} from "../../../../Providers/ContextMenuProvider";
 import {deleteDBItem} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
+import {useTranslation} from "../../../../CustomHooks/useTranslation";
+import {DebtPresetModel} from "../../../../Data/DatabaseModels/DebtPresetModel";
+import {useCurrentAccount} from "../../../../Providers/AccountProvider";
+import {AccountType} from "../../../../Data/EnumTypes/AccountType";
+import CreateDebtDialog from "../../../Dialogs/CreateDebtDialog/CreateDebtDialog";
 
 const CreateTransactionPresetSlot = ({
     preset,
     isBasic,
 }: {
-    preset: TransactionPresetModel,
+    preset: TransactionPresetModel | DebtPresetModel,
     isBasic: boolean,
 }) => {
+    const translate = useTranslation()
+    const currentAccount = useCurrentAccount()
     const dialog = useDialog()
     const contextMenu = useContextMenu()
 
     const openCreateTransactionDialog = () => {
-        dialog.open(
-            new DialogModel(
-                "Create transaction",
-                <CreateTransactionDialog
-                    transaction={preset.presetTransaction}
-                    preset={preset}
-                />,
+        if (currentAccount?.type === AccountType.DEFAULT) {
+            dialog.open(
+                new DialogModel(
+                    translate("create-transaction"),
+                    <CreateTransactionDialog
+                        transaction={(preset as TransactionPresetModel).presetTransaction}
+                        preset={preset as TransactionPresetModel}
+                    />,
+                )
             )
-        )
+        } else {
+            dialog.open(
+                new DialogModel(
+                    translate("create-debt"),
+                    <CreateDebtDialog
+                        debt={(preset as DebtPresetModel).presetDebt}
+                        preset={preset as DebtPresetModel}
+                    />,
+                )
+            )
+        }
     }
 
     const Icon = (MDIcons as any)[preset.icon || "MdClose"]

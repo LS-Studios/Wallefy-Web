@@ -3,12 +3,13 @@ import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './AutoCompleteInputComponent.scss';
 import DropDialog from "../../Dropdialog/DropDialog";
 import {MdClose} from "react-icons/md";
-import {InputNameValueModel} from "../../../../Data/Input/InputNameValueModel";
+import {InputNameValueModel} from "../../../../Data/DataModels/Input/InputNameValueModel";
 import {getInputValueUidByUid} from "../../../../Helper/HandyFunctionHelper";
 import {useContextMenu} from "../../../../Providers/ContextMenuProvider";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {deleteDBItem, deleteDBItemByUid} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
+import {useTranslation} from "../../../../CustomHooks/useTranslation";
 
 function AutoCompleteInputComponent<T>({
     title,
@@ -22,6 +23,7 @@ function AutoCompleteInputComponent<T>({
     placeholder = "",
     type = "text",
     allowCreatingNew = false,
+    selectAtLeastOne = false,
     contextMenuOptions,
     enabled,
     setEnabled,
@@ -38,11 +40,13 @@ function AutoCompleteInputComponent<T>({
     placeholder?: string,
     type?: string,
     allowCreatingNew?: boolean,
+    selectAtLeastOne?: boolean,
     contextMenuOptions?: (value: InputNameValueModel<T>) => ContentAction[],
     enabled?: boolean,
     setEnabled?: (enabled: boolean) => void,
     style?: CSSProperties,
 }) {
+    const translate = useTranslation()
     const contextMenu = useContextMenu()
 
     const inputRef = React.createRef<HTMLInputElement>();
@@ -58,6 +62,18 @@ function AutoCompleteInputComponent<T>({
     const [suggestionsToWorkWith, setSuggestionsToWorkWith] = useState<InputNameValueModel<T>[] | null>(null)
     const [filteredSuggestions, setFilteredSuggestions] = useState<InputNameValueModel<T>[] | null>(null)
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
+
+    const sortSuggestions = (suggestions: InputNameValueModel<T>[] | null) => {
+        return suggestions?.sort((a, b) => {
+            if (a.name < b.name) {
+                return -1
+            }
+            if (a.name > b.name) {
+                return 1
+            }
+            return 0
+        }) || null
+    }
 
     useEffect(() => {
         if (showSuggestions && fetchSuggestionsOnOpen) {
@@ -79,15 +95,11 @@ function AutoCompleteInputComponent<T>({
     }, [suggestions]);
 
     useEffect(() => {
-        setFilteredSuggestions(suggestionsToWorkWith)
+        setFilteredSuggestions(sortSuggestions(suggestionsToWorkWith))
     }, [suggestionsToWorkWith]);
 
     useEffect(() => {
-        if (changeUserInputOnValueChange) {
-            setUserInput(Array.isArray(value) ? "" : value?.name || "")
-            setChangeUserInputOnValueChange(true)
-            //TODO could cause problem, if value is not fetched yet and user puts something in
-        }
+        setUserInput(Array.isArray(value) ? "" : value?.name || "")
     }, [value]);
 
     const valueIsSelected = (suggestion: InputNameValueModel<T>) => {
@@ -98,10 +110,23 @@ function AutoCompleteInputComponent<T>({
         }
     }
 
-    const applySuggestion = (selectedSuggestion: number) => {
-        const suggestion = filteredSuggestions![selectedSuggestion]
+    const applySuggestion = (selectedSuggestion: string) => {
+        const suggestion = filteredSuggestions!.find((suggestion) => suggestion.name === selectedSuggestion);
 
-        setChangeUserInputOnValueChange(false)
+        //New option is selected -> Remove
+        if (suggestion === undefined) {
+            if (selectAtLeastOne) return;
+
+            if (Array.isArray(value)) {
+                onValueChange(value.filter((v) => v.name !== selectedSuggestion));
+                setUserInput("");
+            } else {
+                onValueChange(null)
+            }
+            return;
+        }
+
+
         if (allowCreatingNew && !suggestion.value) {
             if (Array.isArray(value)) {
                 onValueChange([...value, new InputNameValueModel<T>(userInput, null)]);
@@ -110,14 +135,16 @@ function AutoCompleteInputComponent<T>({
                 onValueChange(new InputNameValueModel<T>(userInput, null));
             }
         } else if (valueIsSelected(suggestion)) {
-            if (Array.isArray(value)) {
-
+            if (Array.isArray(value) && (selectAtLeastOne || value.length > 1)) {
                 const newValue = value.filter((v) => v.name !== suggestion.name);
                 onValueChange(newValue);
 
                 setUserInput("");
-            } else {
+            } else if (!selectAtLeastOne) {
                 onValueChange(null);
+                setUserInput("");
+            } else {
+                setShowSuggestions(false)
             }
         } else {
             if (Array.isArray(value)) {
@@ -128,7 +155,7 @@ function AutoCompleteInputComponent<T>({
             }
         }
 
-        setFilteredSuggestions(suggestionsToWorkWith);
+        setFilteredSuggestions(sortSuggestions(suggestionsToWorkWith));
     }
 
     const changeFocus = (newFocusValue: boolean) => {
@@ -159,14 +186,16 @@ function AutoCompleteInputComponent<T>({
                 suggestion.name.toLowerCase().indexOf(userInput.toLowerCase()) > -1
         ) || [];
 
+        const foundSuggestion = suggestionsToWorkWith?.find(suggestion => suggestion.name === userInput) === undefined
+
         if (userInput) {
             setActiveSuggestion(0)
-            if (allowCreatingNew) filteredSuggestions.unshift(new InputNameValueModel<T>("Als neue Option hinzufügen", null))
+            if (allowCreatingNew && foundSuggestion) filteredSuggestions.push(new InputNameValueModel<T>(translate("add-as-new-option"), null))
         } else {
             setActiveSuggestion(null)
         }
 
-        setFilteredSuggestions(filteredSuggestions);
+        setFilteredSuggestions(sortSuggestions(filteredSuggestions));
 
         if (!Array.isArray(value)) {
             onValueChange(null);
@@ -175,8 +204,8 @@ function AutoCompleteInputComponent<T>({
         setUserInput(userInput);
     }
 
-    const selectSuggestion = (selectedSuggestion: number) => {
-        const suggestion = filteredSuggestions![selectedSuggestion];
+    const selectSuggestion = (selectedSuggestion: string) => {
+        const suggestion = filteredSuggestions!.find((suggestion) => suggestion.name === selectedSuggestion);
 
         if (!suggestion?.value || !valueIsSelected(suggestion)) {
             setActiveSuggestion(null);
@@ -190,7 +219,9 @@ function AutoCompleteInputComponent<T>({
         if (!filteredSuggestions) return;
 
         if (e.key === "Enter") {
-            if (activeSuggestion !== null) applySuggestion(activeSuggestion!);
+            if (activeSuggestion !== null) applySuggestion(
+                filteredSuggestions!.find((suggestion, index) => index === activeSuggestion)!.name
+            );
 
             setShowSuggestions(false)
 
@@ -276,27 +307,25 @@ function AutoCompleteInputComponent<T>({
                         className="auto-complete-suggestions-drop-down"
                         style={suggestionUlStyle}
                     >
-                        { filteredSuggestions.length ? filteredSuggestions.map((suggestion, index) => {
+                        { filteredSuggestions.map((suggestion, index) => {
                             return <li
                                 key={index}
-                                onClick={(e) => selectSuggestion(index)}
-                                className={(Array.isArray(value) ? value.includes(suggestion) : value === suggestion) ? "active" : index === activeSuggestion ? "selected" : ""}
+                                onClick={(e) => selectSuggestion(suggestion.name)}
+                                className={(Array.isArray(value) ? value.includes(suggestion) : value?.name === suggestion.name) ? "active" : index === activeSuggestion ? "selected" : ""}
                                 onContextMenu={(e) => {
                                     contextMenuOptions && contextMenu.handleOnContextMenu(e, contextMenuOptions(suggestion))
                                 }}
                             >
                                 { suggestionElement ? suggestionElement(suggestion) : <>
                                     <span>{suggestion.name}</span>
-                                    { (Array.isArray(value) ? value.includes(suggestion) : value === suggestion) && <MdClose /> }
+                                    { (Array.isArray(value) ? (value.includes(suggestion) && (selectAtLeastOne || value.length > 1)) : (value?.name === suggestion.name && !selectAtLeastOne)) && <MdClose /> }
                                 </> }
                             </li>
-                        }) : <div>
-                            <li>No suggestions available</li>
-                        </div>}
+                        })}
                     </ul> : <ul className="auto-complete-suggestions-drop-down-no-items">
-                        <li>No suggestions</li>
+                        <li>{translate("no-suggestions")}</li>
                     </ul>) : <ul className="auto-complete-suggestions-drop-down-no-items">
-                        <li>Loading ...</li>
+                        <li>{translate("loading")}</li>
                     </ul> }
                 </>
             }
@@ -325,8 +354,7 @@ function AutoCompleteInputComponent<T>({
                                     e.stopPropagation();
                                     if (!filteredSuggestions) return;
 
-                                    const suggestionIndex = filteredSuggestions?.indexOf(tag)
-                                    suggestionIndex !== -1 && applySuggestion(suggestionIndex!)
+                                    applySuggestion(tag.name)
                                 }}
                             >
                                 <span>{tag.name}</span>
@@ -345,9 +373,11 @@ function AutoCompleteInputComponent<T>({
                         onFocus={(e) => {
                             changeFocus(true)
                         }}
-                        // onBlur={(e) => {
-                        //     changeFocus(false)
-                        // }}
+                        onBlur={(e) => {
+                            if (selectAtLeastOne) {
+                                //TODO implement on blur select first
+                            }
+                        }}
                         //TODO make, that blur closes the suggestions but selecting is still possible
                     />
                 </div>

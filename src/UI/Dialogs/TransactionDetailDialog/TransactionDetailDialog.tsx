@@ -1,124 +1,164 @@
 import React, {useEffect} from 'react';
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
-import {TransactionModel} from "../../../Data/Transactions/TransactionModel";
-import TextInputComponent from "../../Components/Input/TextInput/TextInputComponent";
-import {formatDate, speakableDate} from "../../../Helper/DateHelper";
+import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
+import {speakableDate} from "../../../Helper/DateHelper";
 
 import './TransactionDetailDialog.scss';
-import {TransactionType} from "../../../Data/Transactions/TransactionType";
-import {formatCurrency} from "../../../Helper/CurrencyHelper";
-import Divider from "../../Components/Divider/Divider";
+import {formatCurrency, formatCurrencyFromTransaction, getTransactionAmount} from "../../../Helper/CurrencyHelper";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../Providers/DialogProvider";
 import CreateTransactionDialog from "../CreateTransactionDialog/CreateTransactionDialog";
-import {DialogModel} from "../../../Data/Providers/DialogModel";
+import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import {RepetitionHelper} from "../../../Helper/RepetitionHelper";
 import {deleteDBItem, getDBItemOnChange, getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {TransactionPartnerModel} from "../../../Data/TransactionPartnerModel";
-import {CategoryModel} from "../../../Data/CategoryModel";
-import {LabelModel} from "../../../Data/LabelModel";
-import {getTransactionAmount} from "../../../Helper/TransactionHelper";
-import transaction from "../../Screens/Transactions/Transaction/Transaction";
+import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
+import {CategoryModel} from "../../../Data/DatabaseModels/CategoryModel";
+import {LabelModel} from "../../../Data/DatabaseModels/LabelModel";
+import {useTranslation} from "../../../CustomHooks/useTranslation";
+import {useSettings} from "../../../Providers/SettingsProvider";
+import {useCurrentAccount} from "../../../Providers/AccountProvider";
+import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useCategories} from "../../../CustomHooks/useCategories";
+import {useLabels} from "../../../CustomHooks/useLabels";
+import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
 
 const TransactionDetailDialog = ({
     transaction,
-    preFetchedTransactionPartners
+    preFetchedTransactionPartners,
  }: {
     transaction: TransactionModel,
-    preFetchedTransactionPartners: TransactionPartnerModel[] | null
+    preFetchedTransactionPartners: TransactionPartnerModel[] | null,
 }) => {
+    const settings = useSettings()
+    const translate = useTranslation()
+    const currentAccount = useCurrentAccount()
+    const getDatabaseRoute = useDatabaseRoute()
     const dialog = useDialog()
     const toast = useToast()
 
     const [detailTransaction, setDetailTransaction] = React.useState<TransactionModel>(structuredClone(transaction))
-    const [transactionPartners, setTransactionPartners] = React.useState<TransactionPartnerModel[] | null>(preFetchedTransactionPartners)
-    const [categories, setCategories] = React.useState<CategoryModel[] | null>(null)
-    const [labels, setLabels] = React.useState<LabelModel[] | null>(null)
+    const transactionPartners = useTransactionPartners(preFetchedTransactionPartners || [])
+    const categories = useCategories()
+    const labels = useLabels()
 
     useEffect(() => {
-        getDBItemsOnChange(DatabaseRoutes.TRANSACTION_PARTNERS, setTransactionPartners)
-        getDBItemsOnChange(DatabaseRoutes.CATEGORIES, setCategories)
-        getDBItemsOnChange(DatabaseRoutes.LABELS, setLabels)
-    }, []);
+        if (!getDatabaseRoute) return
+
+        getDBItemOnChange(
+            getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
+            transaction.uid,
+            (fetchedTransaction: TransactionModel | null) => {
+                if (fetchedTransaction) {
+                    setDetailTransaction(fetchedTransaction)
+                }
+            }
+        )
+    }, [getDatabaseRoute]);
 
     const details = [
         {
-            title: "Name",
-            value: detailTransaction.name
+            title: translate("name"),
+            value: detailTransaction.name,
         },
         {
-            title: "Amount",
-            value: formatCurrency(getTransactionAmount(detailTransaction) || 0, detailTransaction.currencyCode)
+            title: translate("transaction-amount"),
+            value: <div>
+                <span>{formatCurrencyFromTransaction(detailTransaction, settings?.language)}</span>
+                { detailTransaction.currency.currencyCode !== currentAccount?.currencyCode && <>
+                    <br/>
+                    ( <span>{formatCurrency(
+                        getTransactionAmount(detailTransaction, currentAccount?.currencyCode),
+                        settings?.language,
+                        currentAccount?.currencyCode
+                    )}</span> )
+                </> }
+            </div>
         },
         {
-            title: "Receiver",
-            value: transactionPartners ? (transactionPartners.find(partner => partner.uid === detailTransaction.transactionExecutorUid)?.name || "Unknown") : "Loading..."
+            title: translate("receiver"),
+            value: transactionPartners ? (transactionPartners.find(partner => partner.uid === detailTransaction.transactionExecutorUid)?.name || translate("unknown")) : translate("loading")
         },
         {
-            title: "Date",
-            value: speakableDate(new Date(detailTransaction.date))
+            title: translate("date"),
+            value: !detailTransaction.repetition.isPending && !detailTransaction.repetition.isPaused ? speakableDate(new Date(detailTransaction.date), settings?.language || "de", translate) : null
         },
         {
-            title: "Category",
-            value: categories ? categories.find(category => category.uid === detailTransaction.categoryUid)?.name : "Loading..."
+            title: translate("category"),
+            value: categories ? categories.find(category => category.uid === detailTransaction.categoryUid)?.name : translate("loading")
         },
         {
-            title: "Labels",
+            title: translate("labels"),
             value: labels ? detailTransaction.labels.reduce((result: string[], labelUid) => {
                 const foundLabel = labels.find(label => label.uid === labelUid)
                 if (foundLabel) {
                     result.push(foundLabel.name)
                 }
                 return result
-            }, []) : "Loading..."
+            }, []) : translate("loading"),
+            expandOnRight: true
         },
         {
-            title: "Notes",
+            title: translate("notes"),
             value: detailTransaction.notes
         },
         {
-            title: "Repetition",
-            value: new RepetitionHelper(detailTransaction).toSpeakableText()
-        }, {
-            title: "Next repetition",
-            value: !detailTransaction.history && (detailTransaction.repetition.repetitionAmount || 2) > 1 ? speakableDate(new Date(new RepetitionHelper(detailTransaction).calculateNextRepetitionDate()!)) : null
+            title: translate("repetition"),
+            value: !detailTransaction.history ? new RepetitionHelper(detailTransaction).toSpeakableText() : ""
+        },
+        {
+            title: translate("next-repetition"),
+            value: getDatabaseRoute ? (!detailTransaction.history ? (detailTransaction.repetition.isPaused ? translate("paused") : detailTransaction.repetition.isPending ? translate("pending") : (detailTransaction.repetition.repetitionAmount || 2) > 1 ? speakableDate(new Date(new RepetitionHelper(detailTransaction).calculateNextRepetitionDate(getDatabaseRoute)!), settings?.language || "de", translate) : null) : null) : translate("loading")
         }
     ]
 
     return (
         <DialogOverlay actions={[
             new ContentAction(
-                "Edit",
+                translate("edit"),
                 () => {
+                     if (transaction.future) dialog.closeCurrent()
+
                     dialog.open(
                         new DialogModel(
-                            "Edit detailTransaction",
+                            translate("edit-transaction"),
                             <CreateTransactionDialog transaction={detailTransaction} />
                         )
                     )
                 }
             ),
             new ContentAction(
-                "Copy",
+                translate("copy"),
                 () => {
                     navigator.clipboard.writeText(JSON.stringify(detailTransaction))
-                    toast.open("detailTransaction copied to clipboard")
+                    toast.open(translate("transaction-copied-to-clipboard"))
                 }
             ),
             new ContentAction(
-                "Delete",
+                translate("delete"),
                 () => {
+                    if (!currentAccount) return
+
                     dialog.closeCurrent();
-                    deleteDBItem(DatabaseRoutes.TRANSACTIONS, detailTransaction)
-                }
+
+                    const transactionPath = detailTransaction.history ? DatabaseRoutes.HISTORY_TRANSACTIONS : DatabaseRoutes.TRANSACTIONS
+
+                    deleteDBItem(
+                        getDatabaseRoute!(transactionPath),
+                        detailTransaction
+                    )
+                },
+                false,
+                getDatabaseRoute === null
             ),
         ]}>
             <div className="transaction-detail-dialog">
-                { details.filter((detail) => detail.value?.length).map((detail, index) => {
+                { details.filter((detail) => {
+                    return Array.isArray(detail.value) ? detail.value.length : detail.value
+                }).map((detail, index) => {
                     return <div className="transaction-detail-dialog-row">
-                        <div className="transaction-detail-dialog-row">
+                        <div className={"transaction-detail-dialog-row " + (detail.expandOnRight ? "expand-on-right" : "")}>
                             <span id="transaction-detail-dialog-row-title">{detail.title}</span>
                             <span id="transaction-detail-dialog-row-value">{
                                 Array.isArray(detail.value) ? <div className="transaction-detail-dialog-row-labels">

@@ -1,26 +1,32 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import TextInputComponent from "../../../Components/Input/TextInput/TextInputComponent";
 //@ts-ignore
 import variables from "../../../../Data/Variables.scss";
 import RadioInputComponent from "../../../Components/Input/RadioInput/RadioInputComponent";
-import {InputOptionModel} from "../../../../Data/Input/InputOptionModel";
-import {ExecutionType} from "../../../../Data/Transactions/ExecutionType";
-import {RepetitionType} from "../../../../Data/Transactions/RepetitionType";
+import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
+import {ExecutionType} from "../../../../Data/EnumTypes/ExecutionType";
+import {RepetitionType} from "../../../../Data/EnumTypes/RepetitionType";
 import InputBaseComponent from "../../../Components/Input/InputBase/InputBaseComponent";
 
 import './RepetitionTab.scss';
-import {RepetitionRateType} from "../../../../Data/Transactions/RepetitionRateType";
-import {DayOfWeekModel} from "../../../../Data/Transactions/DayOfWeekModel";
+import {RepetitionRateType} from "../../../../Data/EnumTypes/RepetitionRateType";
+import {DayOfWeekModel} from "../../../../Data/DataModels/Reptition/DayOfWeekModel";
 import DateInputComponent from "../../../Components/Input/DateInputComponent/DateInputComponent";
 import CheckboxInputComponent from "../../../Components/Input/CheckboxInput/CheckboxInputComponent";
-import {TransactionModel} from "../../../../Data/Transactions/TransactionModel";
-import {RepetitionModel} from "../../../../Data/Transactions/RepetitionModel";
+import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
+import {RepetitionModel} from "../../../../Data/DataModels/Reptition/RepetitionModel";
 import {
-    formatDateToStandardString,
+    formatDateToStandardString, getCurrentDate,
     getWeekDayNameShort
 } from "../../../../Helper/DateHelper";
 import {useToast} from "../../../../Providers/Toast/ToastProvider";
 import useEffectNotInitial from "../../../../CustomHooks/useEffectNotInitial";
+import {RepetitionHelper} from "../../../../Helper/RepetitionHelper";
+import {useTranslation} from "../../../../CustomHooks/useTranslation";
+import {useSettings} from "../../../../Providers/SettingsProvider";
+import {useCurrentAccount} from "../../../../Providers/AccountProvider";
+import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+;
 
 const RepetitionTab = ({
    workTransaction,
@@ -29,6 +35,9 @@ const RepetitionTab = ({
     workTransaction: TransactionModel,
     updateTransaction: (updater: (oldTransaction: TransactionModel) => TransactionModel) => void
 }) => {
+    const getDatabaseRoute = useDatabaseRoute()
+    const settings = useSettings()
+    const translate = useTranslation()
     const toast = useToast()
 
     const getRepetitionTypeByAmount = (amount: number | null) => {
@@ -42,48 +51,63 @@ const RepetitionTab = ({
     }
 
     const executionTypeOptions = [
-        new InputOptionModel("Past", ExecutionType.PAST),
-        new InputOptionModel("Now", ExecutionType.NOW),
-        new InputOptionModel("Later", ExecutionType.LATER)
+        new InputOptionModel(translate("past"), ExecutionType.PAST),
+        new InputOptionModel(translate("now"), ExecutionType.NOW),
+        new InputOptionModel(translate("later"), ExecutionType.LATER)
     ];
 
     const repetitionTypeOptions = [
-        new InputOptionModel("Onetime", RepetitionType.ONETIME),
-        new InputOptionModel("+1 times", RepetitionType.MULTIPLE),
-        new InputOptionModel("Undefined", RepetitionType.UNDEFINED)
+        new InputOptionModel(translate("onetime"), RepetitionType.ONETIME),
+        new InputOptionModel(translate("+1-times"), RepetitionType.MULTIPLE),
+        new InputOptionModel(translate("undefined"), RepetitionType.UNDEFINED)
     ];
 
     const repetitionRateTypeOptions = [
-        new InputOptionModel("Day", RepetitionRateType.DAY),
-        new InputOptionModel("Week", RepetitionRateType.WEEK),
-        new InputOptionModel("Month", RepetitionRateType.MONTH),
-        new InputOptionModel("Year", RepetitionRateType.YEAR)
+        new InputOptionModel(translate("day"), RepetitionRateType.DAY),
+        new InputOptionModel(translate("week"), RepetitionRateType.WEEK),
+        new InputOptionModel(translate("month"), RepetitionRateType.MONTH),
+        new InputOptionModel(translate("year"), RepetitionRateType.YEAR)
     ];
 
     const dayOfWeekOptions = [
-        new InputOptionModel(getWeekDayNameShort(1, 'de-DE'), DayOfWeekModel.MONDAY),
-        new InputOptionModel(getWeekDayNameShort(2, 'de-DE'), DayOfWeekModel.TUESDAY),
-        new InputOptionModel(getWeekDayNameShort(3, 'de-DE'), DayOfWeekModel.WEDNESDAY),
-        new InputOptionModel(getWeekDayNameShort(4, 'de-DE'), DayOfWeekModel.THURSDAY),
-        new InputOptionModel(getWeekDayNameShort(5, 'de-DE'), DayOfWeekModel.FRIDAY),
-        new InputOptionModel(getWeekDayNameShort(6, 'de-DE'), DayOfWeekModel.SATURDAY),
-        new InputOptionModel(getWeekDayNameShort(0, 'de-DE'), DayOfWeekModel.SUNDAY)
+        new InputOptionModel(getWeekDayNameShort(1, settings?.language || 'de-DE'), DayOfWeekModel.MONDAY),
+        new InputOptionModel(getWeekDayNameShort(2, settings?.language || 'de-DE'), DayOfWeekModel.TUESDAY),
+        new InputOptionModel(getWeekDayNameShort(3, settings?.language || 'de-DE'), DayOfWeekModel.WEDNESDAY),
+        new InputOptionModel(getWeekDayNameShort(4, settings?.language || 'de-DE'), DayOfWeekModel.THURSDAY),
+        new InputOptionModel(getWeekDayNameShort(5, settings?.language || 'de-DE'), DayOfWeekModel.FRIDAY),
+        new InputOptionModel(getWeekDayNameShort(6, settings?.language || 'de-DE'), DayOfWeekModel.SATURDAY),
+        new InputOptionModel(getWeekDayNameShort(0, settings?.language || 'de-DE'), DayOfWeekModel.SUNDAY)
     ];
 
     const [repetitionType, setRepetitionType] = React.useState<InputOptionModel<RepetitionType>>(getRepetitionTypeByAmount(workTransaction.repetition.repetitionAmount || null));
 
     const getRepetitionRateName = (repetitionRateType: RepetitionRateType) => {
-        switch (repetitionRateType) {
-            case RepetitionRateType.DAY:
-                return "Day";
-            case RepetitionRateType.WEEK:
-                return "Week";
-            case RepetitionRateType.MONTH:
-                return "Month";
-            case RepetitionRateType.YEAR:
-                return "Year";
-            default:
-                return "Undefined";
+        if ((workTransaction.repetition.repetitionRate || 1) === 1) {
+            switch (repetitionRateType) {
+                case RepetitionRateType.DAY:
+                    return translate("day");
+                case RepetitionRateType.WEEK:
+                    return translate("week");
+                case RepetitionRateType.MONTH:
+                    return translate("month");
+                case RepetitionRateType.YEAR:
+                    return translate("year");
+                default:
+                    return translate("undefined");
+            }
+        } else {
+            switch (repetitionRateType) {
+                case RepetitionRateType.DAY:
+                    return translate("days");
+                case RepetitionRateType.WEEK:
+                    return translate("weeks");
+                case RepetitionRateType.MONTH:
+                    return translate("months");
+                case RepetitionRateType.YEAR:
+                    return translate("years");
+                default:
+                    return translate("undefined");
+            }
         }
     }
 
@@ -115,6 +139,41 @@ const RepetitionTab = ({
             return oldTransaction;
         });
     }
+
+    const getEveryText = () => {
+        if ((workTransaction.repetition.repetitionRate || 1) === 1) {
+            switch (workTransaction.repetition.repetitionRateType) {
+                case RepetitionRateType.DAY:
+                    return translate("every-1");
+                case RepetitionRateType.WEEK:
+                    return translate("every-2");
+                case RepetitionRateType.MONTH:
+                    return translate("every-1");
+                case RepetitionRateType.YEAR:
+                    return translate("every-3");
+                default:
+                    return translate("every-1");
+            }
+        } else {
+            return translate("every-4");
+        }
+    }
+
+    useEffectNotInitial(() => {
+        if (workTransaction.history) {
+            updateRepetition((oldRepetition) => {
+                oldRepetition.executionType = ExecutionType.PAST;
+                return oldRepetition;
+            })
+        } else if (getDatabaseRoute) {
+            updateTransaction((oldTransaction) => {
+                while (new Date(oldTransaction.date) < getCurrentDate()) {
+                    oldTransaction.date = new RepetitionHelper(oldTransaction).calculateNextRepetitionDate(getDatabaseRoute, true)!
+                }
+                return oldTransaction;
+            })
+        }
+    }, [getDatabaseRoute, workTransaction.repetition.isPending, workTransaction.repetition.isPaused])
 
     useEffectNotInitial(() => {
         updateTransaction((oldTransaction) => {
@@ -154,7 +213,7 @@ const RepetitionTab = ({
     useEffectNotInitial(() => {
         if (workTransaction.repetition.repetitionRateType === RepetitionRateType.WEEK) {
             if (workTransaction.repetition.repetitionDaysInWeek.length === 0) {
-                toast.open("Es muss mindestens ein Tag ausgewählt sein!")
+                toast.open(translate("select-at-least-on-day"))
                 updateRepetition((oldRepetition) => {
                     oldRepetition.repetitionDaysInWeek = [DayOfWeekModel.MONDAY];
                     return oldRepetition;
@@ -195,7 +254,7 @@ const RepetitionTab = ({
     return (
         <>
             <RadioInputComponent
-                title="Execution type"
+                title={translate("execution-type")}
                 value={executionTypeOptions.find(option => option.value === workTransaction.repetition.executionType)!}
                 onValueChange={(value) => updateRepetition((oldRepetition) => {
                     oldRepetition.executionType = (value as InputOptionModel<ExecutionType>).value;
@@ -205,7 +264,7 @@ const RepetitionTab = ({
             />
             { workTransaction.repetition.executionType === ExecutionType.LATER && <>
                 <InputBaseComponent
-                    title="Number of repetitions"
+                    title={translate("number-of-repetitions")}
                     style={{
                         border: "2px solid " + variables.stroke_color
                     }}
@@ -239,7 +298,7 @@ const RepetitionTab = ({
                 </InputBaseComponent>
                 { repetitionType.value !== RepetitionType.ONETIME && <>
                     <InputBaseComponent
-                        title="Repetition rate"
+                        title={translate("repetition-rate")}
                         style={{
                             border: "2px solid " + variables.stroke_color
                         }}
@@ -256,7 +315,7 @@ const RepetitionTab = ({
                                 options={repetitionRateTypeOptions}
                             />
                             <div className="create-transaction-dialog-repetition-rate-times-row">
-                                <span>Every</span>
+                                <span>{getEveryText()}</span>
                                 <TextInputComponent
                                     value={workTransaction.repetition.repetitionRate}
                                     onValueChange={(value) => {
@@ -276,6 +335,15 @@ const RepetitionTab = ({
                                     onValueChange={(value) => {
                                         updateRepetition((oldRepetition) => {
                                             oldRepetition.repetitionDaysInWeek = (value as InputOptionModel<DayOfWeekModel>[]).map((option) => option.value);
+                                            oldRepetition.repetitionDaysInWeek.sort((a, b) => {
+                                                if (a === DayOfWeekModel.SUNDAY) {
+                                                    return 1;
+                                                } else if (b === DayOfWeekModel.SUNDAY) {
+                                                    return -1;
+                                                } else {
+                                                    return a - b;
+                                                }
+                                            });
                                             return oldRepetition;
                                         })
                                     }}
@@ -285,8 +353,8 @@ const RepetitionTab = ({
                         </div>
                     </InputBaseComponent>
                 </>}
-                <CheckboxInputComponent
-                    text="Pending"
+                { repetitionType.value === RepetitionType.ONETIME ? <CheckboxInputComponent
+                    text={translate("pending")}
                     value={workTransaction.repetition.isPending}
                     onValueChange={(value) => {
                         updateRepetition((oldRepetition) => {
@@ -294,14 +362,23 @@ const RepetitionTab = ({
                             return oldRepetition;
                         })
                     }}
+                /> : <CheckboxInputComponent
+                    text={translate("paused")}
+                    value={workTransaction.repetition.isPaused}
+                    onValueChange={(value) => {
+                        updateRepetition((oldRepetition) => {
+                            oldRepetition.isPaused = value;
+                            return oldRepetition;
+                        })
+                    }}
                     style={{
                         border: "2px solid " + variables.stroke_color
                     }}
-                />
+                /> }
             </>}
-            { workTransaction.repetition.executionType !== ExecutionType.NOW && !workTransaction.repetition.isPending && <>
+            { workTransaction.repetition.executionType !== ExecutionType.NOW && !workTransaction.repetition.isPending && !workTransaction.repetition.isPaused && <>
                 <DateInputComponent
-                    title={workTransaction.repetition.executionType === ExecutionType.LATER ? "Start date" : "Execution date"}
+                    title={workTransaction.repetition.executionType === ExecutionType.LATER ? translate("start-date") : translate("execution-date")}
                     value={new Date(workTransaction.date)}
                     onValueChange={(value) => {
                         updateTransaction((oldTransaction) => {

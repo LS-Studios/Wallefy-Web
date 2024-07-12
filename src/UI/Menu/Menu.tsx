@@ -1,34 +1,82 @@
 import React, {useEffect} from 'react';
 import './Menu.scss';
 import {
-    MdAddCircleOutline, MdHelpOutline, MdInventory,
+    MdAddCircleOutline,
+    MdHelpOutline,
+    MdHome,
+    MdInventory,
     MdOutlineAccountCircle,
     MdOutlineBarChart,
     MdOutlineMonetizationOn,
     MdSettings
 } from "react-icons/md";
 import Divider from "../Components/Divider/Divider";
-import {RoutePath} from "../../Data/Menu/RoutePath";
+import {RoutePath} from "../../Data/EnumTypes/RoutePath";
+import {useLocation, useNavigate} from "react-router-dom";
+import {IconType} from "react-icons";
+import {useDialog} from "../../Providers/DialogProvider";
+import {DialogModel} from "../../Data/DataModels/DialogModel";
+import SettingsDialog from "../Dialogs/SettingsDialog/SettingsDialog";
+import {useTranslation} from "../../CustomHooks/useTranslation";
+import {useCurrentAccount} from "../../Providers/AccountProvider";
+import {AccountType} from "../../Data/EnumTypes/AccountType";
+
 const Menu = () => {
+    const translate = useTranslation()
+    const dialog = useDialog()
+
+    const navigate = useNavigate()
+    const location = useLocation()
+    const [currentRoute, setCurrentRoute] = React.useState(location.pathname);
+
+    const currentAccount = useCurrentAccount()
+
+    useEffect(() => {
+        setCurrentRoute(location.pathname)
+    }, [location]);
+
+    const getMenuItemComponent = (route: string | (() => void), Icon: IconType, name: string) => {
+        let onClick = () => {}
+
+        if (typeof route === 'string') {
+            onClick = () => navigate(route)
+        } else {
+            onClick = route
+        }
+
+        return <li onClick={onClick} id={currentRoute === route ? "selected" : ""}><Icon className="menu-nav-icon"/>{name}</li>
+    }
+
     return (
         <div className="menu">
             <div className="menu-app-title">Wallefy</div>
             <Divider />
             <nav className="menu-navigation main">
                 <ul>
-                    <li id={window.location.pathname === RoutePath.CREATE_TRANSACTION ? "selected" : ""}><MdAddCircleOutline className="menu-nav-icon"/> <a href={RoutePath.CREATE_TRANSACTION}>Create transaction</a></li>
-                    <li id={window.location.pathname === RoutePath.TRANSACTION_OVERVIEW ? "selected" : ""}><MdOutlineBarChart className="menu-nav-icon"/> <a href={RoutePath.TRANSACTION_OVERVIEW}>Transaction overview</a></li>
-                    <li id={window.location.pathname === RoutePath.TRANSACTIONS ? "selected" : ""}><MdOutlineMonetizationOn className="menu-nav-icon"/> <a href={RoutePath.TRANSACTIONS}>Transactions</a></li>
-                    <li id={window.location.pathname === RoutePath.STORAGE ? "selected" : ""}><MdInventory className="menu-nav-icon"/> <a href={RoutePath.STORAGE}>Storage</a></li>
-                    <li id={window.location.pathname === RoutePath.ACCOUNTS ? "selected" : ""}><MdOutlineAccountCircle className="menu-nav-icon"/> <a href={RoutePath.ACCOUNTS}>Accounts</a></li>
+                    {getMenuItemComponent(RoutePath.HOME, MdHome, translate("home"))}
+                    {getMenuItemComponent(RoutePath.CREATE_TRANSACTION, MdAddCircleOutline, translate("create-transaction"))}
+                    {currentAccount?.type === AccountType.DEFAULT && getMenuItemComponent(RoutePath.TRANSACTION_OVERVIEW, MdOutlineBarChart, translate("transaction-overview"))}
+                    {currentAccount?.type === AccountType.DEBTS && getMenuItemComponent(RoutePath.EVALUATION, MdOutlineBarChart, translate("evaluation"))}
+                    {getMenuItemComponent(RoutePath.TRANSACTIONS, MdOutlineMonetizationOn, translate("transactions"))}
+                    {getMenuItemComponent(RoutePath.STORAGE, MdInventory, translate("storage"))}
+                    {getMenuItemComponent(RoutePath.ACCOUNTS, MdOutlineAccountCircle, translate("accounts"))}
                 </ul>
             </nav>
             <div className="menu-bottom">
                 <Divider />
                 <nav className="menu-navigation">
                     <ul>
-                        <li><MdSettings className="menu-nav-icon"/> <a href="/settings">Settings</a></li>
-                        <li><MdHelpOutline className="menu-nav-icon"/> <a href="/help">Help</a></li>
+                        {getMenuItemComponent(() => {
+                            dialog.open(
+                                new DialogModel(
+                                    translate("settings"),
+                                    <SettingsDialog />
+                                )
+                            )
+                        }, MdSettings, translate("settings"))}
+                        {getMenuItemComponent(() => {
+
+                        }, MdHelpOutline, translate("help"))}
                     </ul>
                 </nav>
             </div>

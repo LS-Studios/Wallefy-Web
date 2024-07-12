@@ -1,6 +1,6 @@
 import React from 'react';
 import './RadioInputComponent.scss';
-import {InputOptionModel} from "../../../../Data/Input/InputOptionModel";
+import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
 import InputBaseComponent from "../InputBase/InputBaseComponent";
 
 const RadioInputComponent = ({

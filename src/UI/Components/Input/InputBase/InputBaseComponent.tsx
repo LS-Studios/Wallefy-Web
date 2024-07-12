@@ -1,12 +1,15 @@
 import React, {CSSProperties, PropsWithChildren, useEffect, useState} from 'react';
 import './InputBaseComponent.scss';
 import {MdCheckBox, MdCheckBoxOutlineBlank, MdOutlineCheckBox} from "react-icons/md";
+import Divider from "../../Divider/Divider";
 
 const InputBaseComponent = ({
     title,
     style,
     labelClassName,
     onClick,
+    onDrop,
+    onDrag,
     enabled,
     setEnabled,
     children
@@ -15,6 +18,8 @@ const InputBaseComponent = ({
     style?: CSSProperties,
     labelClassName?: string,
     onClick?: (e: React.MouseEvent<HTMLDivElement>) => void,
+    onDrop?: (e: React.DragEvent<HTMLDivElement>) => void,
+    onDrag?: (e: React.DragEvent<HTMLDivElement>) => void,
     enabled?: boolean,
     setEnabled?: (enabled: boolean) => void
 }>) => {
@@ -29,6 +34,8 @@ const InputBaseComponent = ({
                 setEnabled(!enabled);
             }
         }}
+        onDrop={onDrop}
+        onDrag={onDrag}
     >
         <div className="input-base-component-header">
             <label className={labelClassName}>{title}</label>

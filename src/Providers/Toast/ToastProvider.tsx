@@ -1,6 +1,6 @@
 import React, {useState, useMemo, PropsWithChildren, useContext} from 'react';
 import "./ToastProvider.scss";
-import {ToastModel} from "../../Data/Providers/ToastModel";
+import {ToastModel} from "../../Data/DataModels/ToastModel";
 import uuid from "react-uuid";
 import {ToastContext} from "../Contexts";
 import Toast from "../../UI/Provider/Toast/Toast";

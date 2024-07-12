@@ -1,9 +1,9 @@
 @import "../../../Data/Variables.scss";
 
 .toast {
-  border: $stroke-color 2px solid;
-  background: $text;
-  color: $primary;
+  border: var(--stroke-color) 2px solid;
+  background: var(--text);
+  color: var(--primary);
   border-radius: 12px;
   max-width: 480px;
   position: relative;

@@ -5,150 +5,146 @@ import variables from "../../../../Data/Variables.scss";
 import RadioInputComponent from "../../../Components/Input/RadioInput/RadioInputComponent";
 import CurrencyInputComponent from "../../../Components/Input/CurrencyInput/CurrencyInputComponent";
 import AutoCompleteInputComponent from "../../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
-import {InputOptionModel} from "../../../../Data/Input/InputOptionModel";
-import {TransactionType} from "../../../../Data/Transactions/TransactionType";
+import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
+import {TransactionType} from "../../../../Data/EnumTypes/TransactionType";
 import InputBaseComponent from "../../../Components/Input/InputBase/InputBaseComponent";
 import TextAreaInputComponent from "../../../Components/Input/TextAreaInput/TextAreaInputComponent";
-import {TransactionModel} from "../../../../Data/Transactions/TransactionModel";
-import {CreateTransactionInputErrorModel} from "../../../../Data/CreateScreen/CreateTransactionInputErrorModel";
-import {CategoryModel} from "../../../../Data/CategoryModel";
-import {LabelModel} from "../../../../Data/LabelModel";
-import {InputNameValueModel} from "../../../../Data/Input/InputNameValueModel";
+import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
+import {CreateTransactionInputErrorModel} from "../../../../Data/ErrorModels/CreateTransactionInputErrorModel";
+import {CategoryModel} from "../../../../Data/DatabaseModels/CategoryModel";
+import {LabelModel} from "../../../../Data/DatabaseModels/LabelModel";
+import {InputNameValueModel} from "../../../../Data/DataModels/Input/InputNameValueModel";
 import {deleteDBItemByUid, getDBItemsOnChange} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
-import {getInputValueUidByUid, getInputValueUidsByUids} from "../../../../Helper/HandyFunctionHelper";
+import {
+    getInputValueUidByUid,
+    getInputValueUidsByUids
+} from "../../../../Helper/HandyFunctionHelper";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
-import {DialogModel} from "../../../../Data/Providers/DialogModel";
+import {DialogModel} from "../../../../Data/DataModels/DialogModel";
 import EditStorageItemDialog from "../../EditStorageItemDialog/EditStorageItemDialog";
-import {StorageItemModel} from "../../../../Data/StorageItemModel";
+import {StorageItemModel} from "../../../../Data/DatabaseModels/StorageItemModel";
 import {useDialog} from "../../../../Providers/DialogProvider";
+import useEffectNotInitial from "../../../../CustomHooks/useEffectNotInitial";
+import {useTranslation} from "../../../../CustomHooks/useTranslation";
+import {useCurrentAccount} from "../../../../Providers/AccountProvider";
+import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
+import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
 
 const DescriptionTab = ({
     inputError,
     workTransaction,
-    updateTransaction
+    updateTransaction,
+    categories,
+    labels,
+    newItems,
+    addNewItems,
+    getDbItemContextMenuOptions
 }: {
     inputError: CreateTransactionInputErrorModel,
     workTransaction: TransactionModel,
-    updateTransaction: (updater: (oldTransaction: TransactionModel) => TransactionModel) => void
+    updateTransaction: (updater: (oldTransaction: TransactionModel) => TransactionModel) => void,
+    categories: CategoryModel[] | null,
+    labels: LabelModel[] | null,
+    newItems: CreateDialogNewItems,
+    addNewItems: (newItem: DBItem, newItemsKey: keyof CreateDialogNewItems) => DBItem
+    getDbItemContextMenuOptions: (databaseRoute: DatabaseRoutes, newItemsKey: keyof CreateDialogNewItems, value: InputNameValueModel<DBItem>) => ContentAction[]
 }) => {
+    const currentAccount = useCurrentAccount()
+    const translate = useTranslation()
     const dialog = useDialog()
+    const getDatabaseRoute = useDatabaseRoute()
 
-    const [categories, setCategories] = React.useState<InputNameValueModel<CategoryModel>[] | null>([])
-    const [labels, setLabels] = React.useState<InputNameValueModel<LabelModel>[] | null>([])
+    const [categoriesForSelection, setCategoriesForSelection] = React.useState<InputNameValueModel<CategoryModel>[]>([])
+    const [labelsForSelection, setLabelsForSelection] = React.useState<InputNameValueModel<LabelModel>[]>([])
 
     useEffect(() => {
-        getDBItemsOnChange(DatabaseRoutes.CATEGORIES, (categories: CategoryModel[]) => {
-            setCategories(categories.map(category => new InputNameValueModel(category.name, category)))
-        })
-        getDBItemsOnChange(DatabaseRoutes.LABELS, (labels: LabelModel[]) => {
-            setLabels(labels.map(label => new InputNameValueModel(label.name, label)))
-        })
-    }, []);
+        if (categories) {
+            const categoriesForSelection = categories.map(category => new InputNameValueModel(category.name, category))
+            const newCategoriesForSelection = newItems.newCategories.map(category => new InputNameValueModel(category.name, category))
+            setCategoriesForSelection([...categoriesForSelection, ...newCategoriesForSelection])
+        }
+    }, [categories, newItems.newCategories])
+
+    useEffect(() => {
+        if (labels) {
+            const labelsForSelection = labels.map(label => new InputNameValueModel(label.name, label))
+            const newLabelsForSelection = newItems.newLabels.map(label => new InputNameValueModel(label.name, label))
+            setLabelsForSelection([...labelsForSelection, ...newLabelsForSelection])
+        }
+    }, [labels, newItems.newLabels])
 
     return (
         <>
             <AutoCompleteInputComponent
-                title="Category of transaction"
-                value={getInputValueUidByUid(workTransaction.categoryUid, categories, workTransaction.newCategory)}
+                title={translate("category-of-transaction")}
+                value={getInputValueUidByUid(workTransaction.categoryUid, categoriesForSelection)}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {
                         const newCategory = value as InputNameValueModel<CategoryModel> | null;
 
-                        if (!getInputValueUidByUid(workTransaction.categoryUid, categories)) {
-                            oldTransaction.categoryUid = null;
-                        }
-
-                        if (!newCategory || newCategory.value) {
-                            oldTransaction.categoryUid = newCategory?.value?.uid || null;
-                            oldTransaction.newCategory = null
+                        if (newCategory) {
+                            if (newCategory.value) {
+                                oldTransaction.categoryUid = newCategory.value.uid
+                            } else {
+                                oldTransaction.categoryUid = addNewItems(
+                                    new CategoryModel(
+                                        currentAccount!.uid,
+                                        newCategory.name,
+                                    ),
+                                    "newCategories"
+                                ).uid
+                            }
                         } else {
-                            oldTransaction.newCategory = newCategory.name;
+                            oldTransaction.categoryUid = null;
                         }
 
                         return oldTransaction;
                     });
                 }}
-                suggestions={categories}
+                suggestions={categoriesForSelection}
                 style={{
-                    borderColor: inputError.categoryError ? variables.errorColor : null
+                    borderColor: inputError.categoryError ? variables.error_color : null
                 }}
                 allowCreatingNew={true}
-                contextMenuOptions={(value) => [
-                    new ContentAction(
-                        "Edit",
-                        () => {
-                            dialog.open(
-                                new DialogModel(
-                                    "Edit Category",
-                                    <EditStorageItemDialog
-                                        storageItem={new StorageItemModel(value.value!, DatabaseRoutes.CATEGORIES)}
-                                    />
-                                )
-                            )
-                        }
-                    ),
-                    new ContentAction(
-                        "Delete",
-                        () => {
-                            deleteDBItemByUid(DatabaseRoutes.CATEGORIES, value.value!.uid)
-                        }
-                    )
-                ]}
+                contextMenuOptions={(value) => getDbItemContextMenuOptions(
+                    DatabaseRoutes.CATEGORIES,
+                    'newCategories',
+                    value
+                )}
             />
             <AutoCompleteInputComponent
-                title="Labels of transaction"
-                value={getInputValueUidsByUids(workTransaction.labels, labels, workTransaction.newLabels)}
+                title={translate("labels-of-transaction")}
+                value={getInputValueUidsByUids(workTransaction.labels, labelsForSelection)}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {
                         const newLabels = value as InputNameValueModel<LabelModel>[];
 
-                        const newTransactionLabels: string[] = []
-                        const transactionLabels: string[] = []
-
-                        newLabels.forEach(label => {
-                            if (!label.value) {
-                                newTransactionLabels.push(label.name);
-                            } else {
-                                if (getInputValueUidByUid(label.value.uid, labels)) {
-                                    transactionLabels.push(label.value.uid);
-                                }
-                            }
-                        })
-
-                        oldTransaction.newLabels = newTransactionLabels;
-                        oldTransaction.labels = transactionLabels;
+                        oldTransaction.labels = newLabels?.map(label => {
+                            return label.value?.uid || addNewItems(
+                                new LabelModel(
+                                    currentAccount!.uid,
+                                    label.name
+                                ),
+                                'newLabels'
+                            ).uid
+                        }) || [];
 
                         return oldTransaction;
                     });
                 }}
-                suggestions={labels}
-                placeholder="Add label..."
+                suggestions={labelsForSelection}
+                placeholder={translate("add-label")}
                 allowCreatingNew={true}
-                contextMenuOptions={(value) => [
-                    new ContentAction(
-                        "Edit",
-                        () => {
-                            dialog.open(
-                                new DialogModel(
-                                    "Edit Label",
-                                    <EditStorageItemDialog
-                                        storageItem={new StorageItemModel(value.value!, DatabaseRoutes.LABELS)}
-                                    />
-                                )
-                            )
-                        }
-                    ),
-                    new ContentAction(
-                        "Delete",
-                        () => {
-                            deleteDBItemByUid(DatabaseRoutes.LABELS, value.value!.uid)
-                        }
-                    )
-                ]}
+                contextMenuOptions={(value) => getDbItemContextMenuOptions(
+                    DatabaseRoutes.LABELS,
+                    'newLabels',
+                    value
+                )}
             />
             <TextAreaInputComponent
-                title="Notes"
+                title={translate("notes")}
                 value={workTransaction.notes}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {

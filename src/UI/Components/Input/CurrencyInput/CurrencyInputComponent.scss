@@ -5,9 +5,17 @@
   align-items: center;
 
   &.box {
-    border: 2px solid $stroke-color;
+    border: 2px solid var(--stroke-color);
     border-radius: 12px;
     padding: 8px 12px;
+
+    &.disabled {
+        border: 2px solid var(--disabled-stroke-color);
+    }
+
+    &.focused {
+      border: 2px solid var(--outline-color);
+    }
   }
 
   height: 26px;

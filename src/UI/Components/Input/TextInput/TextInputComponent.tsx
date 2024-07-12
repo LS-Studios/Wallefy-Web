@@ -115,10 +115,11 @@ const TextInputComponent = ({
     const inputComponent = <input
         className="text-input-component-input"
         style={{
-            height: title ? (inputIsExpanded ? "26px" : "0") : "26px",
+            height: title ? (inputIsExpanded || placeholder ? "26px" : "0") : "26px",
         }}
         ref={inputRef}
         value={inputValue}
+        type={type !== "number" ? type : "text"}
         placeholder={placeholder}
         onChange={onChange}
         onKeyDown={onKeyDown}
@@ -134,7 +135,7 @@ const TextInputComponent = ({
             cursor: onValueChange ? "pointer" : "default"
         }}
         onClick={() => changeFocus(true)}
-        labelClassName={inputIsExpanded ? "input-is-expanded" : ""}
+        labelClassName={inputIsExpanded || placeholder ? "input-is-expanded" : ""}
     >
         { inputComponent }
     </InputBaseComponent> : inputComponent

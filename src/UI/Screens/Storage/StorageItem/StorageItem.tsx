@@ -1,26 +1,28 @@
 import React from 'react';
 import './StorageItem.scss';
 import {useDialog} from "../../../../Providers/DialogProvider";
-import {StorageItemModel} from "../../../../Data/StorageItemModel";
+import {StorageItemModel} from "../../../../Data/DatabaseModels/StorageItemModel";
 import EditStorageItemDialog from "../../../Dialogs/EditStorageItemDialog/EditStorageItemDialog";
-import {DialogModel} from "../../../../Data/Providers/DialogModel";
+import {DialogModel} from "../../../../Data/DataModels/DialogModel";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
 
 const StorageItem = ({
     storageItem,
+    translate
  }: {
     storageItem: StorageItemModel,
+    translate: (string: string) => string
 }) => {
     const dialog = useDialog();
 
     const getTitle = () => {
         switch (storageItem.itemType) {
             case DatabaseRoutes.TRANSACTION_PARTNERS:
-                return "Edit Transaction Partner";
+                return translate("edit-transaction-partner")
             case DatabaseRoutes.CATEGORIES:
-                return "Edit Category";
+                return translate("edit-category")
             case DatabaseRoutes.LABELS:
-                return "Edit Label";
+                return translate("edit-label")
             default:
                 return "";
 

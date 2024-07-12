@@ -1,0 +1,204 @@
+import React, {useEffect, useState} from 'react';
+import {
+    MdAccountBalance,
+    MdCalendarMonth,
+    MdChair, MdEmojiEvents, MdLabel, MdPayments,
+    MdPeople, MdPieChart,
+    MdSavings, MdStackedBarChart,
+    MdTrendingDown,
+    MdTrendingUp
+} from "react-icons/md";
+import "../Home/HomeScreen.scss";
+import {ChartDataModel} from "../../../Data/DataModels/Chart/ChartDataModel";
+import BarChartCard
+    from "../TransactionOverview/TransactionOverviewBalancesCard/BarChartCard";
+import {DateRangeModel} from "../../../Data/DataModels/DateRangeModel";
+import {
+    formatDate,
+    formatDateToStandardString, getCurrentDate,
+    getEndOfMonth,
+    getStartOfMonth,
+    speakableDate, speakableDateRange
+} from "../../../Helper/DateHelper";
+// @ts-ignore
+import variables from "../../../Data/Variables.scss";
+import {CalculationType} from "../../../Data/EnumTypes/CalculationType";
+import CardContentRow from "../TransactionOverview/TransactionOverviewBalancesCard/CardContentRow";
+import Divider from "../../Components/Divider/Divider";
+import {formatCurrency, getTransactionAmount} from "../../../Helper/CurrencyHelper";
+import {calculateBalancesAtDateInDateRange} from "../../../Helper/TransactionHelper";
+import {BalanceAtDateModel} from "../../../Data/DataModels/Chart/BalanceAtDateModel";
+import {useTranslation} from "../../../CustomHooks/useTranslation";
+import {useSettings} from "../../../Providers/SettingsProvider";
+import {useCurrentAccount} from "../../../Providers/AccountProvider";
+import {useAccounts} from "../../../CustomHooks/useAccounts";
+import ValueCard from "../Home/ValueCard/ValueCard";
+import {useDebts} from "../../../CustomHooks/useDebts";
+import {BarChart} from "@mui/x-charts";
+import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import TransactionOverviewPieCard from "../TransactionOverview/TransactionOverviewPieCard/TransactionOverviewPieCard";
+import {useCategories} from "../../../CustomHooks/useCategories";
+import {useLabels} from "../../../CustomHooks/useLabels";
+import {DBItem} from "../../../Data/DatabaseModels/DBItem";
+import {TransactionType} from "../../../Data/EnumTypes/TransactionType";
+import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
+import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
+
+const EvaluationScreen = () => {
+    const settings = useSettings()
+    const translate = useTranslation()
+    const currentAccount = useCurrentAccount()
+
+    const debts = useDebts()
+    const transactionPartners = useTransactionPartners()
+    const categories = useCategories()
+    const labels = useLabels()
+
+    const [totalPayments, setTotalPayments] = useState<number>(0)
+
+    const [participantData, setParticipantData] = React.useState<ChartDataModel[]>([]);
+    const [selectedParticipantData, setSelectedParticipantData] = React.useState<ChartDataModel | null>(null);
+
+    const [paymentData, setPaymentData] = React.useState<ChartDataModel[]>([]);
+    const [selectedPaymentData, setSelectedPaymentData] = React.useState<ChartDataModel | null>(null);
+
+    const [categoryData, setCategoryData] = React.useState<ChartDataModel[]>([]);
+    const [selectedCategory, setSelectedCategory] = React.useState<ChartDataModel | null>(null);
+
+    const [labelData, setLabelData] = React.useState<ChartDataModel[]>([]);
+    const [selectedLabel, setSelectedLabel] = React.useState<ChartDataModel | null>(null);
+
+    useEffect(() => {
+        if (!debts) return
+
+        setTotalPayments(debts.reduce((acc, debt) => acc + (debt.transactionAmount || 0), 0))
+    }, [debts]);
+
+    useEffect(() => {
+        if (!debts || !transactionPartners) return
+
+        const transactionPartnerMap: { [key: string]: number } = {}
+        const payerMap: { [key: string]: number } = {}
+
+        debts.forEach((debt) => {
+            if (debt.whoHasPaidUid) {
+                payerMap[debt.whoHasPaidUid] = (payerMap[debt.whoHasPaidUid] || 0) + 1
+            }
+
+            debt.distributions.forEach((distribution) => {
+                transactionPartnerMap[distribution.transactionPartnerUid] = (transactionPartnerMap[distribution.transactionPartnerUid] || 0) + ((debt.transactionAmount || 0) * (distribution.percentage / 100))
+            })
+        })
+
+        setParticipantData(
+            Object.keys(transactionPartnerMap).map((key) => {
+                const partner = transactionPartners.find((partner) => partner.uid === key)
+
+                return new ChartDataModel(
+                    partner?.name || "",
+                    transactionPartnerMap[key]
+                )
+            })
+        )
+        setPaymentData(
+            Object.keys(payerMap).map((key) => {
+                const partner = transactionPartners.find((partner) => partner.uid === key)
+
+                return new ChartDataModel(
+                    partner?.name || "",
+                    payerMap[key]
+                )
+            })
+        )
+    }, [debts, transactionPartners]);
+
+    function setPieChartData<T extends DBItem>(setFunction: (data: ChartDataModel[]) => void, data: T[], uidCheck: (item: T, debt: DebtModel) => boolean) {
+        setFunction(data.reduce((result: ChartDataModel[], item) => {
+            const foundItems = debts?.filter((debt) => {
+                return uidCheck(item, debt)
+            }) || []
+
+            if (foundItems.length > 0) {
+                result.push(
+                    new ChartDataModel(
+                        item.name,
+                        foundItems.reduce((a, b) => a + getTransactionAmount(b, currentAccount?.currencyCode, true), 0)!,
+                    )
+                )
+            }
+            return result
+        }, []))
+    }
+
+    useEffect(() => {
+        if (!debts || !categories) return
+        setPieChartData(setCategoryData, categories, (category, transaction) => {
+            return transaction.categoryUid === category.uid
+        })
+    }, [debts, categories]);
+
+    useEffect(() => {
+        if (!debts || !labels) return
+        setPieChartData(setLabelData, labels, (label, transaction) => {
+            return transaction.labels?.includes(label.uid)
+        })
+    }, [debts, labels]);
+
+    const valueFormatter = (value: number | undefined) => {
+        return formatCurrency(value || 0, settings?.language, currentAccount?.currencyCode)
+    }
+
+    return (
+        <div className="home-screen">
+            <ValueCard
+                icon={<MdPayments/>}
+                title={translate("total-amount-spend")}
+                value={formatCurrency(totalPayments, settings?.language, currentAccount?.currencyCode)}
+            />
+            <BarChartCard
+                icon={<MdStackedBarChart/>}
+                title={translate("cost-per-participant")}
+                displayLabelAsData={false}
+                chartData={participantData}
+                valueFormatter={valueFormatter}
+                selectedItem={selectedParticipantData}
+                onItemSelected={setSelectedParticipantData}
+                baseCurrency={currentAccount?.currencyCode}
+            />
+            <div className="transaction-overview-screen-row">
+                <TransactionOverviewPieCard
+                    icon={<MdEmojiEvents/>}
+                    title={translate("payments")}
+                    chartData={paymentData}
+                    valueFormatter={(value) => String(value)}
+                    selectedItem={selectedPaymentData}
+                    onItemSelected={setSelectedPaymentData}
+                    noItemSelectedLabel={translate("total")}
+                    baseCurrency={currentAccount?.currencyCode}
+                />
+                <TransactionOverviewPieCard
+                    icon={<MdPieChart/>}
+                    title={translate("categories")}
+                    chartData={categoryData}
+                    valueFormatter={valueFormatter}
+                    selectedItem={selectedCategory}
+                    onItemSelected={setSelectedCategory}
+                    noItemSelectedLabel={translate("total")}
+                    baseCurrency={currentAccount?.currencyCode}
+                />
+                <TransactionOverviewPieCard
+                    icon={<MdLabel/>}
+                    title={translate("labels")}
+                    chartData={labelData}
+                    valueFormatter={valueFormatter}
+                    selectedItem={selectedLabel}
+                    onItemSelected={setSelectedLabel}
+                    noItemSelectedLabel={translate("total")}
+                    baseCurrency={currentAccount?.currencyCode}
+                />
+            </div>
+        </div>
+    );
+};
+
+export default EvaluationScreen;

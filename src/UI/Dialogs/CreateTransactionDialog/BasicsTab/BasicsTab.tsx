@@ -5,21 +5,26 @@ import variables from "../../../../Data/Variables.scss";
 import RadioInputComponent from "../../../Components/Input/RadioInput/RadioInputComponent";
 import CurrencyInputComponent from "../../../Components/Input/CurrencyInput/CurrencyInputComponent";
 import AutoCompleteInputComponent from "../../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
-import {InputOptionModel} from "../../../../Data/Input/InputOptionModel";
-import {TransactionType} from "../../../../Data/Transactions/TransactionType";
-import {TransactionModel} from "../../../../Data/Transactions/TransactionModel";
+import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
+import {TransactionType} from "../../../../Data/EnumTypes/TransactionType";
+import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
 import * as MDIcons from "react-icons/md";
-import {CreateTransactionInputErrorModel} from "../../../../Data/CreateScreen/CreateTransactionInputErrorModel";
-import {TransactionPartnerModel} from "../../../../Data/TransactionPartnerModel";
+import {CreateTransactionInputErrorModel} from "../../../../Data/ErrorModels/CreateTransactionInputErrorModel";
+import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/TransactionPartnerModel";
 import {deleteDBItemByUid, getDBItemsOnChange} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
-import {InputNameValueModel} from "../../../../Data/Input/InputNameValueModel";
+import {InputNameValueModel} from "../../../../Data/DataModels/Input/InputNameValueModel";
 import {getInputValueUidByUid} from "../../../../Helper/HandyFunctionHelper";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../../Providers/DialogProvider";
-import {DialogModel} from "../../../../Data/Providers/DialogModel";
+import {DialogModel} from "../../../../Data/DataModels/DialogModel";
 import EditStorageItemDialog from "../../EditStorageItemDialog/EditStorageItemDialog";
-import {StorageItemModel} from "../../../../Data/StorageItemModel";
+import {StorageItemModel} from "../../../../Data/DatabaseModels/StorageItemModel";
+import {useTranslation} from "../../../../CustomHooks/useTranslation";
+import {useCurrentAccount} from "../../../../Providers/AccountProvider";
+import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
+import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
 
 const BasicsTab = ({
    inputError,
@@ -30,6 +35,10 @@ const BasicsTab = ({
    setPresetName,
    workTransaction,
    updateTransaction,
+   transactionPartners,
+   newItems,
+   addNewItems,
+   getDbItemContextMenuOptions
 }: {
     inputError: CreateTransactionInputErrorModel,
     isPreset: boolean,
@@ -38,22 +47,28 @@ const BasicsTab = ({
     presetName: string,
     setPresetName: (value: string) => void,
     workTransaction: TransactionModel,
-    updateTransaction: (updater: (oldTransaction: TransactionModel) => TransactionModel) => void
+    updateTransaction: (updater: (oldTransaction: TransactionModel) => TransactionModel) => void,
+    transactionPartners: TransactionPartnerModel[] | null,
+    newItems: CreateDialogNewItems,
+    addNewItems: (newItem: DBItem, newItemsKey: keyof CreateDialogNewItems) => DBItem
+    getDbItemContextMenuOptions: (databaseRoute: DatabaseRoutes, newItemsKey: keyof CreateDialogNewItems, value: InputNameValueModel<DBItem>) => ContentAction[]
 }) => {
-    const dialog = useDialog()
+    const translate = useTranslation()
 
     const transactionTypeInputOptions = [
-        new InputOptionModel("Income", TransactionType.INCOME),
-        new InputOptionModel("Expense", TransactionType.EXPENSE)
+        new InputOptionModel(translate("income"), TransactionType.INCOME),
+        new InputOptionModel(translate("expenses"), TransactionType.EXPENSE)
     ];
 
-    const [transactionPartners, setTransactionPartners] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
+    const [transactionPartnersForSelection, setTransactionPartnersForSelection] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
 
     useEffect(() => {
-        getDBItemsOnChange(DatabaseRoutes.TRANSACTION_PARTNERS, (partners: TransactionPartnerModel[]) => {
-            setTransactionPartners(partners.map(partner => new InputNameValueModel<TransactionPartnerModel>(partner.name, partner)))
-        })
-    }, []);
+        if (transactionPartners) {
+            const transactionPartnersForSelection = transactionPartners.map(transactionPartner => new InputNameValueModel(transactionPartner.name, transactionPartner))
+            const newTransactionPartnersForSelection = newItems.newTransactionPartners.map(transactionPartner => new InputNameValueModel(transactionPartner.name, transactionPartner))
+            setTransactionPartnersForSelection([...transactionPartnersForSelection, ...newTransactionPartnersForSelection])
+        }
+    }, [transactionPartners, newItems.newTransactionPartners]);
 
     return (
         <>
@@ -89,7 +104,7 @@ const BasicsTab = ({
                     }}
                 />
                 <TextInputComponent
-                    title="Preset name"
+                    title={translate("preset-name")}
                     value={presetName}
                     onValueChange={(value) => {
                         setPresetName(value as string);
@@ -97,7 +112,7 @@ const BasicsTab = ({
                 />
             </> }
             <TextInputComponent
-                title="Name of transaction"
+                title={translate("name-of-transaction")}
                 value={workTransaction.name}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {
@@ -106,11 +121,11 @@ const BasicsTab = ({
                     });
                 }}
                 style={{
-                    borderColor: inputError.nameError ? variables.errorColor : null
+                    borderColor: inputError.nameError ? variables.error_color : null
                 }}
             />
             <RadioInputComponent
-                title="Transaction type"
+                title={translate("transaction-type")}
                 value={transactionTypeInputOptions.find(option => option.value === workTransaction.transactionType)!}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {
@@ -121,7 +136,7 @@ const BasicsTab = ({
                 options={transactionTypeInputOptions}
             />
             <CurrencyInputComponent
-                title="Transaction amount"
+                title={translate("transaction-amount")}
                 value={workTransaction.transactionAmount}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {
@@ -129,57 +144,53 @@ const BasicsTab = ({
                         return oldTransaction;
                     });
                 }}
+                currency={workTransaction.currency}
+                onCurrencyChange={(value) => {
+                    updateTransaction((oldTransaction) => {
+                        oldTransaction.currency = value;
+                        return oldTransaction;
+                    });
+                }}
                 style={{
-                    borderColor: inputError.transactionAmountError ? variables.errorColor : null
+                    borderColor: inputError.transactionAmountError ? variables.error_color : null
                 }}
             />
             <AutoCompleteInputComponent
-                title={(workTransaction.transactionType === TransactionType.INCOME ? "Sender" : "Receiver") + " of transaction"}
-                value={getInputValueUidByUid(workTransaction.transactionExecutorUid, transactionPartners, workTransaction.newTransactionPartner)}
+                title={(workTransaction.transactionType === TransactionType.INCOME ? translate("sender-of-transaction") : translate("receiver-of-transaction"))}
+                value={getInputValueUidByUid(workTransaction.transactionExecutorUid, transactionPartnersForSelection)}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {
                         const newTransactionExecutor = value as InputNameValueModel<TransactionPartnerModel> | null;
 
-                        if (!getInputValueUidByUid(workTransaction.transactionExecutorUid, transactionPartners)) {
-                            oldTransaction.transactionExecutorUid = null;
-                        }
+                        if (newTransactionExecutor) {
+                            if (newTransactionExecutor.value) {
+                                oldTransaction.transactionExecutorUid = newTransactionExecutor.value.uid
+                            } else {
+                                const newTransactionPartner = new TransactionPartnerModel(
+                                    oldTransaction!.uid,
+                                    newTransactionExecutor.name,
+                                    false
+                                )
 
-                        if (!newTransactionExecutor || newTransactionExecutor.value) {
-                            oldTransaction.transactionExecutorUid = newTransactionExecutor?.value?.uid || null;
-                            oldTransaction.newTransactionPartner = null;
+                                oldTransaction.transactionExecutorUid = addNewItems(newTransactionPartner, "newTransactionPartners").uid
+                            }
                         } else {
-                            oldTransaction.newTransactionPartner = newTransactionExecutor.name;
+                            oldTransaction.transactionExecutorUid = null;
                         }
 
                         return oldTransaction;
                     });
                 }}
-                suggestions={transactionPartners}
+                suggestions={transactionPartnersForSelection}
                 style={{
-                    borderColor: inputError.transactionPartnerError ? variables.errorColor : null
+                    borderColor: inputError.transactionPartnerError ? variables.error_color : null
                 }}
                 allowCreatingNew={true}
-                contextMenuOptions={(value) => [
-                    new ContentAction(
-                        "Edit",
-                        () => {
-                            dialog.open(
-                                new DialogModel(
-                                    "Edit Transaction Partner",
-                                    <EditStorageItemDialog
-                                        storageItem={new StorageItemModel(value.value!, DatabaseRoutes.TRANSACTION_PARTNERS)}
-                                    />
-                                )
-                            )
-                        }
-                    ),
-                    new ContentAction(
-                        "Delete",
-                        () => {
-                            deleteDBItemByUid(DatabaseRoutes.TRANSACTION_PARTNERS, value.value!.uid)
-                        }
-                    )
-                ]}
+                contextMenuOptions={(value) => getDbItemContextMenuOptions(
+                    DatabaseRoutes.TRANSACTION_PARTNERS,
+                    "newTransactionPartners",
+                    value
+                )}
             />
         </>
     );

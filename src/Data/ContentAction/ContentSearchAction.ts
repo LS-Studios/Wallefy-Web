@@ -1,7 +1,7 @@
 import React from "react";
 import {ContentAction} from "./ContentAction";
 import {ContentActionInterface} from "./ContentActionInterface";
-import {ContentActionType} from "./ContentActionType";
+import {ContentActionType} from "../EnumTypes/ContentActionType";
 
 export class ContentSearchAction implements ContentActionInterface {
     name: string;

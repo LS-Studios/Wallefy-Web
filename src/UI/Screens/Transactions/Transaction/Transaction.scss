@@ -3,6 +3,7 @@
 
 .transaction {
   @extend .screen-list-item;
+  background-color: var(--background);
 
   &:hover {
     scale: 1.01;
@@ -29,8 +30,8 @@
   }
 
   .transaction-income {
-    background-color: $income-color;
-    color: $income-text-color;
+    background-color: var(--income-color);
+    color: var(--income-text-color);
     border-radius: 12px;
     padding: 4px 8px;
   }

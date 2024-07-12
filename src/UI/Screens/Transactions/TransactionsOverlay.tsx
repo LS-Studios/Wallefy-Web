@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+    import React, {useEffect, useState} from 'react';
 import {MdOutlineMonetizationOn, MdSort, MdTune} from "react-icons/md";
 import {ContentSearchAction} from "../../../Data/ContentAction/ContentSearchAction";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
@@ -6,24 +6,32 @@ import TransactionsScreen from "./TransactionsScreen";
 import ContentOverlay from "../../ContentOverlay/ContentOverlay";
 import {useDialog} from "../../../Providers/DialogProvider";
 import FilterTransactionsDialog from "../../Dialogs/FilterTransactionsDialog/FilterTransactionsDialog";
-import {DialogModel} from "../../../Data/Providers/DialogModel";
-import {SortType} from "../../../Data/SortType";
-import {InputOptionModel} from "../../../Data/Input/InputOptionModel";
-import {FilterModel} from "../../../Data/FilterModel";
-import SortTransactionsDialog from "../../Dialogs/SortTransactionsDialog/SortTransactionsDialog";
+import {DialogModel} from "../../../Data/DataModels/DialogModel";
+import {SortType} from "../../../Data/EnumTypes/SortType";
+import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel";
+import {FilterModel} from "../../../Data/DataModels/FilterModel";
+import OptionDialog from "../../Dialogs/OptionDialog/OptionDialog";
+    import {useTranslation} from "../../../CustomHooks/useTranslation";
 
 const TransactionsOverlay = () => {
+    const translate = useTranslation()
     const dialog = useDialog()
 
     const sortTypeOptions = [
-        new InputOptionModel("Newest first", SortType.NEWEST_FIRST),
-        new InputOptionModel("Price low to high", SortType.PRICE_LOW_TO_HIGH),
-        new InputOptionModel("Price high to low", SortType.PRICE_HIGH_TO_LOW),
+        new InputOptionModel(translate("newest-first"), SortType.NEWEST_FIRST),
+        new InputOptionModel(translate("price-low-to-high"), SortType.PRICE_LOW_TO_HIGH),
+        new InputOptionModel(translate("price-high-to-low"), SortType.PRICE_HIGH_TO_LOW),
     ];
 
     const [searchValue, setSearchValue] = useState<string>("")
     const [sortValue, setSortValue] = useState<SortType>(SortType.NEWEST_FIRST);
     const [filterValue, setFilterValue] = useState<FilterModel>(new FilterModel())
+
+    const sortOptions = [
+        new InputOptionModel(translate("newest-first"), SortType.NEWEST_FIRST),
+        new InputOptionModel(translate("price-low-to-high"), SortType.PRICE_LOW_TO_HIGH),
+        new InputOptionModel(translate("price-high-to-low"), SortType.PRICE_HIGH_TO_LOW),
+    ]
 
     const getNumberOfActiveFilters = () => {
         let count = 0;
@@ -37,37 +45,39 @@ const TransactionsOverlay = () => {
 
     return (
         <ContentOverlay
-            title="Transactions"
+            title={translate("transactions")}
             titleIcon={<MdOutlineMonetizationOn />}
             actions={[
                 new ContentSearchAction(
-                    "Search for transactions",
+                    translate("search-for-transactions"),
                     (searchText) => {
                         setSearchValue(searchText);
                     }
                 ),
                 new ContentAction(
-                    "Sort: " + sortTypeOptions.find((option) => option.value === sortValue)!.name,
+                    translate("sort") + ": " + sortTypeOptions.find((option) => option.value === sortValue)!.name,
                     () => {
                         dialog.open(
                             new DialogModel(
-                                "Sort transactions",
-                                <SortTransactionsDialog
-                                    sortType={sortValue}
-                                    onSortTypeChange={setSortValue}
+                                translate("sort-transactions"),
+                                <OptionDialog
+                                    currentOption={sortOptions.find((option) => option.value === sortValue)!}
+                                    onOptionChange={(sortOption) => setSortValue(sortOption.value)}
+                                    options={sortOptions}
                                 />
                             )
                         )
                     },
                     false,
+                    false,
                     <MdSort />,
                 ),
                 new ContentAction(
-                    "Filter" + (getNumberOfActiveFilters() > 0 ? " (" + getNumberOfActiveFilters() + ")" : ""),
+                    translate("filter") + (getNumberOfActiveFilters() > 0 ? " (" + getNumberOfActiveFilters() + ")" : ""),
                     () => {
                         dialog.open(
                             new DialogModel(
-                                "Filter transactions",
+                                translate("filter-transactions"),
                                 <FilterTransactionsDialog
                                     currentFilter={filterValue}
                                     onFilterChange={setFilterValue}
@@ -75,6 +85,7 @@ const TransactionsOverlay = () => {
                             )
                         )
                     },
+                    false,
                     false,
                     <MdTune />,
                 )

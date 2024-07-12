@@ -1,0 +1,21 @@
+@import "../../../Data/Variables";
+
+.transaction-overview-screen-row {
+  .card {
+    flex: 1;
+    min-width: 300px;
+    box-sizing: border-box;
+  }
+}
+
+.transaction-overview-card-no-items {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 280px;
+
+  font-style: italic;
+
+  font-size: 16px;
+  color: var(--text);
+}

@@ -18,10 +18,11 @@ import {
   CleanValueOptions,
   getSuffix,
   FormatValueOptions,
-  repositionCursor,
+  repositionCursor, replaceDecimalSeparator,
 } from "./utils";
 import {stat} from "fs";
 import usePrevious from "../../../CustomHooks/usePrevious";
+import {escapeRegExp} from "./utils/escapeRegExp";
 
 // @ts-ignore
 export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
@@ -62,6 +63,7 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
       onKeyUp,
       transformRawValue,
       formatValueOnBlur = true,
+      centerText,
       ...props
     }: CurrencyInputProps,
     ref
@@ -110,9 +112,17 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
 
     const [stateValue, setStateValue] = useState(() =>
       defaultValue != null
-        ? formatValue({ ...formatValueOptions, decimalScale, value: String(defaultValue) })
+        ? formatValue({ ...formatValueOptions, decimalScale, value: cleanValue(
+        {
+          value: String(defaultValue),
+          ...cleanValueOptions
+        })})
         : userValue != null
-        ? formatValue({ ...formatValueOptions, decimalScale, value: String(userValue) })
+        ? formatValue({ ...formatValueOptions, decimalScale, value: cleanValue(
+        {
+          value: String(userValue),
+          ...cleanValueOptions
+        })})
         : ''
     );
     const [dirty, setDirty] = useState(false);
@@ -149,6 +159,7 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
           }
 
           setChangeCount(changeCount + 1);
+          setDirty(false);
           return
         }
       }
@@ -156,6 +167,7 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
       const stringValue = cleanValue({ value: modifiedValue, ...cleanValueOptions });
 
       if (userMaxLength && stringValue.replace(/-/g, '').length > userMaxLength) {
+        setDirty(false);
         return;
       }
 
@@ -163,6 +175,7 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
         onValueChange && onValueChange(undefined, name, { float: null, formatted: '', value: '' });
         setStateValue(stringValue);
         setCursor(1);
+        setDirty(false);
         return;
       }
 
@@ -185,20 +198,22 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
         ...formatValueOptions,
       });
 
-
       if (cursorPosition != null) {
         // Prevent cursor jumping
         let newCursor = cursorPosition + (formattedValue.length - value.length);
         newCursor = newCursor <= 0 ? (prefix ? prefix.length : 0) : newCursor;
 
-        if (value.length === 1 || (value.length === 2 && value.startsWith("-"))) {
-          newCursor -= 3
+        if (value.length === 1) {
+          newCursor = 1
+        } else if (value.length === 2 && value.startsWith("-")) {
+          newCursor = 2
         }
 
         if (oldValue && lastKeyStroke === 'Backspace') {
           if (oldValue[cursorPosition] === decimalSeparator) {
             setCursor(oldValue.indexOf(decimalSeparator));
             setChangeCount(changeCount + 1);
+            setDirty(false);
             return;
           }
           if (oldValue.indexOf(decimalSeparator) !== -1 && cursorPosition > oldValue.indexOf(decimalSeparator)!) {
@@ -255,7 +270,7 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
         target: { value },
       } = event;
 
-      const valueOnly = cleanValue({ value, ...cleanValueOptions });
+      let valueOnly = cleanValue({ value, ...cleanValueOptions });
 
       if (valueOnly === '-' || valueOnly === decimalSeparator || !valueOnly) {
         setStateValue('');
@@ -350,7 +365,6 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
         const suffix = getSuffix(stateValue, { groupSeparator, decimalSeparator });
 
         if (suffix && selectionStart && selectionStart > stateValue.length - suffix.length) {
-          /* istanbul ignore else */
           if (inputRef.current) {
             const newCursor = stateValue.length - suffix.length;
             inputRef.current.setSelectionRange(newCursor, newCursor);
@@ -361,13 +375,23 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
       onKeyUp && onKeyUp(event);
     };
 
-    // Update state if userValue changes to undefined
+    //Update value if suffix changes
+    useEffect(() => {
+      processChange(stateValue);
+    }, [suffix]);
+
+    // Update state if userValue changes
     useEffect(() => {
       if (userValue == null && defaultValue == null) {
         setStateValue('');
       } else if (!dirty) {
+        const stringValue = cleanValue({
+          value: String(userValue).replace('.', decimalSeparator),
+          ...cleanValueOptions
+        });
+
         const newValue = fixedDecimalLength ? padTrimValue(
-            String(userValue),
+            stringValue,
             decimalSeparator,
             decimalScale !== undefined ? decimalScale : fixedDecimalLength
         ) : String(userValue)
@@ -376,6 +400,7 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
           value: newValue,
           ...formatValueOptions,
         });
+
         setStateValue(formattedValue);
       }
     }, [defaultValue, userValue]);
@@ -426,6 +451,7 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
       disabled,
       value: stateValue,
       ref: inputRef,
+      style: centerText ? { textAlign: 'center', ...props.style } : props.style,
       ...props,
     };
 

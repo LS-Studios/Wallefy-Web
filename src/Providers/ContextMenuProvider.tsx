@@ -1,9 +1,9 @@
 import React, {useState, useMemo, PropsWithChildren, useContext} from 'react';
 import uuid from "react-uuid";
-import {DialogModel} from "../Data/Providers/DialogModel";
+import {DialogModel} from "../Data/DataModels/DialogModel";
 import DialogBase from "../UI/Provider/DialogBase/DialogBase";
 import {ContextMenuContext, DialogContext} from "./Contexts";
-import {ContextMenuModel} from "../Data/Providers/ContextMenuModel";
+import {ContextMenuModel} from "../Data/DataModels/ContextMenuModel";
 import ContextMenuBase from "../UI/Components/ContextMenuBase/ContextMenuBase";
 import {ContentAction} from "../Data/ContentAction/ContentAction";
 

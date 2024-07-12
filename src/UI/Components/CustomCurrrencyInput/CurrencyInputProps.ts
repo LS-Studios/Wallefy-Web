@@ -191,5 +191,7 @@ export type CurrencyInputProps = Overwrite<
      */
      formatValueOnBlur?: boolean;
 
+      centerText?: boolean;
+
   }
 >;

@@ -5,35 +5,38 @@ import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import AccountsScreen from "./AccountsScreen";
 import ContentOverlay from "../../ContentOverlay/ContentOverlay";
 import {useDialog} from "../../../Providers/DialogProvider";
-import {DialogModel} from "../../../Data/Providers/DialogModel";
+import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import CreateAccountDialog from "../../Dialogs/CreateAccountDialog/CreateAccountDialog";
+import {useTranslation} from "../../../CustomHooks/useTranslation";
 
 const AccountsOverlay = () => {
+    const translate = useTranslation()
     const dialog = useDialog()
 
     const [searchValue, setSearchValue] = useState<string>("");
 
     return (
         <ContentOverlay
-            title="Accounts"
+            title={translate("accounts")}
             titleIcon={<MdOutlineAccountCircle />}
             actions={[
                 new ContentSearchAction(
-                    "Search for accounts",
+                    translate("search-for-accounts"),
                     (searchText) => {
                         setSearchValue(searchText);
                     }
                 ),
                 new ContentAction(
-                    "Add account",
+                    translate("add-account"),
                     () => {
                         dialog.open(
                             new DialogModel(
-                                "Create account",
+                                translate("create-account"),
                                 <CreateAccountDialog />,
                             )
                         )
                     },
+                    false,
                     false,
                     <MdAdd />,
                 )

@@ -1,11 +1,11 @@
 @import "../../../Data/Variables.scss";
 
 .divider {
-  background-color: $stroke-color;
+  background-color: var(--stroke-color);
   height: 2px;
   width: 100%;
 
   &.outlineColor {
-    background-color: $outline-color;
+    background-color: var(--outline-color);
   }
 }

@@ -2,9 +2,9 @@
 
 .load-more-button {
   padding: 8px 20px;
-  border: 2px solid $stroke-color;
+  border: 2px solid var(--stroke-color);
   background-color: transparent;
-  color: $text;
+  color: var(--text);
   border-radius: 24px;
 
   display: flex;

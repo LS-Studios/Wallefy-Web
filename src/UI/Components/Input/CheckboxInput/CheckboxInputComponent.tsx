@@ -7,18 +7,20 @@ const CheckboxInputComponent = ({
     text,
     value,
     onValueChange,
+    disabled,
     style,
 }: {
     text: string,
     value: boolean,
     onValueChange: (value: boolean) => void,
+    disabled?: boolean,
     style?: CSSProperties,
 }) => {
     return (
         <div
             style={style}
-            className="checkbox-input-component"
-            onClick={() => onValueChange(!value)}
+            className={"checkbox-input-component " + (disabled ? "disabled" : "")}
+            onClick={() => !disabled && onValueChange(!value)}
         >
             <label>{text}</label>
             {
