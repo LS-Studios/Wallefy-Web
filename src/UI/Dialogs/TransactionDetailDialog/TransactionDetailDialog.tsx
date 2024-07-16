@@ -23,6 +23,9 @@ import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartner
 import {useCategories} from "../../../CustomHooks/useCategories";
 import {useLabels} from "../../../CustomHooks/useLabels";
 import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
+import {DebtType} from "../../../Data/EnumTypes/DebtType";
+import {getIcon} from "../../../Helper/IconMapper";
+import {executeTransaction} from "../../../Helper/TransactionHelper";
 
 const TransactionDetailDialog = ({
     transaction,
@@ -33,7 +36,7 @@ const TransactionDetailDialog = ({
 }) => {
     const settings = useSettings()
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount, updateAccountBalance } = useCurrentAccount();
     const getDatabaseRoute = useDatabaseRoute()
     const dialog = useDialog()
     const toast = useToast()
@@ -57,10 +60,17 @@ const TransactionDetailDialog = ({
         )
     }, [getDatabaseRoute]);
 
+    const Icon = getIcon(detailTransaction.icon || "")
+
     const details = [
         {
             title: translate("name"),
             value: detailTransaction.name,
+        },
+        {
+            title: translate("icon"),
+            value: <div className="transaction-detail-dialog-icon-row">{translate(detailTransaction.icon || "")} <Icon /></div>,
+            expandOnRight: true
         },
         {
             title: translate("transaction-amount"),
@@ -118,7 +128,7 @@ const TransactionDetailDialog = ({
             new ContentAction(
                 translate("edit"),
                 () => {
-                     if (transaction.future) dialog.closeCurrent()
+                     dialog.closeCurrent()
 
                     dialog.open(
                         new DialogModel(
@@ -134,6 +144,20 @@ const TransactionDetailDialog = ({
                     navigator.clipboard.writeText(JSON.stringify(detailTransaction))
                     toast.open(translate("transaction-copied-to-clipboard"))
                 }
+            ),
+            new ContentAction(
+                translate("execute"),
+                () => {
+                    executeTransaction(
+                        detailTransaction,
+                        currentAccount!,
+                        updateAccountBalance,
+                        getDatabaseRoute!
+                    )
+                    dialog.closeCurrent()
+                },
+                false,
+                !currentAccount || !getDatabaseRoute
             ),
             new ContentAction(
                 translate("delete"),
@@ -157,7 +181,7 @@ const TransactionDetailDialog = ({
                 { details.filter((detail) => {
                     return Array.isArray(detail.value) ? detail.value.length : detail.value
                 }).map((detail, index) => {
-                    return <div className="transaction-detail-dialog-row">
+                    return <div key={index} className="transaction-detail-dialog-row">
                         <div className={"transaction-detail-dialog-row " + (detail.expandOnRight ? "expand-on-right" : "")}>
                             <span id="transaction-detail-dialog-row-title">{detail.title}</span>
                             <span id="transaction-detail-dialog-row-value">{

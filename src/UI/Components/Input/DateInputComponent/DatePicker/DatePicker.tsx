@@ -28,13 +28,13 @@ const DatePicker = ({
     return (
         <Calendar
             weekDays={[
+                getWeekDayNameShort(0, settings?.language || 'de-DE'),
                 getWeekDayNameShort(1, settings?.language || 'de-DE'),
                 getWeekDayNameShort(2, settings?.language || 'de-DE'),
                 getWeekDayNameShort(3, settings?.language || 'de-DE'),
                 getWeekDayNameShort(4, settings?.language || 'de-DE'),
                 getWeekDayNameShort(5, settings?.language || 'de-DE'),
-                getWeekDayNameShort(6, settings?.language || 'de-DE'),
-                getWeekDayNameShort(0, settings?.language || 'de-DE')
+                getWeekDayNameShort(6, settings?.language || 'de-DE')
             ]}
             months={[
                 translate("january"),

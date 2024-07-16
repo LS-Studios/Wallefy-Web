@@ -12,7 +12,7 @@ import {useHistoryTransactions} from "./useHistoryTransactions";
 
 const useTransactionInDateRange = (dateRange: DateRangeModel) => {
     const getDatabaseRoute = useDatabaseRoute()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
 
     const historyTransactions = useHistoryTransactions()
     const presetTransactions = useTransactions()

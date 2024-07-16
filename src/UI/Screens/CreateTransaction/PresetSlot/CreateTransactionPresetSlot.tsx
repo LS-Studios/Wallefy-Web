@@ -18,6 +18,9 @@ import {DebtPresetModel} from "../../../../Data/DatabaseModels/DebtPresetModel";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
 import {AccountType} from "../../../../Data/EnumTypes/AccountType";
 import CreateDebtDialog from "../../../Dialogs/CreateDebtDialog/CreateDebtDialog";
+import {getIcon} from "../../../../Helper/IconMapper";
+import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import PresetDialog from "../../../Dialogs/PresetDialog";
 
 const CreateTransactionPresetSlot = ({
     preset,
@@ -27,35 +30,24 @@ const CreateTransactionPresetSlot = ({
     isBasic: boolean,
 }) => {
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const dialog = useDialog()
     const contextMenu = useContextMenu()
+    const getDatabaseRoute = useDatabaseRoute()
 
     const openCreateTransactionDialog = () => {
-        if (currentAccount?.type === AccountType.DEFAULT) {
-            dialog.open(
-                new DialogModel(
-                    translate("create-transaction"),
-                    <CreateTransactionDialog
-                        transaction={(preset as TransactionPresetModel).presetTransaction}
-                        preset={preset as TransactionPresetModel}
-                    />,
-                )
+        dialog.open(
+            new DialogModel(
+                preset.name + " - " + translate("create-transaction"),
+                <PresetDialog
+                    preset={preset}
+                    isDebt={currentAccount?.type === AccountType.DEBTS}
+                />,
             )
-        } else {
-            dialog.open(
-                new DialogModel(
-                    translate("create-debt"),
-                    <CreateDebtDialog
-                        debt={(preset as DebtPresetModel).presetDebt}
-                        preset={preset as DebtPresetModel}
-                    />,
-                )
-            )
-        }
+        )
     }
 
-    const Icon = (MDIcons as any)[preset.icon || "MdClose"]
+    const Icon = getIcon(preset.icon)
 
     return <>
         <div
@@ -65,7 +57,9 @@ const CreateTransactionPresetSlot = ({
 
                 }, isBasic),
                 new ContentAction("Delete", () => {
-                    deleteDBItem(DatabaseRoutes.PRESETS, preset)
+                    if (!getDatabaseRoute) return
+
+                    deleteDBItem(getDatabaseRoute(DatabaseRoutes.PRESETS), preset)
                 })
             ])}
         >

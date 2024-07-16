@@ -1,4 +1,4 @@
-import React, {PropsWithChildren, useEffect} from 'react';
+import React, {PropsWithChildren, useEffect, useRef} from 'react';
 import './ContentOverlay.scss';
 import {MdAddCircleOutline, MdCreate, MdOutlineHome, MdPowerSettingsNew, MdSearch} from "react-icons/md";
 import {ContentAction} from "../../Data/ContentAction/ContentAction";
@@ -27,7 +27,9 @@ const ContentOverlay = ({
     const translate = useTranslation()
     const navigate = useNavigate()
 
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
+
+    const searchInputRef = useRef<HTMLInputElement>(null)
 
     return <>
         <Menu />
@@ -58,11 +60,13 @@ const ContentOverlay = ({
                                     {buttonAction.name}
                                 </a>
                             } else if (action.type === ContentActionType.SEARCH) {
-                                return <div className="content-overlay-header-content-actions-search-action">
+                                return <div key={index} className="content-overlay-header-content-actions-search-action">
                                     <MdSearch className="content-overlay-header-content-actions-search-icon" />
-                                    <input type="text" placeholder={(action as ContentSearchAction).placeholder} onChange={(e) => {
+                                    <input ref={searchInputRef} type="text" placeholder={(action as ContentSearchAction).placeholder} onChange={(e) => {
                                         const searchAction = action as ContentSearchAction;
                                         searchAction.onSearchTextChanged(e.target.value);
+                                    }} onKeyDown={(e) => {
+                                        e.key === "Enter" && searchInputRef.current?.blur()
                                     }} />
                                 </div>
                             } else {

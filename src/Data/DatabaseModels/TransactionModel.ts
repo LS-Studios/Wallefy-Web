@@ -8,10 +8,11 @@ import {SettingsModel} from "../DataModels/SettingsModel"; // Assuming Repetitio
 
 export class TransactionModel implements DBItem {
     uid: string;
-    accountId: string;
+    accountUid: string;
     history: boolean;
     future: boolean;
     name: string;
+    icon: string | null;
     categoryUid: string | null;
     categoryFallback: string | null;
     transactionAmount: number | null;
@@ -22,15 +23,16 @@ export class TransactionModel implements DBItem {
     date: string;
     repetition: RepetitionModel;
     labels: string[];
-    labelFallback: string[];
+    labelsFallback: { [uid: string]: string};
     notes: string;
 
     constructor(baseCurrency: string | null | undefined) {
         this.uid = '';
-        this.accountId = '';
+        this.accountUid = '';
         this.history = false;
         this.future = false;
         this.name ='';
+        this.icon = null;
         this.categoryUid = '';
         this.categoryFallback = null;
         this.transactionAmount = null;
@@ -41,7 +43,7 @@ export class TransactionModel implements DBItem {
         this.date = formatDateToStandardString(new Date());
         this.repetition = new RepetitionModel();
         this.labels = [];
-        this.labelFallback = [];
+        this.labelsFallback = {};
         this.notes = '';
     }
 }

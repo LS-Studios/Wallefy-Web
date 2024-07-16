@@ -34,6 +34,8 @@ import {useTransactions} from "../../../CustomHooks/useTransactions";
 import {useCategories} from "../../../CustomHooks/useCategories";
 import {useLabels} from "../../../CustomHooks/useLabels";
 import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useDebts} from "../../../CustomHooks/useDebts";
+import {usePayedDebts} from "../../../CustomHooks/usePayedDebts";
 
 const FilterTransactionsDialog = ({
     currentFilter,
@@ -45,12 +47,14 @@ const FilterTransactionsDialog = ({
     isDebt?: boolean
 }) => {
     const translate = useTranslation();
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const dialog = useDialog();
 
     const [filter, setFilter] = React.useState<FilterModel>(structuredClone(currentFilter));
 
     const transactions = useTransactions()
+    const debts = useDebts()
+    const payedDebts = usePayedDebts()
 
     const categories = useCategories()
     const labels = useLabels()
@@ -87,13 +91,22 @@ const FilterTransactionsDialog = ({
     }, [currentAccount]);
 
     useEffect(() => {
-        if (!transactions || !selectedCurrency) return
+        if (!transactions || !selectedCurrency || !debts || !payedDebts) return
 
-        const minPrice = Math.min(...transactions.map(transaction => getTransactionAmount(transaction, selectedCurrency?.currencyCode)!));
-        const maxPrice = Math.max(...transactions.map(transaction => getTransactionAmount(transaction, selectedCurrency?.currencyCode)!));
+        let minPrice
+        let maxPrice
+
+        if (isDebt) {
+            minPrice = Math.min(...[...debts, ...payedDebts].map(debt => getTransactionAmount(debt, selectedCurrency?.currencyCode)!));
+            maxPrice = Math.max(...[...debts, ...payedDebts].map(debt => getTransactionAmount(debt, selectedCurrency?.currencyCode)!));
+        } else {
+            minPrice = Math.min(...transactions.map(transaction => getTransactionAmount(transaction, selectedCurrency?.currencyCode)!));
+            maxPrice = Math.max(...transactions.map(transaction => getTransactionAmount(transaction, selectedCurrency?.currencyCode)!));
+        }
+
         setPriceRangeMin(minPrice);
         setPriceRangeMax(maxPrice);
-    }, [transactions, selectedCurrency]);
+    }, [transactions, debts, payedDebts, selectedCurrency]);
 
     useEffect(() => {
         if (filter.priceRange && priceRangeMin && priceRangeMax) {
@@ -134,7 +147,7 @@ const FilterTransactionsDialog = ({
                 }
             ),
         ]}>
-            {isDebt && <InputBaseComponent
+            {!isDebt && <InputBaseComponent
                 title={translate("transaction-type")}
                 enabled={filter.transactionType !== null}
                 setEnabled={(enabled) => {

@@ -22,7 +22,7 @@ export const useTranslation = () => {
         }
 
         variables.forEach((variable, index) => {
-            translation = translation.replace(`%${index + 1}`, variable);
+            translation = translation.replaceAll(`%${index + 1}`, variable);
         });
 
         return translation

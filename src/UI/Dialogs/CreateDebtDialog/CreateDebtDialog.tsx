@@ -40,6 +40,10 @@ import EditStorageItemDialog from "../EditStorageItemDialog/EditStorageItemDialo
 import {StorageItemModel} from "../../../Data/DatabaseModels/StorageItemModel";
 import {useNewItems} from "../../../CustomHooks/useNewItems";
 import {DistributionModel} from "../../../Data/DataModels/DistributionModel";
+import {DebtType} from "../../../Data/EnumTypes/DebtType";
+import {CurrencyValueModel} from "../../../Data/DataModels/CurrencyValueModel";
+import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
+import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
 
 const CreateDebtDialog = ({
     debt,
@@ -51,7 +55,7 @@ const CreateDebtDialog = ({
     preset?: DebtPresetModel,
 }) => {
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount, updateAccountBalance } = useCurrentAccount();
     const getDatabaseRoute = useDatabaseRoute()
     const dialog = useDialog()
     const toast = useToast()
@@ -66,23 +70,90 @@ const CreateDebtDialog = ({
     const {
         newItems,
         addNewItems,
+        clearNewItems,
         getDbItemContextMenuOptions,
         checkDBItem
-    } = useNewItems(workDebt, setWorkDebt as React.Dispatch<React.SetStateAction<DBItem | null>>)
+    } = useNewItems()
 
     const transactionPartners = useTransactionPartners(null)
     const categories = useCategories()
     const labels = useLabels()
-
-    useEffect(() => {
-        currentAccount && !workDebt && setWorkDebt(new DebtModel(currentAccount.currencyCode))
-    }, [currentAccount]);
 
     const updateDebt = (updater: (oldDebt: DebtModel) => DebtModel) => {
         setWorkDebt((current) => {
             const newDebt = new DebtModel(currentAccount?.currencyCode);
             Object.assign(newDebt, updater(current!));
             return newDebt
+        })
+    }
+
+    const setNewWorkDebtUp = (debt: DebtModel, account: AccountModel) => {
+        checkDebtUids(debt, account).then((debt) => {
+            setWorkDebt(debt)
+        })
+    }
+
+    const checkDebtUids = (debt: DebtModel, account: AccountModel): Promise<DebtModel> => {
+        return new Promise<DebtModel>((resolve) => {
+            const promises: Promise<any>[] = []
+
+            clearNewItems()
+
+            if (debt.transactionExecutorUid) {
+                promises.push(
+                    checkDBItem(
+                        debt,
+                        DatabaseRoutes.TRANSACTION_PARTNERS,
+                        "transactionExecutorUid",
+                        new TransactionPartnerModel(account.uid, debt.transactionExecutorFallback || "", false),
+                        "newTransactionPartners"
+                    )
+                )
+            }
+            if (debt.whoHasPaidUid) {
+                promises.push(
+                    checkDBItem(
+                        debt,
+                        DatabaseRoutes.TRANSACTION_PARTNERS,
+                        "whoHasPaidUid",
+                        new TransactionPartnerModel(account.uid, debt.whoHasPaidFallback || "", true),
+                        "newTransactionPartners"
+                    )
+                )
+            }
+            promises.push(
+                checkDBItem(
+                    debt,
+                    DatabaseRoutes.TRANSACTION_PARTNERS,
+                    "whoWasPaiFor",
+                    Object.fromEntries(Object.entries(debt.whoWasPaiForFallback).map(([uid, value]) => [uid, new TransactionPartnerModel(account.uid, value, true)])),
+                    "newTransactionPartners"
+                )
+            )
+            if (debt.categoryUid) {
+                promises.push(
+                    checkDBItem(
+                        debt,
+                        DatabaseRoutes.CATEGORIES,
+                        "categoryUid",
+                        new CategoryModel(account.uid, debt.categoryFallback || ""),
+                        "newCategories"
+                    )
+                )
+            }
+            promises.push(
+                checkDBItem(
+                    debt,
+                    DatabaseRoutes.LABELS,
+                    "labels",
+                    Object.fromEntries(Object.entries(debt.labelsFallback).map(([uid, value]) => [uid, new LabelModel(account.uid, value)])),
+                    "newLabels"
+                )
+            )
+
+            Promise.all(promises).then((result) => {
+                resolve(result[0])
+            })
         })
     }
 
@@ -102,33 +173,21 @@ const CreateDebtDialog = ({
     }, [workDebt?.transactionAmount, workDebt?.whoWasPaiFor, workDebt?.currency]);
 
     useEffect(() => {
-        if (getDatabaseRoute && debt && debt.uid) {
+        if (!currentAccount || !getDatabaseRoute) return
+
+        if (debt && debt.uid) {
             getDBItemOnChange(
                 getDatabaseRoute(DatabaseRoutes.DEBTS),
-                debt.uid, (changedTransaction
-            ) => {
-                setWorkDebt(changedTransaction as DebtModel)
+                debt.uid,
+                (changedTransaction) => {
+                    changedTransaction && setNewWorkDebtUp(changedTransaction as DebtModel, currentAccount)
             })
         } else if (debt) {
-            setWorkDebt(debt)
+            setNewWorkDebtUp(debt, currentAccount)
+        } else {
+            setNewWorkDebtUp(new DebtModel(currentAccount.currencyCode), currentAccount)
         }
-    }, [getDatabaseRoute]);
-
-    useEffect(() => {
-        if (!debt || !getDatabaseRoute) return
-
-        if (debt.transactionExecutorUid) {
-            checkDBItem(debt, DatabaseRoutes.TRANSACTION_PARTNERS, "transactionExecutorUid")
-        }
-        if (debt.whoHasPaidUid) {
-            checkDBItem(debt, DatabaseRoutes.TRANSACTION_PARTNERS, "whoHasPaidUid")
-        }
-        checkDBItem(debt, DatabaseRoutes.TRANSACTION_PARTNERS, "whoWasPaiFor")
-        if (debt.categoryUid) {
-            checkDBItem(debt, DatabaseRoutes.CATEGORIES, "categoryUid")
-        }
-        checkDBItem(debt, DatabaseRoutes.LABELS, "labels")
-    }, [getDatabaseRoute]);
+    }, [currentAccount, getDatabaseRoute]);
 
     if(!workDebt) {
         return <LoadingDialog />
@@ -152,8 +211,19 @@ const CreateDebtDialog = ({
                     />;
                 case 1:
                     return <DebtDistributionTab
-                        workDebt={workDebt}
-                        updateDebt={updateDebt}
+                        distributions={workDebt.distributions}
+                        onDistributionChange={(newDistributions) => {
+                            updateDebt((oldDebt) => {
+                                return {
+                                    ...oldDebt,
+                                    distributions: newDistributions
+                                }
+                            })
+                        }}
+                        currencyValue={new CurrencyValueModel(
+                            workDebt.transactionAmount,
+                            workDebt.currency
+                        )}
                         transactionPartners={transactionPartners}
                         newItems={newItems}
                     />
@@ -172,7 +242,7 @@ const CreateDebtDialog = ({
         }
 
         const validateInput = () => {
-            if (!workDebt.name) {
+            if (workDebt.debtType === DebtType.DEFAULT && !workDebt.name) {
                 toast.open(translate("please-enter-a-transaction-name"))
                 setInputError((old) => {
                     old.nameError = true;
@@ -188,7 +258,7 @@ const CreateDebtDialog = ({
                 })
                 setCurrentTab(0)
                 return false
-            } else if (!workDebt.transactionExecutorUid) {
+            } else if (workDebt.debtType === DebtType.DEFAULT && !workDebt.transactionExecutorUid) {
                 toast.open(translate("please-enter–a-transaction-partner"))
                 setInputError((old) => {
                     old.transactionExecutorError = true;
@@ -212,7 +282,7 @@ const CreateDebtDialog = ({
                 })
                 setCurrentTab(0)
                 return false
-            } else if (!workDebt.categoryUid) {
+            } else if (workDebt.debtType === DebtType.DEFAULT && !workDebt.categoryUid) {
                 toast.open(translate("please-enter-a-category"))
                 setInputError((old) => {
                     old.categoryError = true;
@@ -235,7 +305,7 @@ const CreateDebtDialog = ({
                 const allTransactionPartners = [...transactionPartners, ...newItems.newTransactionPartners]
                 workDebt.transactionExecutorFallback = allTransactionPartners.find(partner => partner.uid === workDebt.transactionExecutorUid)?.name || workDebt.transactionExecutorFallback
                 workDebt.whoHasPaidFallback = allTransactionPartners.find(partner => partner.uid === workDebt.whoHasPaidUid)?.name || workDebt.whoHasPaidFallback
-                workDebt.whoWasPaiForFallback = workDebt.whoWasPaiFor.map(whoWasPaiForUid => allTransactionPartners.find(whoWasPaiFor => whoWasPaiFor.uid === whoWasPaiForUid)?.name || "")
+                workDebt.whoWasPaiForFallback = Object.fromEntries(workDebt.whoWasPaiFor.map(whoWasPaidForUid => [whoWasPaidForUid, allTransactionPartners.find(tp => tp.uid === whoWasPaidForUid)?.name || ""]))
                 newItems.newTransactionPartners.forEach((newTransactionPartner) => {
                     promises.push(
                         addDBItem(
@@ -259,7 +329,7 @@ const CreateDebtDialog = ({
             }
 
             if (labels) {
-                workDebt.labelsFallback = workDebt.labels.map(labelUid => [...labels, ...newItems.newLabels].find(label => label.uid === labelUid)?.name || "")
+                workDebt.labelsFallback = Object.fromEntries(workDebt.labels.map(labelUid => [labelUid, [...labels, ...newItems.newLabels].find(label => label.uid === labelUid)?.name || ""]))
                 newItems.newLabels.forEach((newLabel) => {
                     promises.push(
                         addDBItem(
@@ -274,7 +344,7 @@ const CreateDebtDialog = ({
         }
 
         return (
-            <DialogOverlay actions={currentTab === 2 ? (!debt?.uid || isPreset ? [
+            <DialogOverlay actions={(workDebt.debtType === DebtType.MONEY_TRANSFER || currentTab === 2) ? (!debt?.uid || isPreset ? [
                 new ContentAction(translate("back"), () => setCurrentTab(currentTab - 1)),
                 new ContentAction(translate("create"), () => {
                     setInputError(new CreateDebtInputErrorModel())
@@ -284,23 +354,23 @@ const CreateDebtDialog = ({
 
                     Promise.all(addNewValues()).then(() => {
                         if (isPreset) {
-                            addDBItem(
-                                getDatabaseRoute(DatabaseRoutes.PRESETS),
-                                new DebtPresetModel(
-                                    currentAccount.uid,
-                                    presetIcon?.value!,
-                                    presetName,
-                                    workDebt,
-                                    currentAccount?.currencyCode
-                                )
-                            ).then(() => {
-                                dialog.closeCurrent();
-                            })
+                            // addDBItem(
+                            //     getDatabaseRoute(DatabaseRoutes.PRESETS),
+                            //     new DebtPresetModel(
+                            //         currentAccount.uid,
+                            //         presetIcon?.value!,
+                            //         presetName,
+                            //         workDebt,
+                            //         currentAccount?.currencyCode
+                            //     )
+                            // ).then(() => {
+                            //     dialog.closeCurrent();
+                            // })
                         } else {
-                            workDebt.accountId = currentAccount.uid
+                            workDebt.accountUid = currentAccount.uid
 
                             addDBItem(
-                                getDatabaseRoute(DatabaseRoutes.DEBTS),
+                                getDatabaseRoute(workDebt.debtType === DebtType.DEFAULT ? DatabaseRoutes.DEBTS : DatabaseRoutes.PAYED_DEBTS),
                                 workDebt
                             ).then(() => {
                                 if (!preset) {
@@ -313,12 +383,12 @@ const CreateDebtDialog = ({
                                     {
                                         ...preset,
                                         presetTransaction: {
-                                            ...preset!.presetDebt,
-                                            transactionExecutorUid: preset!.presetDebt.transactionExecutorUid ? workDebt.transactionExecutorUid : null,
-                                            whoHasPaidUid: preset!.presetDebt.whoHasPaidUid ? workDebt.whoHasPaidUid : null,
-                                            whoWasPaiFor: preset!.presetDebt.whoWasPaiFor ? workDebt.whoWasPaiFor : null,
-                                            categoryUid: preset!.presetDebt.categoryUid ? workDebt.categoryUid : null,
-                                            labels: preset!.presetDebt.labels.length ? workDebt.labels : [],
+                                            ...preset!.presetItem,
+                                            transactionExecutorUid: preset!.presetItem.transactionExecutorUid ? workDebt.transactionExecutorUid : null,
+                                            whoHasPaidUid: preset!.presetItem.whoHasPaidUid ? workDebt.whoHasPaidUid : null,
+                                            whoWasPaiFor: preset!.presetItem.whoWasPaiFor ? workDebt.whoWasPaiFor : null,
+                                            categoryUid: preset!.presetItem.categoryUid ? workDebt.categoryUid : null,
+                                            labels: preset!.presetItem.labels.length ? workDebt.labels : [],
                                         } as DebtModel
                                     } as DebtPresetModel
                                 ).then(() => {
@@ -340,7 +410,7 @@ const CreateDebtDialog = ({
                         // workTransaction.newLabels = workTransaction.labels.map(labelUid => labels.find(label => label.uid === labelUid)?.name || "")
 
                         updateDBItem(
-                            getDatabaseRoute!(DatabaseRoutes.DEBTS),
+                            getDatabaseRoute!(workDebt.debtType === DebtType.DEFAULT ? DatabaseRoutes.DEBTS : DatabaseRoutes.PAYED_DEBTS),
                             workDebt
                         ).then(() => {
                             dialog.closeCurrent();
@@ -351,35 +421,32 @@ const CreateDebtDialog = ({
                 new ContentAction(translate("back"), () => setCurrentTab(currentTab - 1), currentTab === 0),
                 new ContentAction(translate("next"), () => setCurrentTab(currentTab + 1)),
             ]}>
-                <div className="create-transaction-dialog-navigation">
-                    <div>
+                { workDebt.debtType === DebtType.DEFAULT && <div className="create-transaction-dialog-navigation">
+                    <div className={currentTab === 0 ? "selected" : ""}>
                         <MdAttachMoney
-                            className={currentTab === 0 ? "selected" : ""}
                             onClick={() => {
                                 setCurrentTab(0)
                             }}
                         />
                         <span>{translate("basics")}</span>
                     </div>
-                    <div>
+                    <div className={currentTab === 1 ? "selected" : ""}>
                         <MdTune
-                            className={currentTab === 1 ? "selected" : ""}
                             onClick={() => {
                                 setCurrentTab(1)
                             }}
                         />
                         <span>{translate("distribution")}</span>
                     </div>
-                    <div>
+                    <div className={currentTab === 2 ? "selected" : ""}>
                         <MdDescription
-                            className={currentTab === 2 ? "selected" : ""}
                             onClick={() => {
                                 setCurrentTab(2)
                             }}
                         />
                         <span>{translate("description")}</span>
                     </div>
-                </div>
+                </div>}
                 {
                     getTab(currentTab)
                 }

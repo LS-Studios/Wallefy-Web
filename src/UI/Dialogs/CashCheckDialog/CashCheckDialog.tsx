@@ -4,74 +4,67 @@ import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import {CashCheckModel} from "../../../Data/DataModels/CashCheckModel";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import "./CashCheckDialog.scss";
-import {formatCurrency} from "../../../Helper/CurrencyHelper";
+import {formatCurrency, getTransactionAmount} from "../../../Helper/CurrencyHelper";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
 import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
 import LoadingDialog from "../LoadingDialog/LoadingDialog";
 import {useDebts} from "../../../CustomHooks/useDebts";
 import {calculateCashChecks} from "../../../Helper/CalculationHelper";
 import {useSettings} from "../../../Providers/SettingsProvider";
-import {deleteDBObject, getDBObject, getDBObjectOnChange, setDBObject} from "../../../Helper/AceBaseHelper";
+import {addDBItem, deleteDBObject, getDBObject, getDBObjectOnChange, setDBObject} from "../../../Helper/AceBaseHelper";
 import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {PayedDebtModel} from "../../../Data/DataModels/PayedDebtModel";
+import {usePayedDebts} from "../../../CustomHooks/usePayedDebts";
+import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
+import {DebtType} from "../../../Data/EnumTypes/DebtType";
+import CashCheckCard from "./CashCheckCard";
 
 const CashCheckDialog = () => {
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount, updateAccountBalance } = useCurrentAccount();
     const settings = useSettings()
     const getDatabaseRoute = useDatabaseRoute()
 
     const debts = useDebts()
+    const payedDebts = usePayedDebts()
     const transactionPartners = useTransactionPartners()
 
     const [cashChecks, setCashChecks] = React.useState<CashCheckModel[]>([])
-    const getPaymentTextFromCashCheck = (cashCheck: CashCheckModel) => {
-        return translate(
-            "payment-text",
-            transactionPartners!.find(partner => partner.uid === cashCheck.payerUid)?.name || cashCheck.payerUid,
-            formatCurrency(cashCheck.amount, settings?.language, currentAccount?.currencyCode),
-            transactionPartners!.find(partner => partner.uid === cashCheck.receiverUid)?.name || cashCheck.receiverUid,
-        )
-    }
 
     useEffect(() => {
-        if (!debts || !transactionPartners) return
+        if (!debts || !payedDebts || !currentAccount) return
         //deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS))
-        getDBObjectOnChange(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS), (payedDebts: PayedDebtModel[] | null) => {
-            setCashChecks(calculateCashChecks(debts,payedDebts || []))
-        })
+        setCashChecks(calculateCashChecks(debts,payedDebts || [], currentAccount?.currencyCode))
+    }, [debts, payedDebts]);
 
-        //TODO geht noch nicht, wenn man neue hinzufügt
-    }, [debts, transactionPartners]);
-
-    if (!currentAccount || !debts || !transactionPartners) {
+    if (!debts || !transactionPartners || !currentAccount) {
         return <LoadingDialog />
     }
 
     const checkDone = (cashCheck: CashCheckModel | CashCheckModel[]) => {
-        getDBObject(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS)).then((payedDebts: PayedDebtModel[] | null) => {
-            let newPayedDebts = payedDebts || []
+        const buildPayedDebtModel = (cashCheck: CashCheckModel) => {
+            const newDebt = new DebtModel(currentAccount.currencyCode)
+            newDebt.accountUid = currentAccount.uid
+            newDebt.transactionAmount = cashCheck.amount
+            newDebt.whoHasPaidUid = cashCheck.payerUid
+            newDebt.whoWasPaiFor = [cashCheck.receiverUid]
+            newDebt.debtType = DebtType.MONEY_TRANSFER
+            return newDebt
+        }
 
-            if (Array.isArray(cashCheck)) {
-                cashCheck.forEach(cashCheck => {
-                    newPayedDebts.push(new PayedDebtModel(cashCheck.payerUid, cashCheck.payedDebts))
-                })
-            } else {
-                newPayedDebts.push(new PayedDebtModel(cashCheck.payerUid, cashCheck.payedDebts))
-            }
-
-            setDBObject(
+        if (Array.isArray(cashCheck)) {
+            cashCheck.forEach(cashCheck => {
+                addDBItem(
+                    getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS),
+                    buildPayedDebtModel(cashCheck)
+                )
+            })
+        } else {
+            addDBItem(
                 getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS),
-                newPayedDebts
+                buildPayedDebtModel(cashCheck)
             )
-        })
-    }
-
-    // TODO []: Implement loading dialog
-
-    if (!getDatabaseRoute) {
-        return <LoadingDialog />
+        }
     }
 
     return (
@@ -81,18 +74,20 @@ const CashCheckDialog = () => {
                     translate("all-payments-done"),
                     () => {
                         checkDone(cashChecks)
-                    },
+                    }
                 )
             ] : []}
         >
             { cashChecks.length > 0 ? cashChecks.map((cashCheck, index) => {
-                return <div className="cash-check-dialog-item">
-                    <div className="cash-check-dialog-item-content">
-                        <div className="cash-check-dialog-item-number">{index + 1}</div>
-                        <span className="cash-check-dialog-item-text">{getPaymentTextFromCashCheck(cashCheck)}</span>
-                    </div>
-                    <button className="cash-check-dialog-item-done-button" onClick={() => checkDone(cashCheck)}>{translate("payment-done")}</button>
-                </div>
+                return <CashCheckCard
+                        cashCheck={cashCheck}
+                        index={index}
+                        checkDone={checkDone}
+                        transactionPartners={transactionPartners}
+                        currentAccount={currentAccount}
+                        settings={settings}
+                        translate={translate}
+                    />
             }) : <div className="no-items">{translate("you-are-balanced")}</div> }
         </DialogOverlay>
     );

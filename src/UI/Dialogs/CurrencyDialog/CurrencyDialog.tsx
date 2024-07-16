@@ -30,7 +30,7 @@ const CurrencyDialog = ({
     currencyRateIsDisabled?: boolean
 }) => {
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const dialog = useDialog();
 
     const currencyOptions = getCurrencyOptions()

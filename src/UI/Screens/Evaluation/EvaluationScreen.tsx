@@ -12,14 +12,6 @@ import "../Home/HomeScreen.scss";
 import {ChartDataModel} from "../../../Data/DataModels/Chart/ChartDataModel";
 import BarChartCard
     from "../TransactionOverview/TransactionOverviewBalancesCard/BarChartCard";
-import {DateRangeModel} from "../../../Data/DataModels/DateRangeModel";
-import {
-    formatDate,
-    formatDateToStandardString, getCurrentDate,
-    getEndOfMonth,
-    getStartOfMonth,
-    speakableDate, speakableDateRange
-} from "../../../Helper/DateHelper";
 // @ts-ignore
 import variables from "../../../Data/Variables.scss";
 import {CalculationType} from "../../../Data/EnumTypes/CalculationType";
@@ -43,11 +35,15 @@ import {DBItem} from "../../../Data/DatabaseModels/DBItem";
 import {TransactionType} from "../../../Data/EnumTypes/TransactionType";
 import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
+import {DialogModel} from "../../../Data/DataModels/DialogModel";
+import PieChartDetailDialog from "../../Dialogs/PieChartDetailDialog/PieChartDetailDialog";
+import {useDialog} from "../../../Providers/DialogProvider";
 
 const EvaluationScreen = () => {
+    const dialog = useDialog()
     const settings = useSettings()
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
 
     const debts = useDebts()
     const transactionPartners = useTransactionPartners()
@@ -95,6 +91,7 @@ const EvaluationScreen = () => {
                 const partner = transactionPartners.find((partner) => partner.uid === key)
 
                 return new ChartDataModel(
+                    partner?.uid || "",
                     partner?.name || "",
                     transactionPartnerMap[key]
                 )
@@ -105,6 +102,7 @@ const EvaluationScreen = () => {
                 const partner = transactionPartners.find((partner) => partner.uid === key)
 
                 return new ChartDataModel(
+                    partner?.uid || "",
                     partner?.name || "",
                     payerMap[key]
                 )
@@ -121,6 +119,7 @@ const EvaluationScreen = () => {
             if (foundItems.length > 0) {
                 result.push(
                     new ChartDataModel(
+                        item.uid,
                         item.name,
                         foundItems.reduce((a, b) => a + getTransactionAmount(b, currentAccount?.currencyCode, true), 0)!,
                     )
@@ -175,6 +174,24 @@ const EvaluationScreen = () => {
                     onItemSelected={setSelectedPaymentData}
                     noItemSelectedLabel={translate("total")}
                     baseCurrency={currentAccount?.currencyCode}
+                    onDetailOpen={() => {
+                        const detailDebts: DebtModel[] = []
+
+                        if (!debts) return
+
+                        debts.forEach((debt) => {
+                            if (selectedPaymentData && debt.whoHasPaidUid === selectedPaymentData.valueUid) {
+                                detailDebts.push(debt)
+                            }
+                        })
+
+                        dialog.open(
+                            new DialogModel(
+                                selectedCategory?.label || "",
+                                <PieChartDetailDialog debts={detailDebts} />
+                            )
+                        )
+                    }}
                 />
                 <TransactionOverviewPieCard
                     icon={<MdPieChart/>}
@@ -185,6 +202,24 @@ const EvaluationScreen = () => {
                     onItemSelected={setSelectedCategory}
                     noItemSelectedLabel={translate("total")}
                     baseCurrency={currentAccount?.currencyCode}
+                    onDetailOpen={() => {
+                        const detailDebts: DebtModel[] = []
+
+                        if (!debts) return
+
+                        debts.forEach((debt) => {
+                            if (selectedCategory && debt.categoryUid === selectedCategory.valueUid) {
+                                detailDebts.push(debt)
+                            }
+                        })
+
+                        dialog.open(
+                            new DialogModel(
+                                selectedCategory?.label || "",
+                                <PieChartDetailDialog debts={detailDebts} />
+                            )
+                        )
+                    }}
                 />
                 <TransactionOverviewPieCard
                     icon={<MdLabel/>}
@@ -195,6 +230,24 @@ const EvaluationScreen = () => {
                     onItemSelected={setSelectedLabel}
                     noItemSelectedLabel={translate("total")}
                     baseCurrency={currentAccount?.currencyCode}
+                    onDetailOpen={() => {
+                        const detailDebts: DebtModel[] = []
+
+                        if (!debts) return
+
+                        debts.forEach((debt) => {
+                            if (selectedCategory && debt.labels.includes(selectedCategory.valueUid)) {
+                                detailDebts.push(debt)
+                            }
+                        })
+
+                        dialog.open(
+                            new DialogModel(
+                                selectedCategory?.label || "",
+                                <PieChartDetailDialog debts={detailDebts} />
+                            )
+                        )
+                    }}
                 />
             </div>
         </div>

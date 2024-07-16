@@ -7,18 +7,21 @@ import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/Transacti
 import {CategoryModel} from "../../../../Data/DatabaseModels/CategoryModel";
 import {LabelModel} from "../../../../Data/DatabaseModels/LabelModel";
 import {SettingsModel} from "../../../../Data/DataModels/SettingsModel";
+import {useSettings} from "../../../../Providers/SettingsProvider";
+import {useTranslation} from "../../../../CustomHooks/useTranslation";
 
 const TransactionGroup = ({
     transactionGroup,
     transactionPartners,
-    settings,
-    translate
+    backgroundColor = "var(--background)"
 }: {
     transactionGroup: TransactionGroupModel,
     transactionPartners: TransactionPartnerModel[] | null,
-    settings: SettingsModel | null,
-    translate: (string: string) => string
+    backgroundColor?: string
 }) => {
+    const settings = useSettings()
+    const translate = useTranslation()
+
     const transactionGroupDate = new Date(transactionGroup.date)
 
     return (
@@ -36,6 +39,7 @@ const TransactionGroup = ({
                         isStart={index === 0}
                         isEnd={index === transactionGroup.transactions.length - 1 || transactionGroup.transactions.length === 1}
                         translate={translate}
+                        backgroundColor={backgroundColor}
                     />
                 ))}
             </div>

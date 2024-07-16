@@ -19,6 +19,7 @@ import {ExportDataModel} from "../../Data/DataModels/ExportDataModel";
 import {usePresets} from "../../CustomHooks/usePresets";
 import {useHistoryTransactions} from "../../CustomHooks/useHistoryTransactions";
 import {useDebts} from "../../CustomHooks/useDebts";
+import {usePayedDebts} from "../../CustomHooks/usePayedDebts";
 
 const ExportDialog = () => {
     const dialog = useDialog()
@@ -33,6 +34,7 @@ const ExportDialog = () => {
     const historyTransactions = useHistoryTransactions()
     const transactions = useTransactions()
     const debts = useDebts()
+    const payedDebts = usePayedDebts()
     const transactionPartners = useTransactionPartners()
     const categories = useCategories()
     const labels = useCategories()
@@ -69,6 +71,7 @@ const ExportDialog = () => {
                         !historyTransactions ||
                         !transactions ||
                         !debts ||
+                        !payedDebts ||
                         !transactionPartners ||
                         !categories ||
                         !labels
@@ -81,6 +84,7 @@ const ExportDialog = () => {
                         historyTransactions,
                         transactions,
                         debts,
+                        payedDebts,
                         categories,
                         transactionPartners,
                         labels,

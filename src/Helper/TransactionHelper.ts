@@ -1,8 +1,6 @@
-import {TransactionType} from "../Data/EnumTypes/TransactionType";
-import exp from "constants";
 import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
 import {RepetitionHelper} from "./RepetitionHelper";
-import {formatDate, formatDateToStandardString} from "./DateHelper";
+import {formatDateToStandardString} from "./DateHelper";
 import {DateRangeModel} from "../Data/DataModels/DateRangeModel";
 import {BalanceAtDateModel} from "../Data/DataModels/Chart/BalanceAtDateModel";
 import {getTransactionAmount} from "./CurrencyHelper";
@@ -10,6 +8,10 @@ import {DatabaseRoutes} from "./DatabaseRoutes";
 import {TransactionGroupModel} from "../Data/DataModels/TransactionGroupModel";
 import {DebtModel} from "../Data/DatabaseModels/DebtModel";
 import {DebtGroupModel} from "../Data/DataModels/DebtGroupModel";
+import {AccountModel} from "../Data/DatabaseModels/AccountModel";
+import {addDBItem, deleteDBItem, updateDBItem} from "./AceBaseHelper";
+import {RepetitionModel} from "../Data/DataModels/Reptition/RepetitionModel";
+import {ExecutionType} from "../Data/EnumTypes/ExecutionType";
 
 export const calculateNFutureTransactions = (getDatabaseRoute: (databaseRoute: DatabaseRoutes) => string, transactions: TransactionModel[], amount: number) => {
     const clonedTransactions: TransactionModel[] = structuredClone(transactions)
@@ -163,7 +165,9 @@ export const calculateBalancesAtDateInDateRange = (currentBalance: number, trans
 export const groupTransactions = (
     transactions: (TransactionModel | DebtModel)[],
     createNewGroupMode: (date: string, subTransactions: (TransactionModel | DebtModel)[]) => (TransactionGroupModel | DebtGroupModel),
-    sortTransactions: (transactions: (TransactionModel | DebtModel)[]) => void) => {
+    sortTransactions: (transactions: (TransactionModel | DebtModel)[]) => void,
+    showStartOfMonth: boolean = true
+) => {
     const groups: (TransactionGroupModel | DebtGroupModel)[] = [];
 
     let date = transactions[0].date;
@@ -190,7 +194,7 @@ export const groupTransactions = (
     let previousMonth: number | null = null;
     let previousYear: number | null = null;
 
-    return groups.map(group => {
+    return showStartOfMonth ? groups.map(group => {
         const dateObj = new Date(group.date);
         const currentMonth = dateObj.getMonth();
         const currentYear = dateObj.getFullYear();
@@ -203,6 +207,87 @@ export const groupTransactions = (
         return {
             ...group,
             isStartOfMonth: isStartOfMonth
+        }
+    }) : groups;
+}
+
+export const executePastTransactions = (
+    transactions: TransactionModel[],
+    currentAccount: AccountModel,
+    updateAccountBalance: (amount: number) => void,
+    getDatabaseRoute: (databaseRoute: DatabaseRoutes) => string
+) => {
+    return new Promise<void>((resolve) => {
+        const promises: Promise<void>[] = [];
+
+        transactions.filter((transaction) => {
+            return new Date(transaction.date) < new Date() && !transaction.future && !transaction.history
+        }).forEach((transaction) => {
+            promises.push(executeTransaction(transaction, currentAccount, updateAccountBalance, getDatabaseRoute))
+        })
+
+        Promise.all(promises).then(() => {
+            resolve()
+        })
+    })
+}
+
+export const executeTransaction = (
+    transaction: TransactionModel,
+    currentAccount: AccountModel,
+    updateAccountBalance: (amount: number) => void,
+    getDatabaseRoute: (databaseRoute: DatabaseRoutes) => string
+) => {
+    return new Promise<void>((resolve, reject) => {
+        updateAccountBalance(currentAccount.balance + getTransactionAmount(transaction, currentAccount.currencyCode)!);
+
+        const nextDate = new RepetitionHelper(transaction).calculateNextRepetitionDate(getDatabaseRoute);
+
+        if (transaction.history) {
+            addDBItem(
+                getDatabaseRoute(DatabaseRoutes.HISTORY_TRANSACTIONS),
+                {
+                    ...transaction,
+                    uid: "",
+                    repetition: new RepetitionModel(
+                        ExecutionType.PAST
+                    ),
+                    date: formatDateToStandardString(new Date()),
+                    history: true
+                }
+            ).then(() => {
+                resolve()
+            })
+        } else if (nextDate) {
+            addDBItem(
+                getDatabaseRoute(DatabaseRoutes.HISTORY_TRANSACTIONS),
+                {
+                    ...transaction,
+                    uid: "",
+                    repetition: new RepetitionModel(
+                        ExecutionType.PAST
+                    ),
+                    date: formatDateToStandardString(new Date()),
+                    history: true
+                }
+            ).then(() => {
+                updateDBItem(
+                    getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
+                    {
+                        ...transaction,
+                        date: nextDate
+                    }
+                ).then(() => {
+                    resolve()
+                })
+            })
+        } else {
+            deleteDBItem(
+                getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
+                transaction
+            ).then(() => {
+                resolve()
+            })
         }
     })
 }

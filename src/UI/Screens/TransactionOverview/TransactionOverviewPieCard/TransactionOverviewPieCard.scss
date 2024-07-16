@@ -7,7 +7,7 @@
 
   .transaction-overview-card-chart-text {
     position: absolute;
-    top: 0;
+    top: 8px;
     left: 0;
 
     display: flex;
@@ -25,6 +25,22 @@
     }
     #transaction-overview-card-chart-text-label {
       font-size: 14px;
+    }
+    #transaction-overview-card-chart-text-button {
+        font-size: 14px;
+        color: var(--text);
+        background-color: var(--background-color);
+        border: 2px solid var(--outline-color);
+        border-radius: 12px;
+        padding: 4px 12px;
+        cursor: pointer;
+        transition: 0.2s ease-in-out;
+
+        &:hover {
+            background-color: var(--hover);
+        }
+
+      z-index: 10;
     }
   }
 }
@@ -58,6 +74,10 @@
     cursor: pointer;
 
     transition: 0.2s ease-in-out;
+
+    &:hover {
+      background-color: var(--hover);
+    }
 
     &.selected {
       border: 2px solid var(--outline-color);

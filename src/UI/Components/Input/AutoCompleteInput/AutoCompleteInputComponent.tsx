@@ -2,7 +2,7 @@ import React, {CSSProperties, useEffect, useState} from 'react';
 import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './AutoCompleteInputComponent.scss';
 import DropDialog from "../../Dropdialog/DropDialog";
-import {MdClose} from "react-icons/md";
+import {MdBolt, MdClose} from "react-icons/md";
 import {InputNameValueModel} from "../../../../Data/DataModels/Input/InputNameValueModel";
 import {getInputValueUidByUid} from "../../../../Helper/HandyFunctionHelper";
 import {useContextMenu} from "../../../../Providers/ContextMenuProvider";
@@ -10,10 +10,13 @@ import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {deleteDBItem, deleteDBItemByUid} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
+import {IconType} from "react-icons";
 
 function AutoCompleteInputComponent<T>({
     title,
     value,
+    Icon,
+    onIconClick,
     onValueChange,
     suggestions,
     fetchSuggestionsOnOpen,
@@ -31,6 +34,8 @@ function AutoCompleteInputComponent<T>({
 }: {
     title: string,
     value: InputNameValueModel<T> | InputNameValueModel<T>[] | null,
+    Icon?: IconType | null,
+    onIconClick?: (e: React.MouseEvent) => void,
     onValueChange: (value: InputNameValueModel<T> | InputNameValueModel<T>[] | null) => void,
     suggestions?: InputNameValueModel<T>[] | null,
     fetchSuggestionsOnOpen?: () => Promise<InputNameValueModel<T>[]>,
@@ -57,7 +62,6 @@ function AutoCompleteInputComponent<T>({
     const [inputIsExpanded, setInputIsExpanded] = useState<Boolean>(false)
 
     const [userInput, setUserInput] = useState<string>(Array.isArray(value) ? "" : value?.name || "")
-    const [changeUserInputOnValueChange, setChangeUserInputOnValueChange] = useState<boolean>(true)
     const [activeSuggestion, setActiveSuggestion] = useState<number | null>(null)
     const [suggestionsToWorkWith, setSuggestionsToWorkWith] = useState<InputNameValueModel<T>[] | null>(null)
     const [filteredSuggestions, setFilteredSuggestions] = useState<InputNameValueModel<T>[] | null>(null)
@@ -310,6 +314,7 @@ function AutoCompleteInputComponent<T>({
                         { filteredSuggestions.map((suggestion, index) => {
                             return <li
                                 key={index}
+                                style={{padding: suggestionElement ? "6px 0" : "6px"}}
                                 onClick={(e) => selectSuggestion(suggestion.name)}
                                 className={(Array.isArray(value) ? value.includes(suggestion) : value?.name === suggestion.name) ? "active" : index === activeSuggestion ? "selected" : ""}
                                 onContextMenu={(e) => {
@@ -318,7 +323,7 @@ function AutoCompleteInputComponent<T>({
                             >
                                 { suggestionElement ? suggestionElement(suggestion) : <>
                                     <span>{suggestion.name}</span>
-                                    { (Array.isArray(value) ? (value.includes(suggestion) && (selectAtLeastOne || value.length > 1)) : (value?.name === suggestion.name && !selectAtLeastOne)) && <MdClose /> }
+                                    { (Array.isArray(value) ? (value.includes(suggestion) && (selectAtLeastOne || value.length > 0)) : (value?.name === suggestion.name && !selectAtLeastOne)) && <MdClose style={{color:"var(--accent)"}} /> }
                                 </> }
                             </li>
                         })}
@@ -362,6 +367,9 @@ function AutoCompleteInputComponent<T>({
                             </span>
                         })
                     }
+                    { Icon && (Array.isArray(value) ? value.length > 0 : value) && <Icon onClick={onIconClick ? (e) => {
+                        onIconClick(e)
+                    } : undefined} className="icon" /> }
                     <input
                         className="auto-complete-multi-input-component-input"
                         ref={inputRef}

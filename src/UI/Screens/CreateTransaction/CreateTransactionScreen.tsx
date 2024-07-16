@@ -5,17 +5,12 @@ import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {usePresets} from "../../../CustomHooks/usePresets";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
+import {getDefaultPresets} from "../../../Helper/DefaultPresetHelper";
 
 const CreateTransactionScreen = () => {
     const translate = useTranslation()
 
     const presets = usePresets()
-
-    useEffect(() => {
-        // defaultPresets.forEach((preset) => {
-        //     addDBItem(DatabaseRoutes.PRESETS, preset)
-        // })
-    }, []);
 
     return (
         <div className="create-transaction">

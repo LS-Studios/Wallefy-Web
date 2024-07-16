@@ -34,6 +34,8 @@ import {CreateDebtInputErrorModel} from "../../../../Data/ErrorModels/CreateDebt
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
 import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
 import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/TransactionPartnerModel";
+import {getIcon, getIcons} from "../../../../Helper/IconMapper";
+import LoadingDialog from "../../LoadingDialog/LoadingDialog";
 
 const DebtDescriptionTab = ({
     inputError,
@@ -54,13 +56,20 @@ const DebtDescriptionTab = ({
     addNewItems: (newItem: DBItem, newItemsKey: keyof CreateDialogNewItems) => DBItem
     getDbItemContextMenuOptions: (databaseRoute: DatabaseRoutes, newItemsKey: keyof CreateDialogNewItems, value: InputNameValueModel<DBItem>) => ContentAction[]
 }) => {
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const translate = useTranslation()
     const dialog = useDialog()
     const getDatabaseRoute = useDatabaseRoute()
 
     const [categoriesForSelection, setCategoriesForSelection] = React.useState<InputNameValueModel<CategoryModel>[]>([])
     const [labelsForSelection, setLabelsForSelection] = React.useState<InputNameValueModel<LabelModel>[]>([])
+    const [icons, setIcons] = React.useState<InputNameValueModel<string>[]>([])
+
+    useEffect(() => {
+        setIcons(getIcons().map((icon) => {
+            return new InputNameValueModel(translate(icon), icon)
+        }))
+    }, []);
 
     useEffect(() => {
         if (categories) {
@@ -77,6 +86,10 @@ const DebtDescriptionTab = ({
             setLabelsForSelection([...labelsForSelection, ...newLabelsForSelection])
         }
     }, [labels, newItems.newLabels])
+
+    if (!currentAccount) {
+        return <LoadingDialog />
+    }
 
     return (
         <>
@@ -116,6 +129,30 @@ const DebtDescriptionTab = ({
                     'newCategories',
                     value
                 )}
+            />
+            <AutoCompleteInputComponent<string>
+                title={translate("icon")}
+                value={workDebt.icon ? new InputNameValueModel(translate(workDebt.icon || ""), workDebt.icon) : null}
+                Icon={workDebt.icon ? getIcon(workDebt.icon || "") : null}
+                onValueChange={(value) => {
+                    updateDebt((oldDebt) => {
+                        oldDebt.icon = (value as InputNameValueModel<string> | null)?.value || null;
+                        return oldDebt;
+                    });
+                }}
+                suggestionUlStyle={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+                    gap: "10px"
+                }}
+                suggestionElement={(suggestion) => {
+                    const Icon = getIcon(suggestion.value!) as React.FC
+                    return <div className="create-transaction-preset-icon">
+                        <Icon />
+                        <span>{suggestion.name}</span>
+                    </div>
+                }}
+                suggestions={icons}
             />
             <AutoCompleteInputComponent
                 title={translate("labels-of-transaction")}

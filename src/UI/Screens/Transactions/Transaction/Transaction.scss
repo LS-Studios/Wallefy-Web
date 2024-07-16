@@ -9,19 +9,32 @@
     scale: 1.01;
   }
 
-  .transaction-block-1 {
+  .transaction-content {
     display: flex;
-    flex-direction: column;
     justify-content: center;
-    align-items: start;
+    align-items: center;
 
-    #transaction-name {
-      font-weight: bold;
+    gap: 12px;
 
-      transition: 0.2s ease-in-out;
+    #transaction-icon {
+      width: 24px;
+      height: 24px;
     }
-    #transaction-executer {
-      font-style: italic;
+
+    .transaction-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: start;
+
+      #transaction-name {
+        font-weight: bold;
+
+        transition: 0.2s ease-in-out;
+      }
+      #transaction-executer {
+        font-style: italic;
+      }
     }
   }
 

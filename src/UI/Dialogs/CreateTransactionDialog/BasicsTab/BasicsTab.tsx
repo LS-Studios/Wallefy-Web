@@ -25,6 +25,8 @@ import {useCurrentAccount} from "../../../../Providers/AccountProvider";
 import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
 import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
+import {getIcon, getIcons} from "../../../../Helper/IconMapper";
+import LoadingDialog from "../../LoadingDialog/LoadingDialog";
 
 const BasicsTab = ({
    inputError,
@@ -54,6 +56,7 @@ const BasicsTab = ({
     getDbItemContextMenuOptions: (databaseRoute: DatabaseRoutes, newItemsKey: keyof CreateDialogNewItems, value: InputNameValueModel<DBItem>) => ContentAction[]
 }) => {
     const translate = useTranslation()
+    const { currentAccount } = useCurrentAccount()
 
     const transactionTypeInputOptions = [
         new InputOptionModel(translate("income"), TransactionType.INCOME),
@@ -61,6 +64,13 @@ const BasicsTab = ({
     ];
 
     const [transactionPartnersForSelection, setTransactionPartnersForSelection] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
+    const [icons, setIcons] = React.useState<InputNameValueModel<string>[]>([])
+
+    useEffect(() => {
+        setIcons(getIcons().map((icon) => {
+            return new InputNameValueModel(translate(icon), icon)
+        }))
+    }, []);
 
     useEffect(() => {
         if (transactionPartners) {
@@ -69,6 +79,10 @@ const BasicsTab = ({
             setTransactionPartnersForSelection([...transactionPartnersForSelection, ...newTransactionPartnersForSelection])
         }
     }, [transactionPartners, newItems.newTransactionPartners]);
+
+    if (!currentAccount) {
+        return <LoadingDialog />
+    }
 
     return (
         <>
@@ -79,29 +93,19 @@ const BasicsTab = ({
                     onValueChange={(value) => {
                         setPresetIcon(value as InputNameValueModel<string> | null);
                     }}
-                    // valueFormatter={(value) => {
-                    //     return value.slice(2).replace(/([A-Z])/g, ' $1').trim();
-                    // }}
                     suggestionUlStyle={{
                         display: "grid",
                         gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
                         gap: "10px"
                     }}
                     suggestionElement={(suggestion) => {
-                        const Icon = (MDIcons as any)[suggestion.value!]
+                        const Icon = getIcon(suggestion.value!) as React.FC
                         return <div className="create-transaction-preset-icon">
                             <Icon />
                             <span>{suggestion.name}</span>
                         </div>
                     }}
-                    fetchSuggestionsOnOpen={() => {
-                        return new Promise<InputNameValueModel<string>[]>((resolve) => {
-                            const icons = Object.keys(MDIcons).map((icon) => {
-                                return new InputNameValueModel(icon.slice(2).replace(/([A-Z])/g, ' $1').trim(), icon)
-                            })
-                            resolve(icons)
-                        })
-                    }}
+                    suggestions={icons}
                 />
                 <TextInputComponent
                     title={translate("preset-name")}
@@ -167,7 +171,7 @@ const BasicsTab = ({
                                 oldTransaction.transactionExecutorUid = newTransactionExecutor.value.uid
                             } else {
                                 const newTransactionPartner = new TransactionPartnerModel(
-                                    oldTransaction!.uid,
+                                    currentAccount?.uid!,
                                     newTransactionExecutor.name,
                                     false
                                 )

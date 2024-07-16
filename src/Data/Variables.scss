@@ -1,6 +1,10 @@
 :root {
+    --accent-light: #3890e4;
+    --accent-dark: #3890e4;
     --primary-dark: #2C3A47;
     --primary-light: #ffffff;
+    --hover-dark: rgba(255, 255, 255, 0.08);
+    --hover-light: rgba(0, 0, 0, 0.08);
     --background-dark: #11161B;
     --background-light: #f5f5f5;
     --outline-color: #797979;
@@ -26,7 +30,9 @@
 }
 
 .dark-theme {
+    --accent: var(--accent-dark);
     --primary: var(--primary-dark);
+    --hover: var(--hover-dark);
     --background: var(--background-dark);
     --outline-color: #797979;
     --stroke-color: var(--stroke-color-dark);
@@ -49,7 +55,9 @@
 }
 
 .light-theme {
+    --accent: var(--accent-light);
     --primary: var(--primary-light);
+    --hover: var(--hover-light);
     --background: var(--background-light);
     --outline-color: #565656;
     --stroke-color: #dddddd;
@@ -104,7 +112,7 @@
     background-repeat: no-repeat;
 
     &:focus {
-        background-image: linear-gradient(var(--selected-stroke-color), var(--selected-stroke-color));
+        background-image: linear-gradient(var(--accent), var(--accent));
     }
 }
 

@@ -9,16 +9,18 @@ import {ContextMenuModel} from "../../../Data/DataModels/ContextMenuModel";
 
 const DialogBase = ({
     title,
+    width = 400,
     onClose,
     children
 }: PropsWithChildren<{
     title: string,
+    width: number,
     onClose: () => void
 }>) => {
     return (
         <div id="popup" className="overlay">
             <div className="popup">
-                <div className="content">
+                <div className="content" style={{width}}>
                     <div className="header">
                         <h3>{title}</h3>
                         <MdClose className="closeIcon" onClick={onClose}/>

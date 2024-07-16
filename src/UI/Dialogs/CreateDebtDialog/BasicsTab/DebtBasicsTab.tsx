@@ -32,6 +32,9 @@ import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
 import {ExecutionType} from "../../../../Data/EnumTypes/ExecutionType";
 import {formatDateToStandardString} from "../../../../Helper/DateHelper";
 import DateInputComponent from "../../../Components/Input/DateInputComponent/DateInputComponent";
+import {getIcon, getIcons} from "../../../../Helper/IconMapper";
+import {DebtType} from "../../../../Data/EnumTypes/DebtType";
+import LoadingDialog from "../../LoadingDialog/LoadingDialog";
 
 const DebtBasicsTab = ({
    inputError,
@@ -63,9 +66,24 @@ const DebtBasicsTab = ({
     const dialog = useDialog()
     const translate = useTranslation()
     const getDatabaseRoute = useDatabaseRoute()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
 
     const [transactionPartnersForSelection, setTransactionPartnersForSelection] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
+    const [userTransactionPartners, setUserTransactionPartners] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
+    const [nonUserTransactionPartners, setNonUserTransactionPartners] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
+
+    const debtTypeInputOptions = [
+        new InputOptionModel(translate("default"), DebtType.DEFAULT),
+        new InputOptionModel(translate("money-transfer"), DebtType.MONEY_TRANSFER)
+    ];
+
+    const [icons, setIcons] = React.useState<InputNameValueModel<string>[]>([])
+
+    useEffect(() => {
+        setIcons(getIcons().map((icon) => {
+            return new InputNameValueModel(translate(icon), icon)
+        }))
+    }, []);
 
     useEffect(() => {
         if (transactionPartners) {
@@ -74,6 +92,15 @@ const DebtBasicsTab = ({
             setTransactionPartnersForSelection([...transactionPartnersForSelection, ...newTransactionPartnersForSelection])
         }
     }, [transactionPartners, newItems.newTransactionPartners]);
+
+    useEffect(() => {
+        setUserTransactionPartners(transactionPartnersForSelection?.filter(transactionPartner => transactionPartner.value?.isUser) || [])
+        setNonUserTransactionPartners(transactionPartnersForSelection?.filter(transactionPartner => !transactionPartner.value?.isUser) || [])
+    }, [transactionPartnersForSelection]);
+
+    if (!currentAccount) {
+        return <LoadingDialog />
+    }
 
     return (
         <>
@@ -84,29 +111,19 @@ const DebtBasicsTab = ({
                     onValueChange={(value) => {
                         setPresetIcon(value as InputNameValueModel<string> | null);
                     }}
-                    // valueFormatter={(value) => {
-                    //     return value.slice(2).replace(/([A-Z])/g, ' $1').trim();
-                    // }}
                     suggestionUlStyle={{
                         display: "grid",
                         gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
                         gap: "10px"
                     }}
                     suggestionElement={(suggestion) => {
-                        const Icon = (MDIcons as any)[suggestion.value!]
+                        const Icon = getIcon(suggestion.value!) as React.FC
                         return <div className="create-transaction-preset-icon">
                             <Icon />
                             <span>{suggestion.name}</span>
                         </div>
                     }}
-                    fetchSuggestionsOnOpen={() => {
-                        return new Promise<InputNameValueModel<string>[]>((resolve) => {
-                            const icons = Object.keys(MDIcons).map((icon) => {
-                                return new InputNameValueModel(icon.slice(2).replace(/([A-Z])/g, ' $1').trim(), icon)
-                            })
-                            resolve(icons)
-                        })
-                    }}
+                    suggestions={icons}
                 />
                 <TextInputComponent
                     title={translate("preset-name")}
@@ -116,7 +133,18 @@ const DebtBasicsTab = ({
                     }}
                 />
             </> }
-            <TextInputComponent
+            <RadioInputComponent
+                title={translate("payment-type")}
+                value={debtTypeInputOptions.find(option => option.value === workDebt.debtType)!}
+                onValueChange={(value) => {
+                    updateDebt((oldDebt) => {
+                        oldDebt.debtType = (value as InputOptionModel<DebtType>).value;
+                        return oldDebt;
+                    });
+                }}
+                options={debtTypeInputOptions}
+            />
+            { workDebt.debtType === DebtType.DEFAULT && <TextInputComponent
                 title={translate("name-of-transaction")}
                 value={workDebt.name}
                 onValueChange={(value) => {
@@ -128,7 +156,7 @@ const DebtBasicsTab = ({
                 style={{
                     borderColor: inputError.nameError ? variables.error_color : null
                 }}
-            />
+            /> }
             <CurrencyInputComponent
                 title={translate("transaction-amount")}
                 value={workDebt.transactionAmount}
@@ -149,9 +177,9 @@ const DebtBasicsTab = ({
                     borderColor: inputError.transactionAmountError ? variables.error_color : null
                 }}
             />
-            <AutoCompleteInputComponent
+            { workDebt.debtType === DebtType.DEFAULT && <AutoCompleteInputComponent
                 title={translate("receiver-of-transaction")}
-                value={getInputValueUidByUid(workDebt.transactionExecutorUid, transactionPartnersForSelection)}
+                value={getInputValueUidByUid(workDebt.transactionExecutorUid, nonUserTransactionPartners)}
                 onValueChange={(value) => {
                     updateDebt((oldDebt) => {
                         const newTransactionExecutor = value as InputNameValueModel<TransactionPartnerModel> | null;
@@ -175,7 +203,7 @@ const DebtBasicsTab = ({
                         return oldDebt;
                     });
                 }}
-                suggestions={transactionPartnersForSelection}
+                suggestions={nonUserTransactionPartners}
                 style={{
                     borderColor: inputError.transactionExecutorError ? variables.error_color : null
                 }}
@@ -185,10 +213,10 @@ const DebtBasicsTab = ({
                     "newTransactionPartners",
                     value
                 )}
-            />
+            /> }
             <AutoCompleteInputComponent
                 title={translate("who-has-paid")}
-                value={getInputValueUidByUid(workDebt.whoHasPaidUid, transactionPartnersForSelection)}
+                value={getInputValueUidByUid(workDebt.whoHasPaidUid, userTransactionPartners)}
                 onValueChange={(value) => {
                     updateDebt((oldDebt) => {
                         const newWhoHasPaid = value as InputNameValueModel<TransactionPartnerModel> | null;
@@ -201,7 +229,7 @@ const DebtBasicsTab = ({
                                     new TransactionPartnerModel(
                                         currentAccount!.uid,
                                         newWhoHasPaid.name,
-                                        false
+                                        true
                                     ),
                                     "newTransactionPartners"
                                 ).uid
@@ -213,7 +241,7 @@ const DebtBasicsTab = ({
                         return oldDebt;
                     });
                 }}
-                suggestions={transactionPartnersForSelection}
+                suggestions={userTransactionPartners}
                 style={{
                     borderColor: inputError.whoHasPaidError ? variables.error_color : null
                 }}
@@ -224,9 +252,9 @@ const DebtBasicsTab = ({
                     value
                 )}
             />
-            <AutoCompleteInputComponent
+            { workDebt.debtType === DebtType.DEFAULT ? <AutoCompleteInputComponent
                 title={translate("who-was-paid-for")}
-                value={getInputValueUidsByUids(workDebt.whoWasPaiFor, transactionPartnersForSelection)}
+                value={getInputValueUidsByUids(workDebt.whoWasPaiFor, userTransactionPartners)}
                 onValueChange={(value) => {
                     updateDebt((oldDebt) => {
                         const newWhoWasPaidFor = value as InputNameValueModel<TransactionPartnerModel>[];
@@ -236,7 +264,7 @@ const DebtBasicsTab = ({
                                 new TransactionPartnerModel(
                                     currentAccount!.uid,
                                     whoWasPaidFor.name,
-                                    false
+                                    true
                                 ),
                                 'newTransactionPartners'
                             ).uid
@@ -245,7 +273,7 @@ const DebtBasicsTab = ({
                         return oldDebt;
                     });
                 }}
-                suggestions={transactionPartnersForSelection}
+                suggestions={userTransactionPartners}
                 placeholder={translate("add-person")}
                 style={{
                     borderColor: inputError.whoWasPaidForError ? variables.error_color : null
@@ -256,7 +284,44 @@ const DebtBasicsTab = ({
                     "newTransactionPartners",
                     value
                 )}
-            />
+            /> : <AutoCompleteInputComponent
+                title={translate("who-was-paid-for")}
+                value={getInputValueUidByUid(workDebt.whoWasPaiFor[0], userTransactionPartners)}
+                onValueChange={(value) => {
+                    updateDebt((oldDebt) => {
+                        const newWhoHasPaid = value as InputNameValueModel<TransactionPartnerModel> | null;
+
+                        if (newWhoHasPaid) {
+                            if (newWhoHasPaid.value) {
+                                oldDebt.whoWasPaiFor = [newWhoHasPaid.value.uid]
+                            } else {
+                                oldDebt.whoWasPaiFor = [addNewItems(
+                                    new TransactionPartnerModel(
+                                        currentAccount!.uid,
+                                        newWhoHasPaid.name,
+                                        false
+                                    ),
+                                    "newTransactionPartners"
+                                ).uid]
+                            }
+                        } else {
+                            oldDebt.whoWasPaiFor = [];
+                        }
+
+                        return oldDebt;
+                    });
+                }}
+                suggestions={userTransactionPartners}
+                style={{
+                    borderColor: inputError.whoHasPaidError ? variables.error_color : null
+                }}
+                allowCreatingNew={true}
+                contextMenuOptions={(value) => getDbItemContextMenuOptions(
+                    DatabaseRoutes.TRANSACTION_PARTNERS,
+                    "newTransactionPartners",
+                    value
+                )}
+            /> }
             <DateInputComponent
                 title={translate("when-was-paid")}
                 value={new Date(workDebt.date)}

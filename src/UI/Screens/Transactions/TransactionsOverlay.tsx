@@ -64,7 +64,8 @@ const TransactionsOverlay = () => {
                                     currentOption={sortOptions.find((option) => option.value === sortValue)!}
                                     onOptionChange={(sortOption) => setSortValue(sortOption.value)}
                                     options={sortOptions}
-                                />
+                                />,
+                                350
                             )
                         )
                     },

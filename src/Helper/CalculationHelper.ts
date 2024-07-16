@@ -1,9 +1,8 @@
 import {DebtModel} from "../Data/DatabaseModels/DebtModel";
 import {CashCheckModel} from "../Data/DataModels/CashCheckModel";
-import {runInNewContext} from "node:vm";
-import {PayedDebtModel} from "../Data/DataModels/PayedDebtModel";
-import debt from "../UI/Screens/Debts/Debt/Debt";
-import {PayedDebtsModel} from "../Data/DataModels/PayedDebtsModel";
+import {getTransactionAmount} from "./CurrencyHelper";
+import {BalanceModel} from "../Data/DataModels/BalanceModel";
+import {TransactionPartnerModel} from "../Data/DatabaseModels/TransactionPartnerModel";
 
 export function roundToNearest(value: number, precision: number = 0.01): number {
     const decimalPlaces = precision.toString().split('.')[1]?.length || 0;
@@ -19,74 +18,13 @@ function cutOffDecimals(value: number, decimalsToKeep: number = 2): number {
     return parseFloat(value.toFixed(decimalsToKeep));
 }
 
-export function calculateCashChecks(debts: DebtModel[], payedDebts: PayedDebtModel[]) {
-    const participantMap: { [key: string]: number } = {}
-    const balanceForDebtMap: { [debtUid: string]: { [transactionPartnerUid: string]: number } } = {}
-
-    function setBalanceForDebtMap(debtUid: string, transactionPartnerUid: string, value: number) {
-        if (!balanceForDebtMap[debtUid]) {
-            balanceForDebtMap[debtUid] = {};
-        }
-        balanceForDebtMap[debtUid][transactionPartnerUid] = value;
-    }
-
-    debts.forEach((debt) => {
-        if (debt.whoHasPaidUid)
-            participantMap[debt.whoHasPaidUid] = (participantMap[debt.whoHasPaidUid] || 0) + (debt.transactionAmount || 0)
-
-        debt.distributions.forEach((distribution) => {
-            participantMap[distribution.transactionPartnerUid] = (participantMap[distribution.transactionPartnerUid] || 0) - (debt.transactionAmount || 0) * (distribution.percentage / 100)
-
-            let value = (debt.transactionAmount || 0) * (distribution.percentage / 100)
-
-            if (distribution.transactionPartnerUid === debt.whoHasPaidUid) {
-                value = (debt.transactionAmount || 0) - value
-            } else {
-                value = -value
-            }
-
-            setBalanceForDebtMap(debt.uid, distribution.transactionPartnerUid, value)
-        })
-    })
-
-    payedDebts.forEach((payedDebt) => {
-        let alreadyPayed = 0
-        payedDebt.payedDebts.debts.forEach((debtUid) => {
-            alreadyPayed += balanceForDebtMap[debtUid][payedDebt.payerUid] || 0
-        })
-        participantMap[payedDebt.payedDebts.payedToUid] += alreadyPayed
-        participantMap[payedDebt.payerUid] -= alreadyPayed
-    })
-
-    const payerEntries: [string, number][] = [];
-    const receiverEntries: [string, number][] = [];
-
-    for (const key in participantMap) {
-        if (participantMap[key] >= 0) {
-            receiverEntries.push([key, participantMap[key]]);
-        } else {
-            payerEntries.push([key, participantMap[key]]);
-        }
-    }
-
-    payerEntries.sort((a, b) => a[1] - b[1]);
-    receiverEntries.sort((a, b) => b[1] - a[1]);
-
-    const payersMap: { [key: string]: number } = {}
-    const receiversMap: { [key: string]: number } = {}
-
-    for (const [key, value] of payerEntries) {
-        payersMap[key] = value;
-    }
-
-    for (const [key, value] of receiverEntries) {
-        receiversMap[key] = value;
-    }
-
+export function calculateCashChecks(debts: DebtModel[], payedDebts: DebtModel[], baseCurrency: string) {
     const cashChecks: CashCheckModel[] = [];
 
-    const payers = Object.entries(payersMap);
-    const receivers = Object.entries(receiversMap);
+    const balances = calculateBalances(debts, payedDebts, baseCurrency);
+
+    const payers: [string, number][] = balances.filter(balance => balance.balance < 0).map(balance => [balance.transactionPartnerUid, balance.balance]);
+    const receivers: [string, number][] = balances.filter(balance => balance.balance >= 0).map(balance => [balance.transactionPartnerUid, balance.balance]);
 
     let payerIndex = 0;
     let receiverIndex = 0;
@@ -96,17 +34,15 @@ export function calculateCashChecks(debts: DebtModel[], payedDebts: PayedDebtMod
         let [receiver, receiverAmount] = receivers[receiverIndex];
         let payment = Math.min(-payerAmount, receiverAmount); // Amount to settle between payer and receiver
 
-        cashChecks.push(
-            new CashCheckModel(
-                payer,
-                receiver,
-                payment,
-                new PayedDebtsModel(
+        if (payment > 0) {
+            cashChecks.push(
+                new CashCheckModel(
+                    payer,
                     receiver,
-                    debts.map(debt => debt.uid)
+                    payment
                 )
-            )
-        );
+            );
+        }
 
         payers[payerIndex][1] += payment;
         receivers[receiverIndex][1] -= payment;
@@ -120,4 +56,38 @@ export function calculateCashChecks(debts: DebtModel[], payedDebts: PayedDebtMod
     }
 
     return cashChecks
+}
+
+export const calculateBalances = (debts: DebtModel[], payedDebts: DebtModel[], baseCurrency: string): BalanceModel[] => {
+    const participantMap: { [key: string]: number } = {}
+
+    debts.forEach((debt) => {
+        if (debt.whoHasPaidUid)
+            participantMap[debt.whoHasPaidUid] = (participantMap[debt.whoHasPaidUid] || 0) + getTransactionAmount(debt, baseCurrency)
+
+        debt.distributions.forEach((distribution) => {
+            participantMap[distribution.transactionPartnerUid] = (participantMap[distribution.transactionPartnerUid] || 0) - getTransactionAmount(debt, baseCurrency) * (distribution.percentage / 100)
+        })
+    })
+
+    const newBalances: BalanceModel[] = []
+
+    Object.keys(participantMap).forEach((key) => {
+        const tpPayedDebts = payedDebts?.filter(payedDebt => payedDebt.whoHasPaidUid === key)
+        const tpPayedDebtsAmount = tpPayedDebts?.reduce((acc, payedDebt) => acc + (payedDebt.transactionAmount || 0), 0)
+
+        const tpReceiveDebts = payedDebts?.filter(payedDebt => payedDebt.whoWasPaiFor[0] === key)
+        const tpReceiveDebtsAmount = tpReceiveDebts?.reduce((acc, payedDebt) => acc + (payedDebt.transactionAmount || 0), 0)
+
+        let balance = roundToNearest(participantMap[key]) - roundToNearest(tpReceiveDebtsAmount || 0) + roundToNearest(tpPayedDebtsAmount || 0)
+
+        newBalances.push(
+            new BalanceModel(
+                key,
+                balance,
+            )
+        )
+    })
+
+    return newBalances
 }

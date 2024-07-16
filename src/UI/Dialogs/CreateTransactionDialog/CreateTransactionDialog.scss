@@ -14,6 +14,15 @@
     justify-content: center;
     gap: 8px;
 
+    &.selected {
+      color: var(--accent);
+
+      :first-child {
+        border: 2px solid var(--accent);
+        scale: 1.1;
+      }
+    }
+
     :first-child {
       cursor: pointer;
 
@@ -25,9 +34,8 @@
 
       transition: 0.2s ease-in-out;
 
-      &.selected {
-        border: 2px solid var(--selected-stroke-color);
-        scale: 1.1;
+      &:hover {
+        background: var(--hover);
       }
     }
 

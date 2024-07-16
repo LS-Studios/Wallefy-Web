@@ -32,6 +32,7 @@ const DeleteDialog = () => {
                     deleteHistory && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.HISTORY_TRANSACTIONS))
                     deleteTransactions && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS))
                     deleteTransactions && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.DEBTS))
+                    deleteTransactions && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS))
                     deleteCategories && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.CATEGORIES))
                     deleteTransactionPartners && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.TRANSACTION_PARTNERS))
                     deleteLabels && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.LABELS))

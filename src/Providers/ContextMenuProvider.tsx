@@ -8,20 +8,26 @@ import ContextMenuBase from "../UI/Components/ContextMenuBase/ContextMenuBase";
 import {ContentAction} from "../Data/ContentAction/ContentAction";
 
 export interface ContextMenuProviderProps {
-    handleOnContextMenu: (e: React.MouseEvent, options: ContentAction[]) => void;
+    handleOnContextMenu: (e: React.MouseEvent, options?: ContentAction[], content?: React.ReactNode, canBeHovered?: boolean) => void;
+    closeContextMenu: () => void;
 }
 
 export const ContextMenuProvider = ({ children }: PropsWithChildren) => {
     const [contextMenu, setContextMenu] = useState<ContextMenuModel | null>(null);
 
-    const handleOnContextMenu = (e: React.MouseEvent, options: ContentAction[]) => {
+    const handleOnContextMenu = (e: React.MouseEvent, options?: ContentAction[], content?: React.ReactNode, canBeHovered?: boolean) => {
         e.preventDefault();
-        setContextMenu(new ContextMenuModel(options, e.pageX, e.pageY));
+        setContextMenu(new ContextMenuModel(content, options, e.pageX, e.pageY, canBeHovered));
+    }
+
+    const closeContextMenu = () => {
+        setContextMenu(null);
     }
 
     const contextValue: ContextMenuProviderProps =
         useMemo(() => ({
-            handleOnContextMenu
+            handleOnContextMenu,
+            closeContextMenu
         }), [contextMenu]);
 
     return (

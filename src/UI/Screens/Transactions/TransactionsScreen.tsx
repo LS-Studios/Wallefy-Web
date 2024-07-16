@@ -37,7 +37,7 @@ const TransactionsScreen = ({
     const settings = useSettings()
     const translate = useTranslation()
     const getDatabaseRoute = useDatabaseRoute()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
 
     const [currentTab, setCurrentTab] = React.useState<number>(1);
 
@@ -66,7 +66,7 @@ const TransactionsScreen = ({
     }, [historyTransactions, presetTransactions, futureTransactions, debtTransactions, currentTab]);
 
     useEffect(() => {
-        if (currentTab !== 2 || !presetTransactions || !getDatabaseRoute) return
+        if (!presetTransactions || !getDatabaseRoute) return
 
         const nextFutureTransactions = calculateNFutureTransactions(getDatabaseRoute, presetTransactions, futureTransactionsAmount);
         setFutureTransactions(nextFutureTransactions)
@@ -168,10 +168,8 @@ const TransactionsScreen = ({
             )
         )
 
-        setTransactionGroups(groupTransactions(
+        setTransactionGroups([...groups, ...groupTransactions(
             [
-                ...pausedTransactions,
-                ...pendingTransactions,
                 ...filteredTransactions.filter(transaction => {
                     return !transaction.repetition.isPending && !transaction.repetition.isPaused
                 })
@@ -182,7 +180,7 @@ const TransactionsScreen = ({
             (transactions) => {
                 sortTransactions(transactions as TransactionModel[])
             }
-        ) as TransactionGroupModel[]);
+        ) as TransactionGroupModel[]]);
     }, [transactions, currentAccount, searchValue, sortValue, filterValue]);
 
     return (
@@ -207,8 +205,6 @@ const TransactionsScreen = ({
                                     key={index}
                                     transactionGroup={transactionGroup}
                                     transactionPartners={transactionPartners}
-                                    settings={settings}
-                                    translate={translate}
                                 />
                             ))
                         }

@@ -1,29 +1,20 @@
 import React, {useEffect} from 'react';
-import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
-import {TransactionGroupModel} from "../../../Data/DataModels/TransactionGroupModel";
 import {SortType} from "../../../Data/EnumTypes/SortType";
 import {FilterModel} from "../../../Data/DataModels/FilterModel";
-import {getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
 import {calculateNFutureTransactions, groupTransactions} from "../../../Helper/TransactionHelper";
-import {getTransactionAmount} from "../../../Helper/CurrencyHelper";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {useTransactions} from "../../../CustomHooks/useTransactions";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
 import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
-import {getDataSetPath} from "acebase/dist/types/test/dataset";
 import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
-import {AccountType} from "../../../Data/EnumTypes/AccountType";
-import {useHistoryTransactions} from "../../../CustomHooks/useHistoryTransactions";
 import {useDebts} from "../../../CustomHooks/useDebts";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
-import TransactionGroup from "../Transactions/TransactionGroup/TransactionGroup";
 import {DebtGroupModel} from "../../../Data/DataModels/DebtGroupModel";
 import DebtGroup from "./DebtGroup/DebtGroup";
+import {usePayedDebts} from "../../../CustomHooks/usePayedDebts";
+import {getTransactionAmount} from "../../../Helper/CurrencyHelper";
 
 const DebtScreen = ({
     searchValue,
@@ -36,10 +27,10 @@ const DebtScreen = ({
 }) => {
     const settings = useSettings()
     const translate = useTranslation()
-    const getDatabaseRoute = useDatabaseRoute()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
 
     const debts = useDebts()
+    const payedDebts = usePayedDebts()
     const transactionPartners = useTransactionPartners()
 
     const [debtGroups, setDebtGroups] = React.useState<DebtGroupModel[] | null>(null)
@@ -49,13 +40,24 @@ const DebtScreen = ({
 
         let filteredDebts = []
 
-        if (debts === null) {
+        if (debts === null || payedDebts === null) {
             setDebtGroups(null)
             return
         }
 
         //Search
         filteredDebts = debts.filter((debt) => debt.name.toLowerCase().includes(searchValue.toLowerCase()))
+        filteredDebts = [...filteredDebts, ...payedDebts.map((payedDebt) => {
+            const payerName = transactionPartners?.find(tp => tp.uid === payedDebt.whoHasPaidUid)?.name || "Unknown"
+            const receiverName = transactionPartners?.find(tp => tp.uid === payedDebt.whoWasPaiFor[0])?.name || "Unknown"
+
+            return {
+                ...payedDebt,
+                name: translate("money-transfer"),
+                subName: translate("money-transfer-from-to", payerName, receiverName),
+                icon: "money-transfer"
+            }
+        })]
 
         //Sort
         const sortDebts = (debts: DebtModel[]) => {
@@ -67,12 +69,12 @@ const DebtScreen = ({
                     break;
                 case SortType.PRICE_HIGH_TO_LOW:
                     debts.sort((a, b) => {
-                        return (a.transactionAmount || 0) < (b.transactionAmount || 0) ? 1 : -1;
+                        return (a.transactionAmount || 0) < getTransactionAmount(b, currentAccount.currencyCode) ? 1 : -1;
                     })
                     break;
                 case SortType.PRICE_LOW_TO_HIGH:
                     debts.sort((a, b) => {
-                        return (a.transactionAmount || 0) > (b.transactionAmount || 0) ? 1 : -1;
+                        return (a.transactionAmount || 0) > getTransactionAmount(b, currentAccount.currencyCode) ? 1 : -1;
                     })
                     break;
             }
@@ -126,7 +128,7 @@ const DebtScreen = ({
                 sortDebts(debts as DebtModel[])
             }
         ) as DebtGroupModel[]);
-    }, [debts, currentAccount, searchValue, sortValue, filterValue]);
+    }, [debts, payedDebts, currentAccount, searchValue, sortValue, filterValue]);
 
     return (
         <div className="list-screen">
@@ -139,8 +141,6 @@ const DebtScreen = ({
                                     key={index}
                                     debtGroup={debtGroup}
                                     transactionPartners={transactionPartners}
-                                    settings={settings}
-                                    translate={translate}
                                 />
                             ))
                         }

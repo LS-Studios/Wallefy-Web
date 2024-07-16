@@ -21,7 +21,8 @@ const TransactionOverviewPieCard = ({
     selectedItem,
     onItemSelected,
     calculationType = CalculationType.SUM,
-    baseCurrency
+    baseCurrency,
+    onDetailOpen
 }: {
     icon: React.ReactNode;
     title: string;
@@ -33,7 +34,8 @@ const TransactionOverviewPieCard = ({
     selectedItem: ChartDataModel | null;
     onItemSelected: (item: ChartDataModel | null) => void;
     calculationType?: CalculationType;
-    baseCurrency: string | null | undefined
+    baseCurrency: string | null | undefined,
+    onDetailOpen?: () => void
 }) => {
     const translate = useTranslation()
     const settings = useSettings()
@@ -66,6 +68,7 @@ const TransactionOverviewPieCard = ({
                             }
                         }, 0)))}</span>
                         <span id="transaction-overview-card-chart-text-label">{getLabelText()}</span>
+                        { selectedItem && onDetailOpen && <button id="transaction-overview-card-chart-text-button" onClick={onDetailOpen}>{translate("details")}</button> }
                     </div>
                     <PieChart
                         colors={[

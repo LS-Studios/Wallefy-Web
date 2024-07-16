@@ -4,9 +4,10 @@ import {ContextMenuProviderProps} from "./ContextMenuProvider";
 import {ToastProviderProps} from "./Toast/ToastProvider";
 import {SettingsModel} from "../Data/DataModels/SettingsModel";
 import {AccountModel} from "../Data/DatabaseModels/AccountModel";
+import {AccountProviderProps} from "./AccountProvider";
 
 export const DialogContext = createContext({} as DialogProviderProps)
 export const ContextMenuContext = createContext({} as ContextMenuProviderProps)
 export const ToastContext = createContext({} as ToastProviderProps)
 export const SettingsContext = createContext({} as SettingsModel | null)
-export const AccountContext = createContext({} as AccountModel | null)
+export const AccountContext = createContext({} as AccountProviderProps)

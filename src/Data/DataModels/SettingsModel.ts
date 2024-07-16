@@ -11,6 +11,6 @@ export class SettingsModel {
         this.currentUserUid = currentUserUid || "";
         this.currentAccountUid = currentAccountUid || "";
         this.theme = theme || ThemeType.SYSTEM;
-        this.language = language!
+        this.language = language !== undefined ? language : navigator.language === "de" ? LanguageType.GERMAN : LanguageType.ENGLISH;
     }
 }

@@ -37,6 +37,7 @@ import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
 import {CreateDialogNewItems} from "../../../Data/DataModels/CreateDialogNewItems";
 import {useNewItems} from "../../../CustomHooks/useNewItems";
 import {DBItem} from "../../../Data/DatabaseModels/DBItem";
+import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
 
 const CreateTransactionDialog = ({
     transaction,
@@ -48,7 +49,7 @@ const CreateTransactionDialog = ({
     preset?: TransactionPresetModel,
 }) => {
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const getDatabaseRoute = useDatabaseRoute()
     const dialog = useDialog()
     const toast = useToast()
@@ -62,18 +63,15 @@ const CreateTransactionDialog = ({
 
     const {
         newItems,
+        clearNewItems,
         addNewItems,
         getDbItemContextMenuOptions,
         checkDBItem
-    } = useNewItems(workTransaction, setWorkTransaction as React.Dispatch<React.SetStateAction<DBItem | null>>)
+    } = useNewItems()
 
     const transactionPartners = useTransactionPartners(null)
     const categories = useCategories()
     const labels = useLabels()
-
-    useEffect(() => {
-        currentAccount && !workTransaction && setWorkTransaction(new TransactionModel(currentAccount.currencyCode))
-    }, [currentAccount]);
 
     const updateTransaction = (updater: (oldTransaction: TransactionModel) => TransactionModel) => {
         setWorkTransaction((current) => {
@@ -83,30 +81,72 @@ const CreateTransactionDialog = ({
         })
     }
 
+    const setNewWorkTransactionUp = (transaction: TransactionModel, account: AccountModel) => {
+        checkTransactionUids(transaction, account).then((transaction) => {
+            setWorkTransaction(transaction)
+        })
+    }
+
+    const checkTransactionUids = (transaction: TransactionModel, account: AccountModel): Promise<TransactionModel> => {
+        return new Promise<TransactionModel>((resolve) => {
+            const promises: Promise<any>[] = []
+
+            clearNewItems()
+
+            if (transaction.transactionExecutorUid) {
+                promises.push(
+                    checkDBItem(
+                        transaction,
+                        DatabaseRoutes.TRANSACTION_PARTNERS,
+                        "transactionExecutorUid",
+                        new TransactionPartnerModel(account.uid, transaction.transactionExecutorFallback || "", false),
+                        "newTransactionPartners"
+                    )
+                )
+            }
+            if (transaction.categoryUid) {
+                promises.push(
+                    checkDBItem(
+                        transaction,
+                        DatabaseRoutes.CATEGORIES,
+                        "categoryUid",
+                        new CategoryModel(account.uid, transaction.categoryFallback || ""),
+                        "newCategories"
+                    )
+                )
+            }
+            promises.push(
+                checkDBItem(
+                    transaction,
+                    DatabaseRoutes.LABELS,
+                    "labels",
+                    Object.fromEntries(Object.entries(transaction.labelsFallback).map(([uid, value]) => [uid, new LabelModel(account.uid, value)])),
+                    "newLabels"
+                )
+            )
+
+            Promise.all(promises).then((result) => {
+                resolve(result[0])
+            })
+        })
+    }
+
     useEffect(() => {
-        if (getDatabaseRoute && transaction && transaction.uid) {
+        if (!getDatabaseRoute || !currentAccount) return
+
+        if (transaction && transaction.uid) {
             getDBItemOnChange(
-                getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
-                transaction.uid, (changedTransaction
-            ) => {
-                setWorkTransaction(changedTransaction as TransactionModel)
+                getDatabaseRoute(transaction.history ? DatabaseRoutes.HISTORY_TRANSACTIONS : DatabaseRoutes.TRANSACTIONS),
+                transaction.uid,
+                (changedTransaction) => {
+                    changedTransaction && setNewWorkTransactionUp(changedTransaction as TransactionModel, currentAccount)
             })
         } else if (transaction) {
-            setWorkTransaction(transaction)
+            setNewWorkTransactionUp(transaction, currentAccount)
+        } else {
+            setWorkTransaction(new TransactionModel(currentAccount.currencyCode))
         }
-    }, [getDatabaseRoute]);
-
-    useEffect(() => {
-        if (!transaction || !getDatabaseRoute) return
-
-        if (transaction.transactionExecutorUid) {
-            checkDBItem(transaction, DatabaseRoutes.TRANSACTION_PARTNERS, "transactionExecutorUid")
-        }
-        if (transaction.categoryUid) {
-            checkDBItem(transaction, DatabaseRoutes.CATEGORIES, "categoryUid")
-        }
-        checkDBItem(transaction, DatabaseRoutes.LABELS, "labels")
-    }, [getDatabaseRoute]);
+    }, [getDatabaseRoute, currentAccount]);
 
     if(!workTransaction) {
         return <LoadingDialog />
@@ -216,7 +256,8 @@ const CreateTransactionDialog = ({
             }
 
             if (labels) {
-                workTransaction.labelFallback = workTransaction.labels.map(labelUid => [...labels, ...newItems.newLabels].find(label => label.uid === labelUid)?.name || "")
+                workTransaction.labelsFallback = Object.fromEntries(workTransaction.labels.map(labelUid => [labelUid, [...labels, ...newItems.newLabels].find(label => label.uid === labelUid)?.name || ""]))
+
                 newItems.newLabels.forEach((newLabel) => {
                     promises.push(
                         addDBItem(
@@ -241,18 +282,21 @@ const CreateTransactionDialog = ({
 
                     Promise.all(addNewValues()).then(() => {
                         if (isPreset) {
-                            addDBItem(
-                                getDatabaseRoute(DatabaseRoutes.PRESETS),
-                                new TransactionPresetModel(
-                                    currentAccount.uid,
-                                    presetIcon?.value!,
-                                    presetName,
-                                    workTransaction,
-                                    currentAccount?.currencyCode
-                                )
-                            ).then(() => {
-                                dialog.closeCurrent();
-                            })
+
+                            //TODO [] Remove custom preset creation
+
+                            // addDBItem(
+                            //     getDatabaseRoute(DatabaseRoutes.PRESETS),
+                            //     new TransactionPresetModel(
+                            //         currentAccount.uid,
+                            //         presetIcon?.value!,
+                            //         presetName,
+                            //         workTransaction,
+                            //         currentAccount?.currencyCode
+                            //     )
+                            // ).then(() => {
+                            //     dialog.closeCurrent();
+                            // })
                         } else {
                             let transactionPath = DatabaseRoutes.TRANSACTIONS
 
@@ -261,7 +305,7 @@ const CreateTransactionDialog = ({
                                 workTransaction.history = true
                             }
 
-                            workTransaction.accountId = currentAccount.uid
+                            workTransaction.accountUid = currentAccount.uid
 
                             addDBItem(
                                 getDatabaseRoute(transactionPath),
@@ -277,10 +321,10 @@ const CreateTransactionDialog = ({
                                     {
                                         ...preset,
                                         presetTransaction: {
-                                            ...preset!.presetTransaction,
-                                            transactionExecutorUid: preset!.presetTransaction.transactionExecutorUid ? workTransaction.transactionExecutorUid : null,
-                                            categoryUid: preset!.presetTransaction.categoryUid ? workTransaction.categoryUid : null,
-                                            labels: preset!.presetTransaction.labels.length ? workTransaction.labels : [],
+                                            ...preset!.presetItem,
+                                            transactionExecutorUid: preset!.presetItem.transactionExecutorUid ? workTransaction.transactionExecutorUid : null,
+                                            categoryUid: preset!.presetItem.categoryUid ? workTransaction.categoryUid : null,
+                                            labels: preset!.presetItem.labels.length ? workTransaction.labels : [],
                                         } as TransactionModel
                                     } as TransactionPresetModel
                                 ).then(() => {
@@ -314,27 +358,24 @@ const CreateTransactionDialog = ({
                 new ContentAction(translate("next"), () => setCurrentTab(currentTab + 1)),
             ]}>
                 <div className="create-transaction-dialog-navigation">
-                    <div>
+                    <div className={currentTab === 0 ? "selected" : ""}>
                         <MdAttachMoney
-                            className={currentTab === 0 ? "selected" : ""}
                             onClick={() => {
                                 setCurrentTab(0)
                             }}
                         />
                         <span>{translate("basics")}</span>
                     </div>
-                    <div>
+                    <div className={currentTab === 1 ? "selected" : ""}>
                         <MdRepeat
-                            className={currentTab === 1 ? "selected" : ""}
                             onClick={() => {
                                 setCurrentTab(1)
                             }}
                         />
                         <span>{translate("repetition")}</span>
                     </div>
-                    <div>
+                    <div className={currentTab === 2 ? "selected" : ""}>
                         <MdDescription
-                            className={currentTab === 2 ? "selected" : ""}
                             onClick={() => {
                                 setCurrentTab(2)
                             }}

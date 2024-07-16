@@ -54,8 +54,8 @@ export const DialogProvider = ({ children }: PropsWithChildren) => {
         <DialogContext.Provider value={contextValue}>
             { children }
 
-            {dialogs.map((dialog) => (
-                <DialogBase title={dialog.title} onClose={() => close(dialog.id)}>
+            {dialogs.map((dialog, index) => (
+                <DialogBase key={index} title={dialog.title} width={dialog.width} onClose={() => close(dialog.id)}>
                     { dialog.dialog }
                 </DialogBase>
             ))}

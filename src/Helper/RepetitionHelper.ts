@@ -164,3 +164,15 @@ export class RepetitionHelper {
         }
     }
 }
+
+export const getDisabledWeekDays = (repetition: RepetitionModel) => {
+    return [
+        DayOfWeekModel.MONDAY,
+        DayOfWeekModel.TUESDAY,
+        DayOfWeekModel.WEDNESDAY,
+        DayOfWeekModel.THURSDAY,
+        DayOfWeekModel.FRIDAY,
+        DayOfWeekModel.SATURDAY,
+        DayOfWeekModel.SUNDAY
+    ].filter((day) => !repetition.repetitionDaysInWeek.includes(day));
+}

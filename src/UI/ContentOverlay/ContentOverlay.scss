@@ -86,7 +86,8 @@
 
 .content-overlay-header-content-actions-button {
   //border: 1px solid $stroke;
-  background-color: var(--primary);
+  border: 2px solid var(--outline-color);
+  color: var(--text);
   border-radius: 24px;
   padding: 6px 12px;
 
@@ -96,13 +97,12 @@
 
   margin-left: 16px;
 
-  color: var(--text);
   text-decoration: none;
 
   cursor: pointer;
 
   &:hover {
-    opacity: 0.6;
+    background-color: var(--hover);
   }
 
   * {
@@ -114,7 +114,9 @@
 
 .content-overlay-header-content-actions-search-action {
   //border: 1px solid $stroke;
-  background-color: var(--primary);
+  border: 2px solid var(--outline-color);
+  color: var(--text);
+
   border-radius: 24px;
   padding: 2px 12px;
 
@@ -126,8 +128,16 @@
 
   margin-left: 16px;
 
+  &:focus-within {
+    border: 2px solid var(--accent);
+
+    .content-overlay-header-content-actions-search-icon {
+      color: var(--accent);
+    }
+  }
+
   input {
-    background-color: var(--primary);
+    background-color: transparent;
     border: none;
     color: var(--text);
     font-size: 16px;

@@ -9,7 +9,6 @@ import {
 import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
 import {TransactionType} from "../Data/EnumTypes/TransactionType";
 import {CurrencyModel} from "../Data/DataModels/CurrencyModel";
-import {SettingsModel} from "../Data/DataModels/SettingsModel";
 import {InputNameValueModel} from "../Data/DataModels/Input/InputNameValueModel";
 import {DebtModel} from "../Data/DatabaseModels/DebtModel";
 import {LanguageType} from "../Data/EnumTypes/LanguageType";
@@ -32,7 +31,9 @@ export function getTransactionAmount(transaction: TransactionModel | DebtModel, 
         )
     }
 
-    return absolute ? Math.abs(currencyValue) : currencyValue
+    const castedTransaction = transaction as TransactionModel
+    const value = castedTransaction.transactionType ? (castedTransaction.transactionType === TransactionType.EXPENSE ? -currencyValue : currencyValue) : currencyValue
+    return absolute ? Math.abs(value) : value
 }
 
 export function formatCurrencyFromTransaction(transaction: TransactionModel, language: LanguageType | null | undefined,): string {

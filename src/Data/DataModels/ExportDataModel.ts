@@ -11,15 +11,17 @@ export class ExportDataModel {
     history: TransactionModel[];
     transactions: TransactionModel[];
     debts: DebtModel[];
+    payedDebts: DebtModel[];
     categories: CategoryModel[];
     transactionPartners: TransactionPartnerModel[];
     labels: LabelModel[];
 
-    constructor(presets: (TransactionPresetModel | DebtPresetModel)[], history: TransactionModel[], transactions: TransactionModel[], debts: DebtModel[], categories: CategoryModel[], transactionPartners: TransactionPartnerModel[], labels: LabelModel[]) {
+    constructor(presets: (TransactionPresetModel | DebtPresetModel)[], history: TransactionModel[], transactions: TransactionModel[], debts: DebtModel[], payedDebts: DebtModel[], categories: CategoryModel[], transactionPartners: TransactionPartnerModel[], labels: LabelModel[]) {
         this.presets = presets;
         this.history = history;
         this.transactions = transactions;
         this.debts = debts;
+        this.payedDebts = payedDebts
         this.categories = categories;
         this.transactionPartners = transactionPartners;
         this.labels = labels;

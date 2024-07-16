@@ -29,7 +29,7 @@ const Menu = () => {
     const location = useLocation()
     const [currentRoute, setCurrentRoute] = React.useState(location.pathname);
 
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
 
     useEffect(() => {
         setCurrentRoute(location.pathname)

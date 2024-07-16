@@ -4,20 +4,20 @@ import React, {useEffect} from "react";
 import {ThemeType} from "../Data/EnumTypes/ThemeType";
 import {SettingsModel} from "../Data/DataModels/SettingsModel";
 
-export const useToolTip = (settings: SettingsModel | null, toolTipWith = 250, tooTopHeight = 80) => {
+export const useToolTip = (settings?: SettingsModel | null, toolTipWith = 250, tooTopHeight = 80) => {
     const systemTheme = useThemeDetector()
 
     const [isOnRight, setIsOnRight] = React.useState<boolean>(false);
     const [isOnBottom, setIsOnBottom] = React.useState<boolean>(false);
 
     const mouseMove = (e: MouseEvent) => {
-        if (e.pageX + toolTipWith > window.screen.width) {
+        if (e.pageX + toolTipWith > window.innerWidth) {
             setIsOnRight(false);
         } else {
             setIsOnRight(true);
         }
 
-        if (e.pageY + tooTopHeight > window.screen.height) {
+        if (e.pageY + tooTopHeight > window.innerHeight) {
             setIsOnBottom(false);
         } else {
             setIsOnBottom(true);
@@ -50,6 +50,8 @@ export const useToolTip = (settings: SettingsModel | null, toolTipWith = 250, to
     }
 
     useEffect(() => {
+        if (!settings) return
+
         if (settings?.theme === ThemeType.SYSTEM) {
             setColorsByTheme(systemTheme)
         } else if (settings) {

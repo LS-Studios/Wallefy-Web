@@ -72,14 +72,14 @@ const StorageScreen = ({
     );
 };
 
-//TODO [] show distribution in detail
-//TODO [] on click pi chart open dialog with corresponding transactions
-//TODO [] when refresh, settings theme and language get rested
-//TODO [] When refresh jump to home and not stay on the same page
-//TODO [] Cant change current account in settings -> BUG
-//TODO [] If chart balance is selected, not turn it white, but make the other bars opacity 0.5
+//TODO [] Edit transaction dont fill the form
+//TODO [] Add function to calculate done transactions
+//TODO [] Popup dialog at beginning to explain the app
+//TODO [] Popup dialog to put the current balance and recent transactions
+//TODO [] Mobile Screens
+//TODO [] Add Firebase
+//TODO [] Public account with sync
 //TODO [] Help screen with Chat
 //TODO [] Chatbot which is able to create transactions and read data
-//TODO [] Mobile Screens
 
 export default StorageScreen;

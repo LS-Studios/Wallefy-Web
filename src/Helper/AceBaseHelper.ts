@@ -1,6 +1,6 @@
 import {getDatabase} from "../Database/AceBaseDatabase";
 import {AccountModel} from "../Data/DatabaseModels/AccountModel";
-import {DataReference, DataSnapshot} from "acebase";
+import {DataReference, DataSnapshot, EventStream} from "acebase";
 import {DBItem} from "../Data/DatabaseModels/DBItem";
 import {SettingsModel} from "../Data/DataModels/SettingsModel";
 import exp from "constants";
@@ -66,8 +66,8 @@ export const updateDBItem = <T extends DBItem>(path: string, item: T) => {
     })
 }
 
-export const getDBItemOnChange = <T extends DBItem>(rootPath: string, itemUid: string, onChange: (item: T | null) => void) => {
-    getDatabase().ref(rootPath).child(itemUid).on('value', (snapshot: DataSnapshot) => {
+export const getDBItemOnChange = <T extends DBItem>(rootPath: string, itemUid: string, onChange: (item: T | null) => void): EventStream<DataSnapshot> => {
+    return getDatabase().ref(rootPath).child(itemUid).on('value', (snapshot: DataSnapshot) => {
         if (!snapshot.exists()) {
             onChange(null)
             return;
@@ -76,8 +76,8 @@ export const getDBItemOnChange = <T extends DBItem>(rootPath: string, itemUid: s
     })
 }
 
-export const getDBItemsOnChange = <T extends DBItem>(path: string, onChange: (item: T[]) => void) => {
-    getDatabase().ref(path).on('value', (snapshot: DataSnapshot) => {
+export const getDBItemsOnChange = <T extends DBItem>(path: string, onChange: (item: T[]) => void): EventStream<DataSnapshot> => {
+    return getDatabase().ref(path).on('value', (snapshot: DataSnapshot) => {
         if (!snapshot.exists()) {
             onChange([])
             return;
@@ -115,8 +115,25 @@ export const getDBObject = (path: string) => {
     })
 }
 
-export const getDBObjectOnChange = <T>(path: string, onChange: (item: T | null) => void) => {
-    getDatabase().ref(path).on("value", (snapshot: DataSnapshot) => {
+export const getDBObjects = (path: string) => {
+    return new Promise<any | null>((resolve, reject) => {
+        getDatabase().ref(path).get((snapshot: DataSnapshot) => {
+            if (!snapshot.exists()) {
+                resolve([])
+                return;
+            }
+            const items: any[] = []
+            Object.values(snapshot.val()).forEach((account) => {
+                items.push(account)
+                return true
+            })
+            resolve(items)
+        })
+    })
+}
+
+export const getDBObjectOnChange = <T>(path: string, onChange: (item: T | null) => void): EventStream<DataSnapshot> => {
+    return getDatabase().ref(path).on("value", (snapshot: DataSnapshot) => {
         if (!snapshot.exists()) {
             onChange(null)
             return;

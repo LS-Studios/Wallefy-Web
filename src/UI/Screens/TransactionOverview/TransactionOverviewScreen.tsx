@@ -39,15 +39,19 @@ import {useLabels} from "../../../CustomHooks/useLabels";
 import {useCategories} from "../../../CustomHooks/useCategories";
 import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
 import {useSettings} from "../../../Providers/SettingsProvider";
+import {useDialog} from "../../../Providers/DialogProvider";
+import {DialogModel} from "../../../Data/DataModels/DialogModel";
+import PieChartDetailDialog from "../../Dialogs/PieChartDetailDialog/PieChartDetailDialog";
 
 const TransactionOverviewScreen = ({
     dateRange,
 }: {
     dateRange: DateRangeModel;
 }) => {
+    const dialog = useDialog()
     const translate = useTranslation()
     const settings = useSettings()
-    const currentAccount = useCurrentAccount();
+    const { currentAccount } = useCurrentAccount();;
     const { transactionsInDateRange, transactionsUntilDateRange, totalIncome, totalExpenses, totalSavings, totalBalance } = useTransactionsInDateRange(dateRange);
 
     const categories = useCategories()
@@ -85,6 +89,7 @@ const TransactionOverviewScreen = ({
                 currentAccount?.currencyCode
             ).map((balanceAtDate) => {
                 return new ChartDataModel(
+                    "",
                     balanceAtDate.date,
                     balanceAtDate.balance,
                     getBarColorForBalanceAtDate(balanceAtDate)
@@ -149,6 +154,7 @@ const TransactionOverviewScreen = ({
             if (foundItems.length > 0) {
                 result.push(
                     new ChartDataModel(
+                        item.uid,
                         item.name,
                         foundItems.reduce((a, b) => a + getTransactionAmount(b, currentAccount?.currencyCode, true), 0)!,
                     )
@@ -213,6 +219,22 @@ const TransactionOverviewScreen = ({
                     onItemSelected={setSelectedCategory}
                     noItemSelectedLabel={speakableDateRange(dateRange)}
                     baseCurrency={currentAccount?.currencyCode}
+                    onDetailOpen={() => {
+                        const detailTransactions: TransactionModel[] = []
+
+                        transactionsInDateRange.forEach((transaction) => {
+                            if (selectedCategory && transaction.categoryUid === selectedCategory.valueUid) {
+                                detailTransactions.push(transaction)
+                            }
+                        })
+
+                        dialog.open(
+                            new DialogModel(
+                                selectedCategory?.label || "",
+                                <PieChartDetailDialog transactions={detailTransactions} />
+                            )
+                        )
+                    }}
                 />
                 <TransactionOverviewPieCard
                     icon={<MdPeople />}
@@ -225,6 +247,22 @@ const TransactionOverviewScreen = ({
                     onItemSelected={setSelectedTransactionPartner}
                     noItemSelectedLabel={speakableDateRange(dateRange)}
                     baseCurrency={currentAccount?.currencyCode}
+                    onDetailOpen={() => {
+                        const detailTransactions: TransactionModel[] = []
+
+                        transactionsInDateRange.forEach((transaction) => {
+                            if (selectedTransactionPartner && transaction.transactionExecutorUid === selectedTransactionPartner.valueUid) {
+                                detailTransactions.push(transaction)
+                            }
+                        })
+
+                        dialog.open(
+                            new DialogModel(
+                                selectedTransactionPartner?.label || "",
+                                <PieChartDetailDialog transactions={detailTransactions} />
+                            )
+                        )
+                    }}
                 />
                 <TransactionOverviewPieCard
                     icon={<MdLabel />}
@@ -237,6 +275,22 @@ const TransactionOverviewScreen = ({
                     onItemSelected={setSelectedLabel}
                     noItemSelectedLabel={speakableDateRange(dateRange)}
                     baseCurrency={currentAccount?.currencyCode}
+                    onDetailOpen={() => {
+                        const detailTransactions: TransactionModel[] = []
+
+                        transactionsInDateRange.forEach((transaction) => {
+                            if (selectedTransactionPartner && transaction.labels.includes(selectedTransactionPartner.valueUid)) {
+                                detailTransactions.push(transaction)
+                            }
+                        })
+
+                        dialog.open(
+                            new DialogModel(
+                                selectedTransactionPartner?.label || "",
+                                <PieChartDetailDialog transactions={detailTransactions} />
+                            )
+                        )
+                    }}
                 />
             </div>
         </div>

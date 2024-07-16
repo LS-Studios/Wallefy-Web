@@ -43,7 +43,7 @@ const CurrencyInputComponent = ({
     style?: CSSProperties,
 }) => {
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const dialog = useDialog()
 
     const inputRef = React.createRef<HTMLInputElement>();

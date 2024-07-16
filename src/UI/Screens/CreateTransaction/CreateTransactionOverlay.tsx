@@ -17,7 +17,7 @@ const CreateTransactionOverlay = () => {
     const dialog = useDialog();
     const toast = useToast()
 
-    const currentAccount = useCurrentAccount();
+    const { currentAccount } = useCurrentAccount();
 
     return (
         <ContentOverlay
@@ -47,33 +47,33 @@ const CreateTransactionOverlay = () => {
                     false,
                     <MdAdd />,
                 ),
-                new ContentAction(
-                    translate("new-preset"),
-                    () => {
-                        if (currentAccount?.type === AccountType.DEFAULT) {
-                            dialog.open(
-                                new DialogModel(
-                                    translate("create-transaction-preset"),
-                                    <CreateTransactionDialog
-                                        isPreset={true}
-                                    />
-                                )
-                            );
-                        } else {
-                            dialog.open(
-                                new DialogModel(
-                                    translate("create-transaction-preset"),
-                                    <CreateDebtDialog
-                                        isPreset={true}
-                                    />
-                                )
-                            );
-                        }
-                    },
-                    false,
-                    false,
-                    <MdTune />,
-                ),
+                // new ContentAction(
+                //     translate("new-preset"),
+                //     () => {
+                //         if (currentAccount?.type === AccountType.DEFAULT) {
+                //             dialog.open(
+                //                 new DialogModel(
+                //                     translate("create-transaction-preset"),
+                //                     <CreateTransactionDialog
+                //                         isPreset={true}
+                //                     />
+                //                 )
+                //             );
+                //         } else {
+                //             dialog.open(
+                //                 new DialogModel(
+                //                     translate("create-transaction-preset"),
+                //                     <CreateDebtDialog
+                //                         isPreset={true}
+                //                     />
+                //                 )
+                //             );
+                //         }
+                //     },
+                //     false,
+                //     false,
+                //     <MdTune />,
+                // ),
                 new ContentAction(
                     translate("paste-from-clipboard"),
                     () => {

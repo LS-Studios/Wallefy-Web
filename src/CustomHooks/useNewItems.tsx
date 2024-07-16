@@ -7,17 +7,14 @@ import {ContentAction} from "../Data/ContentAction/ContentAction";
 import {DialogModel} from "../Data/DataModels/DialogModel";
 import EditStorageItemDialog from "../UI/Dialogs/EditStorageItemDialog/EditStorageItemDialog";
 import {StorageItemModel} from "../Data/DatabaseModels/StorageItemModel";
-import {deleteDBItemByUid, getDBItemByUid} from "../Helper/AceBaseHelper";
+import {addDBItem, deleteDBItemByUid, getDBItemByUid} from "../Helper/AceBaseHelper";
 import React from "react";
 import {useTranslation} from "./useTranslation";
 import {useDialog} from "../Providers/DialogProvider";
 import {useDatabaseRoute} from "./useDatabaseRoute";
 import {TransactionPartnerModel} from "../Data/DatabaseModels/TransactionPartnerModel";
 
-export const useNewItems = (
-    workItem: DBItem | null,
-    setWorkItem: React.Dispatch<React.SetStateAction<DBItem | null>>,
-) => {
+export const useNewItems = () => {
     const getDatabaseRoute = useDatabaseRoute()
     const dialog = useDialog()
     const translate = useTranslation()
@@ -105,45 +102,61 @@ export const useNewItems = (
         ]
     }
 
-    const checkDBItem = (item: DBItem, databaseRoute: DatabaseRoutes, key: string) => {
-        // @ts-ignore
-        if (Array.isArray(item[key])) {
+    const checkDBItem = (item: DBItem, databaseRoute: DatabaseRoutes, key: string, newItemFromFallback: DBItem | { [uid: string]: DBItem }, newItemsKey: keyof CreateDialogNewItems,) => {
+        return new Promise<DBItem>((resolve) => {
+            if (!getDatabaseRoute) {
+                resolve(item)
+                return
+            }
+
             // @ts-ignore
-            item[key].forEach((itemUid) => {
+            if (Array.isArray(item[key])) {
+                // @ts-ignore
+                const promises = item[key].map((itemUid) => {
+                    getDBItemByUid(
+                        getDatabaseRoute!(databaseRoute),
+                        itemUid
+                    ).then((whoWasPaiFor) => {
+                        if (!whoWasPaiFor) {
+                            // @ts-ignore
+                            item[key] = addNewItems(
+                                (newItemFromFallback as { [uid: string]: DBItem })[itemUid],
+                                newItemsKey
+                            ).uid
+                        }
+                    })
+                })
+
+                Promise.all(promises).then(() => {
+                    resolve(item)
+                })
+            } else {
                 getDBItemByUid(
                     getDatabaseRoute!(databaseRoute),
-                    itemUid
-                ).then((whoWasPaiFor) => {
-                    if (!whoWasPaiFor) {
-                        setWorkItem((oldItem) => {
-                            // @ts-ignore
-                            oldItem[key] = oldItem[key].filter((uid) => uid !== itemUid)
-                            return oldItem
-                        })
-                    }
-                })
-            })
-        } else {
-            getDBItemByUid(
-                getDatabaseRoute!(databaseRoute),
-                // @ts-ignore
-                item[key]
-            ).then((item) => {
-                if (!item) {
-                    setWorkItem((oldItem) => {
+                    // @ts-ignore
+                    item[key]
+                ).then((foundItem) => {
+                    if (!foundItem) {
                         // @ts-ignore
-                        oldItem[key] = null
-                        return oldItem
-                    })
-                }
-            })
-        }
+                        item[key] = addNewItems(
+                            newItemFromFallback as DBItem,
+                            newItemsKey
+                        ).uid
+                    }
+
+                    resolve(item)
+                })
+            }
+        })
     }
 
-
+    const clearNewItems = () => {
+        setNewItems(new CreateDialogNewItems())
+    }
 
     return {
         newItems,
+        clearNewItems,
         addNewItems,
         getDbItemContextMenuOptions,
         checkDBItem

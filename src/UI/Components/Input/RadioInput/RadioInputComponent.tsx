@@ -8,15 +8,18 @@ const RadioInputComponent = ({
     value,
     onValueChange,
     options,
+    disabled
 }: {
     title?: string,
     value: InputOptionModel<any> | InputOptionModel<any>[],
     onValueChange: (value: InputOptionModel<any> | InputOptionModel<any>[]) => void,
-    options: InputOptionModel<any>[]
+    options: InputOptionModel<any>[],
+    disabled?: boolean
 }) => {
     const radioInput = <div className="radio-input-component">
         {options.map((option, index) => {
             return <button
+                disabled={disabled}
                 key={index}
                 className={(Array.isArray(value) ? value.find((value) => value.value === option.value) : value.value === option.value) ? "selected" : ""}
                 value={option.value}

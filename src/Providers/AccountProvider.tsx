@@ -7,11 +7,23 @@ import {ContextMenuModel} from "../Data/DataModels/ContextMenuModel";
 import ContextMenuBase from "../UI/Components/ContextMenuBase/ContextMenuBase";
 import {ContentAction} from "../Data/ContentAction/ContentAction";
 import {SettingsModel} from "../Data/DataModels/SettingsModel";
-import {getDBItemOnChange, getDBObjectOnChange} from "../Helper/AceBaseHelper";
+import {
+    getDBItemByUid,
+    getDBItemOnChange,
+    getDBObjectOnChange,
+    setDBObject,
+    updateDBItem
+} from "../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
 import {AccountModel} from "../Data/DatabaseModels/AccountModel";
 import {useSettings} from "./SettingsProvider";
 import {useDatabaseRoute} from "../CustomHooks/useDatabaseRoute";
+import {DataSnapshot, EventStream} from "acebase";
+
+export interface AccountProviderProps {
+    currentAccount: AccountModel | null,
+    updateAccountBalance: (newBalance: number) => void
+}
 
 export const AccountProvider = ({ children }: PropsWithChildren) => {
     const settings = useSettings()
@@ -31,7 +43,19 @@ export const AccountProvider = ({ children }: PropsWithChildren) => {
         })
     }, [settings, getDatabaseRoute])
 
-    const value: AccountModel | null = useMemo(() => (currentAccount), [currentAccount]);
+    const updateAccountBalance = (newBalance: number) => {
+        if (!getDatabaseRoute || !currentAccount) return
+
+        setDBObject(
+            getDatabaseRoute(DatabaseRoutes.ACCOUNTS) + "/" + currentAccount.uid + "/balance",
+            newBalance
+        )
+    }
+
+    const value: AccountProviderProps = useMemo(() => ({
+        currentAccount,
+        updateAccountBalance
+    }), [currentAccount]);
 
     return (
         <AccountContext.Provider value={value}>
@@ -40,4 +64,4 @@ export const AccountProvider = ({ children }: PropsWithChildren) => {
     );
 };
 
-export const useCurrentAccount = (): AccountModel | null => useContext(AccountContext);
+export const useCurrentAccount = (): AccountProviderProps => useContext(AccountContext);

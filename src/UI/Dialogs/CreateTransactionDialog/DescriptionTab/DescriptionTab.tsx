@@ -31,6 +31,8 @@ import {useCurrentAccount} from "../../../../Providers/AccountProvider";
 import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
 import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
+import {getIcon, getIcons} from "../../../../Helper/IconMapper";
+import LoadingDialog from "../../LoadingDialog/LoadingDialog";
 
 const DescriptionTab = ({
     inputError,
@@ -51,13 +53,20 @@ const DescriptionTab = ({
     addNewItems: (newItem: DBItem, newItemsKey: keyof CreateDialogNewItems) => DBItem
     getDbItemContextMenuOptions: (databaseRoute: DatabaseRoutes, newItemsKey: keyof CreateDialogNewItems, value: InputNameValueModel<DBItem>) => ContentAction[]
 }) => {
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const translate = useTranslation()
     const dialog = useDialog()
     const getDatabaseRoute = useDatabaseRoute()
 
     const [categoriesForSelection, setCategoriesForSelection] = React.useState<InputNameValueModel<CategoryModel>[]>([])
     const [labelsForSelection, setLabelsForSelection] = React.useState<InputNameValueModel<LabelModel>[]>([])
+    const [icons, setIcons] = React.useState<InputNameValueModel<string>[]>([])
+
+    useEffect(() => {
+        setIcons(getIcons().map((icon) => {
+            return new InputNameValueModel(translate(icon), icon)
+        }))
+    }, []);
 
     useEffect(() => {
         if (categories) {
@@ -75,6 +84,10 @@ const DescriptionTab = ({
         }
     }, [labels, newItems.newLabels])
 
+    if (!currentAccount) {
+        return <LoadingDialog />
+    }
+
     return (
         <>
             <AutoCompleteInputComponent
@@ -90,7 +103,7 @@ const DescriptionTab = ({
                             } else {
                                 oldTransaction.categoryUid = addNewItems(
                                     new CategoryModel(
-                                        currentAccount!.uid,
+                                        currentAccount.uid,
                                         newCategory.name,
                                     ),
                                     "newCategories"
@@ -113,6 +126,30 @@ const DescriptionTab = ({
                     'newCategories',
                     value
                 )}
+            />
+            <AutoCompleteInputComponent<string>
+                title={translate("icon")}
+                value={workTransaction.icon ? new InputNameValueModel(translate(workTransaction.icon || ""), workTransaction.icon) : null}
+                Icon={workTransaction.icon ? getIcon(workTransaction.icon || "") : null}
+                onValueChange={(value) => {
+                    updateTransaction((oldTransaction) => {
+                        oldTransaction.icon = (value as InputNameValueModel<string> | null)?.value || null;
+                        return oldTransaction;
+                    });
+                }}
+                suggestionUlStyle={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+                    gap: "10px"
+                }}
+                suggestionElement={(suggestion) => {
+                    const Icon = getIcon(suggestion.value!) as React.FC
+                    return <div className="create-transaction-preset-icon">
+                        <Icon />
+                        <span>{suggestion.name}</span>
+                    </div>
+                }}
+                suggestions={icons}
             />
             <AutoCompleteInputComponent
                 title={translate("labels-of-transaction")}

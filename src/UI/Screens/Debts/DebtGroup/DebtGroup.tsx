@@ -5,18 +5,21 @@ import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/Transacti
 import {SettingsModel} from "../../../../Data/DataModels/SettingsModel";
 import {DebtGroupModel} from "../../../../Data/DataModels/DebtGroupModel";
 import Debt from "../Debt/Debt";
+import {useSettings} from "../../../../Providers/SettingsProvider";
+import {useTranslation} from "../../../../CustomHooks/useTranslation";
 
 const DebtGroup = ({
     debtGroup,
     transactionPartners,
-    settings,
-    translate
+    backgroundColor = "var(--background)"
 }: {
     debtGroup: DebtGroupModel,
     transactionPartners: TransactionPartnerModel[] | null,
-    settings: SettingsModel | null,
-    translate: (string: string) => string
+    backgroundColor?: string
 }) => {
+    const settings = useSettings()
+    const translate = useTranslation()
+
     const transactionGroupDate = new Date(debtGroup.date)
 
     return (
@@ -34,6 +37,7 @@ const DebtGroup = ({
                         isStart={index === 0}
                         isEnd={index === debtGroup.debts.length - 1 || debtGroup.debts.length === 1}
                         translate={translate}
+                        backgroundColor={backgroundColor}
                     />
                 ))}
             </div>

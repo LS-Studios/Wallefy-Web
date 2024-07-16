@@ -50,16 +50,15 @@
     align-items: center;
     justify-content: space-between;
 
-    padding: 6px;
     cursor: pointer;
 
     &:hover {
-      border: 1px solid var(--text);
+      outline: 1px solid var(--text);
       border-radius: 12px;
     }
 
     &.active {
-      border: 1px solid var(--selected-stroke-color);
+      outline: 1px solid var(--accent);
       border-radius: 12px;
 
       &:not(:first-child) {
@@ -73,7 +72,7 @@
     }
 
     &.selected {
-      border: 1px solid var(--text);
+      outline: 1px solid var(--text);
       border-radius: 12px;
 
       &:not(:first-child) {
@@ -101,6 +100,14 @@
 
   transition: 0.2s ease-in-out;
 
+  .icon {
+    position: absolute;
+    right: 10px;
+    bottom: 16px;
+    width: 24px;
+    height: 24px;
+  }
+
   &.input-is-expanded {
     padding: 6px 0;
     height: auto;
@@ -117,23 +124,12 @@
   }
 }
 
-.auto-complete-input-component-input {
-  @extend .text-input;
-  background-position: bottom 2px center;
-
-  height: 0;
-
-  width: 100%;
-
-  &.input-is-expanded {
-    height: 26px;
-  }
-}
-
 .auto-complete-multi-input-component-input {
   @extend .text-input;
 
   width: 100%;
+
+  padding-right: 28px;
 
   flex: 1;
   min-width: 50px;

@@ -4,6 +4,21 @@
   border: 2px solid var(--stroke-color);
   border-radius: 12px;
 
+  .transaction-detail-dialog-icon-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 4px;
+
+    gap: 4px;
+
+    :last-child {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
   .transaction-detail-dialog-row {
     display: flex;
     flex-direction: row;

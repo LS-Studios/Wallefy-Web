@@ -117,7 +117,7 @@ const BarChartCard = ({
                     )
                 }}
                 onItemClick={(event, d) => {
-                    if (selectedItem === chartData[d.dataIndex]) {
+                    if (selectedItem?.label === chartData[d.dataIndex].label) {
                         onItemSelected(null)
                     } else {
                         onItemSelected(chartData[d.dataIndex])

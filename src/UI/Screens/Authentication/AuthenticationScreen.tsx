@@ -56,17 +56,6 @@ const AuthenticationScreen = () => {
     ]
 
     useEffect(() => {
-        getDBObject(DatabaseRoutes.SETTINGS).then((fetchedSettings) => {
-            if (!fetchedSettings) {
-                setDBObject(
-                    DatabaseRoutes.SETTINGS,
-                    new SettingsModel()
-                )
-            }
-        })
-    }, []);
-
-    useEffect(() => {
         setError(new AuthenticationErrorModel())
         setEmail("")
         setName("")

@@ -20,6 +20,8 @@ import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import CreateDebtDialog from "../CreateDebtDialog/CreateDebtDialog";
 import "../TransactionDetailDialog/TransactionDetailDialog.scss";
 import {roundToNearest} from "../../../Helper/CalculationHelper";
+import {getIcon} from "../../../Helper/IconMapper";
+import {DebtType} from "../../../Data/EnumTypes/DebtType";
 
 const DebtDetailDialog = ({
     debt,
@@ -30,7 +32,7 @@ const DebtDetailDialog = ({
 }) => {
     const settings = useSettings()
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount, updateAccountBalance } = useCurrentAccount();
     const getDatabaseRoute = useDatabaseRoute()
     const dialog = useDialog()
     const toast = useToast()
@@ -54,10 +56,17 @@ const DebtDetailDialog = ({
         )
     }, [getDatabaseRoute]);
 
+    const Icon = getIcon(detailDebt.icon || "")
+
     const details = [
         {
             title: translate("name"),
             value: detailDebt.name,
+        },
+        {
+            title: translate("icon"),
+            value: detailDebt.debtType === DebtType.DEFAULT && <div className="transaction-detail-dialog-icon-row">{translate(detailDebt.icon || "")} <Icon /></div>,
+            expandOnRight: true
         },
         {
             title: translate("transaction-amount"),
@@ -71,7 +80,7 @@ const DebtDetailDialog = ({
         },
         {
             title: translate("receiver"),
-            value: transactionPartners ? (transactionPartners.find(partner => partner.uid === detailDebt.transactionExecutorUid)?.name || translate("unknown")) : translate("loading")
+            value: detailDebt.debtType === DebtType.DEFAULT && (transactionPartners ? (transactionPartners.find(partner => partner.uid === detailDebt.transactionExecutorUid)?.name || translate("unknown")) : translate("loading"))
         },
         {
             title: translate("who-has-paid"),
@@ -79,7 +88,7 @@ const DebtDetailDialog = ({
         },
         {
             title: translate("who-was-paid-for"),
-            value: transactionPartners ? detailDebt.whoWasPaiFor.reduce((result: string[], whoWasPaiForUid) => {
+            value: detailDebt.debtType === DebtType.DEFAULT ? (transactionPartners ? detailDebt.whoWasPaiFor.reduce((result: string[], whoWasPaiForUid) => {
                 const foundWhoWasPaiFor = transactionPartners.find(transactionPartner => transactionPartner.uid === whoWasPaiForUid)
                 if (foundWhoWasPaiFor) {
                     const percentage = detailDebt.distributions.find(distribution => distribution.transactionPartnerUid === whoWasPaiForUid)?.percentage || 0
@@ -94,8 +103,8 @@ const DebtDetailDialog = ({
                     )
                 }
                 return result
-            }, []) : translate("loading"),
-            expandOnRight: true
+            }, []) : translate("loading")) : transactionPartners ? (transactionPartners.find(partner => partner.uid === detailDebt.whoWasPaiFor[0])?.name || translate("unknown")) : translate("loading"),
+            expandOnRight: detailDebt.debtType === DebtType.DEFAULT
         },
         {
             title: translate("date"),
@@ -123,7 +132,7 @@ const DebtDetailDialog = ({
     ]
 
     return (
-        <DialogOverlay actions={[
+        <DialogOverlay actions={detailDebt.debtType === DebtType.DEFAULT ? [
             new ContentAction(
                 translate("edit"),
                 () => {
@@ -157,12 +166,35 @@ const DebtDetailDialog = ({
                 false,
                 getDatabaseRoute === null
             ),
+        ] : [
+            new ContentAction(
+                translate("copy"),
+                () => {
+                    navigator.clipboard.writeText(JSON.stringify(detailDebt))
+                    toast.open(translate("transaction-copied-to-clipboard"))
+                }
+            ),
+            new ContentAction(
+                translate("delete"),
+                () => {
+                    if (!currentAccount) return
+
+                    dialog.closeCurrent();
+
+                    deleteDBItem(
+                        getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS),
+                        detailDebt
+                    )
+                },
+                false,
+                getDatabaseRoute === null
+            ),
         ]}>
             <div className="transaction-detail-dialog">
                 { details.filter((detail) => {
                     return Array.isArray(detail.value) ? detail.value.length : detail.value
                 }).map((detail, index) => {
-                    return <div className="transaction-detail-dialog-row">
+                    return <div key={index} className="transaction-detail-dialog-row">
                         <div className={"transaction-detail-dialog-row " + (detail.expandOnRight ? "expand-on-right" : "")}>
                             <span id="transaction-detail-dialog-row-title">{detail.title}</span>
                             <span id="transaction-detail-dialog-row-value">{

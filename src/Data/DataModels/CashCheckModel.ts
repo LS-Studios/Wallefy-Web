@@ -1,16 +1,17 @@
-import {PayedDebtModel} from "./PayedDebtModel";
-import {PayedDebtsModel} from "./PayedDebtsModel";
+import {DBItem} from "../DatabaseModels/DBItem";
 
-export class CashCheckModel {
-    payerUid: string;
-    receiverUid: string;
-    amount: number;
-    payedDebts: PayedDebtsModel;
+export class CashCheckModel implements DBItem {
+    uid: string = ""
+    payerUid: string
+    receiverUid: string
+    amount: number
 
-    constructor(payerUid: string, receiverUid: string, amount: number, payedDebts: PayedDebtsModel) {
-        this.payerUid = payerUid;
-        this.receiverUid = receiverUid;
-        this.amount = amount;
-        this.payedDebts = payedDebts;
+
+    name: string = ""
+
+    constructor(payerUid: string, receiverUid: string, amount: number) {
+        this.payerUid = payerUid
+        this.receiverUid = receiverUid
+        this.amount = amount
     }
 }

@@ -35,6 +35,7 @@ import {useSettings} from "../../../Providers/SettingsProvider";
 import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
 import {useAccounts} from "../../../CustomHooks/useAccounts";
 import {AccountType} from "../../../Data/EnumTypes/AccountType";
+import {getDefaultDebtPresets, getDefaultPresets} from "../../../Helper/DefaultPresetHelper";
 
 const CreateAccountDialog = ({
     account
@@ -42,7 +43,7 @@ const CreateAccountDialog = ({
     account?: AccountModel
 }) => {
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const dialog = useDialog()
     const toast = useToast()
 
@@ -162,8 +163,27 @@ const CreateAccountDialog = ({
                         return;
                     }
                     if (workAccount.balance === null) workAccount.balance = 0;
-                    addDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount).then(() => {
-                        dialog.closeCurrent()
+                    addDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount).then((newAccount) => {
+                        const castedAccount = newAccount as AccountModel;
+
+                        let presets
+
+                        if (castedAccount.type === AccountType.DEFAULT) {
+                            presets = getDefaultPresets(castedAccount.currencyCode, castedAccount.uid)
+                        } else {
+                            presets = getDefaultDebtPresets(castedAccount.currencyCode, castedAccount.uid)
+                        }
+
+                        presets.forEach(preset => {
+                            addDBItem(
+                                getDatabaseRoute!(DatabaseRoutes.ACCOUNTS) + "/" + castedAccount.uid + "/" + DatabaseRoutes.PRESETS,
+                                preset
+                            ).then(() => {
+                                dialog.closeCurrent()
+                            })
+                        })
+
+
                     })
                 },
                 false,
@@ -191,6 +211,7 @@ const CreateAccountDialog = ({
                     });
                 }}
                 options={accountTypeOptions}
+                disabled={account !== undefined}
             />
             { workAccount.type === AccountType.DEFAULT && <CurrencyInputComponent
                 title={translate("account-balance")}
@@ -204,6 +225,7 @@ const CreateAccountDialog = ({
                 currency={selectedCurrency}
                 onCurrencyChange={setSelectedCurrency}
                 currencyRateIsDisabled={true}
+                allowNegativeValue={true}
             /> }
             <RadioInputComponent
                 title={translate("account-visibility")}

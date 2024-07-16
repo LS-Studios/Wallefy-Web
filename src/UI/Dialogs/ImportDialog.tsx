@@ -59,6 +59,7 @@ const ImportDialog = () => {
                         importHistory && fileContent.history.map((transaction) => addDBItem(getDatabaseRoute!(DatabaseRoutes.HISTORY_TRANSACTIONS), transaction)),
                         importTransactions && fileContent.transactions.map((transaction) => addDBItem(getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS), transaction)),
                         importTransactions && fileContent.debts.map((debt) => addDBItem(getDatabaseRoute!(DatabaseRoutes.DEBTS), debt)),
+                        importTransactions && fileContent.payedDebts.map((debt) => addDBItem(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS), debt)),
                         importCategories && fileContent.categories.map((category) => addDBItem(getDatabaseRoute!(DatabaseRoutes.CATEGORIES), category)),
                         importTransactionPartners && fileContent.transactionPartners.map((partner) => addDBItem(getDatabaseRoute!(DatabaseRoutes.TRANSACTION_PARTNERS), partner)),
                         importLabels && fileContent.labels.map((label) => addDBItem(getDatabaseRoute!(DatabaseRoutes.LABELS), label))

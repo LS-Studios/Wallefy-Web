@@ -31,16 +31,19 @@ import DistributionInputComponent from "../../../Components/Input/DistriutionInp
 import {DistributionModel} from "../../../../Data/DataModels/DistributionModel";
 import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/TransactionPartnerModel";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
+import {CurrencyValueModel} from "../../../../Data/DataModels/CurrencyValueModel";
 ;
 
 const DebtDistributionTab = ({
-    workDebt,
-    updateDebt,
+    distributions,
+    onDistributionChange,
+    currencyValue,
     transactionPartners,
     newItems,
 }: {
-    workDebt: DebtModel,
-    updateDebt: (updater: (oldDebt: DebtModel) => DebtModel) => void,
+    distributions: DistributionModel[],
+    onDistributionChange: (newDistributions: DistributionModel[]) => void,
+    currencyValue: CurrencyValueModel
     transactionPartners: TransactionPartnerModel[] | null,
     newItems: CreateDialogNewItems,
 }) => {
@@ -50,7 +53,7 @@ const DebtDistributionTab = ({
     const setDistribution = (distribution: DistributionModel) => {
         const distributionMap: { [key: string]: number } = {};
 
-        workDebt.distributions.forEach((d) => {
+        distributions.forEach((d) => {
             distributionMap[d.transactionPartnerUid] = d.percentage;
         });
 
@@ -88,27 +91,22 @@ const DebtDistributionTab = ({
         updatedAlreadyChanged.push(distribution.transactionPartnerUid);
 
         // Update state
-        updateDebt((oldDebt) => {
-            return {
-                ...oldDebt,
-                distributions: Object.keys(newDistributions).map(tpUid => new DistributionModel(tpUid, newDistributions[tpUid]))
-            }
-        })
+        onDistributionChange(Object.keys(newDistributions).map(tpUid => new DistributionModel(tpUid, newDistributions[tpUid])))
         setAlreadyChanged(updatedAlreadyChanged);
         setLastChanged(distribution.transactionPartnerUid)
     };
 
     return (
         <>
-            {workDebt.distributions.map((distribution, index) => {
+            {distributions.map((distribution, index) => {
                 return (
                     <DistributionInputComponent
                         distribution={distribution}
                         onDistributionChange={(newDistribution) => {
                             setDistribution(newDistribution);
                         }}
-                        price={workDebt.transactionAmount || 0}
-                        currency={workDebt.currency}
+                        price={currencyValue.transactionAmount || 0}
+                        currency={currencyValue.currency}
                         transactionPartners={transactionPartners ? [...transactionPartners, ...newItems.newTransactionPartners] : []}
                     />
                 )

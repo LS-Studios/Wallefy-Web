@@ -5,6 +5,7 @@ import './ContextMenuBase.scss';
 import {useClickAway} from "@uidotdev/usehooks";
 import Spinner from "../Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
+import {useToolTip} from "../../../CustomHooks/useToolTip";
 
 const ContextMenuBase = ({
     contextMenu,
@@ -13,6 +14,8 @@ const ContextMenuBase = ({
     contextMenu: ContextMenuModel,
     setContextMenu: (contextMenu: ContextMenuModel | null) => void
 }) => {
+    const { isOnRight, isOnBottom} = useToolTip()
+
     const ref = useClickAway(() => {
         setContextMenu(null)
     }) as React.RefObject<HTMLDivElement>
@@ -22,11 +25,12 @@ const ContextMenuBase = ({
             ref={ref}
             className="context-menu-base"
             style={{
-                top: contextMenu.y,
-                left: contextMenu.x,
+                top: contextMenu.y + (!contextMenu.canBeHovered ? (isOnBottom ? 0 : -60) : 0),
+                left: contextMenu.x + (!contextMenu.canBeHovered ? (isOnRight ? 20 : -100) : 0),
             }}
         >
-            {contextMenu.options.map((option, i) => (
+            {contextMenu.content}
+            {contextMenu.options?.map((option, i) => (
                 <div
                     key={i}
                     className={"context-menu-base-option " + (option.disabled ? "disabled" : "")}

@@ -26,7 +26,7 @@ import {useAccounts} from "../../../CustomHooks/useAccounts";
 const SettingsDialog = () => {
     const dialog = useDialog()
     const translate = useTranslation()
-    const currentAccount = useCurrentAccount()
+    const { currentAccount } = useCurrentAccount();
     const settings = useSettings()
 
     const themeOptions: InputOptionModel<ThemeType>[] = [
@@ -85,7 +85,9 @@ const SettingsDialog = () => {
         setDBObject(
             DatabaseRoutes.SETTINGS,
             newSettings
-        )
+        ).then((s) => {
+
+        })
     }, [selectedTheme, selectedLanguage, selectedAccount])
 
     return (

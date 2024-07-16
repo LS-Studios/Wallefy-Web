@@ -7,7 +7,7 @@ import {ContextMenuModel} from "../Data/DataModels/ContextMenuModel";
 import ContextMenuBase from "../UI/Components/ContextMenuBase/ContextMenuBase";
 import {ContentAction} from "../Data/ContentAction/ContentAction";
 import {SettingsModel} from "../Data/DataModels/SettingsModel";
-import {getDBObjectOnChange} from "../Helper/AceBaseHelper";
+import {getDBObjectOnChange, setDBObject} from "../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
 
 export const SettingsProvider = ({ children }: PropsWithChildren) => {
@@ -15,7 +15,16 @@ export const SettingsProvider = ({ children }: PropsWithChildren) => {
 
     useEffect(() => {
         getDBObjectOnChange(DatabaseRoutes.SETTINGS, (settings) => {
-            setSettings(settings as SettingsModel)
+            if (!settings) {
+                setDBObject(
+                    DatabaseRoutes.SETTINGS,
+                    new SettingsModel()
+                ).then((newSettings) => {
+                    setSettings(newSettings as SettingsModel)
+                })
+            } else {
+                setSettings(settings as SettingsModel)
+            }
         })
     }, [])
 

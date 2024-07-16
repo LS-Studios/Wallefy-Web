@@ -12,10 +12,13 @@ import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel"
 import {FilterModel} from "../../../Data/DataModels/FilterModel";
 import OptionDialog from "../../Dialogs/OptionDialog/OptionDialog";
     import {useTranslation} from "../../../CustomHooks/useTranslation";
+    import {useCurrentAccount} from "../../../Providers/AccountProvider";
+    import {AccountType} from "../../../Data/EnumTypes/AccountType";
 
 const DebtOverlay = () => {
     const translate = useTranslation()
     const dialog = useDialog()
+    const { currentAccount } = useCurrentAccount();
 
     const sortTypeOptions = [
         new InputOptionModel(translate("newest-first"), SortType.NEWEST_FIRST),
@@ -81,6 +84,7 @@ const DebtOverlay = () => {
                                 <FilterTransactionsDialog
                                     currentFilter={filterValue}
                                     onFilterChange={setFilterValue}
+                                    isDebt={currentAccount?.type === AccountType.DEBTS}
                                 />
                             )
                         )
