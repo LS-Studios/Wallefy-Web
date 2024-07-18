@@ -26,7 +26,8 @@ import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
 import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
 import {AccountType} from "../../../Data/EnumTypes/AccountType";
 import {getDefaultDebtPresets, getDefaultPresets} from "../../../Helper/DefaultPresetHelper";
-import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import {addPresetsForAccount, getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import {DatabaseType} from "../../../Data/EnumTypes/DatabaseType";
 
 const CreateAccountDialog = ({
     account
@@ -128,7 +129,7 @@ const CreateAccountDialog = ({
                         toast.open(translate("there-must-be-at-least-one-account"))
                         return;
                     } else if (workAccount.uid === currentAccount?.uid) {
-                        getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, {
+                        getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
                             ...settings,
                             currentAccountUid: accounts!.filter(account => account.uid !== workAccount.uid)[0].uid
                         })
@@ -156,27 +157,11 @@ const CreateAccountDialog = ({
                     if (workAccount.balance === null) workAccount.balance = 0;
                     getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount).then((newAccount) => {
                         const castedAccount = newAccount as AccountModel;
-
-                        let presets
-
-                        if (castedAccount.type === AccountType.DEFAULT) {
-                            presets = getDefaultPresets(castedAccount.currencyCode, castedAccount.uid)
-                        } else {
-                            presets = getDefaultDebtPresets(castedAccount.currencyCode, castedAccount.uid)
-                        }
-
-                        presets.forEach(preset => {
-                            getActiveDatabaseHelper().addDBItem(
-                                getDatabaseRoute!(DatabaseRoutes.ACCOUNTS) + "/" + castedAccount.uid + "/" + DatabaseRoutes.PRESETS,
-                                preset
-                            ).then(() => {
-                                dialog.closeCurrent()
-                            })
-                        })
+                        addPresetsForAccount(currentAccount!.uid, castedAccount);
                     })
                 },
                 false,
-                !getDatabaseRoute
+                !getDatabaseRoute || !currentAccount
             )
         ]}>
             <TextInputComponent

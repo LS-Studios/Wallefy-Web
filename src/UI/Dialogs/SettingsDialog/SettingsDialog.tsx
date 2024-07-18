@@ -21,6 +21,7 @@ import ImportDialog from "../ImportDialog";
 import DeleteDialog from "../DeleteDialog";
 import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
 import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import {DatabaseType} from "../../../Data/EnumTypes/DatabaseType";
 
 const SettingsDialog = () => {
     const dialog = useDialog()
@@ -61,7 +62,7 @@ const SettingsDialog = () => {
     useEffect(() => {
         if (!accountsForSelection || fetchedInitialData) return
 
-        getActiveDatabaseHelper().getDBObject(DatabaseRoutes.SETTINGS).then((settings: SettingsModel) => {
+        getActiveDatabaseHelper(DatabaseType.ACE_BASE).getDBObject(DatabaseRoutes.SETTINGS).then((settings: SettingsModel) => {
             if (settings) {
                 setSelectedTheme(themeOptions.find(option => option.value === settings.theme) || themeOptions[0])
                 setSelectedLanguage(languageOptions.find(option => option.value === settings.language) || languageOptions[0])
@@ -81,7 +82,7 @@ const SettingsDialog = () => {
             selectedLanguage.value
         )
 
-        getActiveDatabaseHelper().setDBObject(
+        getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(
             DatabaseRoutes.SETTINGS,
             newSettings
         ).then((s) => {
@@ -161,7 +162,7 @@ const SettingsDialog = () => {
                 text={translate("delete-user-account")}
                 onClick={() => {
                     if (!settings) return;
-                    getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
+                    getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
                     getActiveDatabaseHelper().deleteDBItemByUid(DatabaseRoutes.USERS, settings.currentUserUid)
                     dialog.closeCurrent()
                 }}

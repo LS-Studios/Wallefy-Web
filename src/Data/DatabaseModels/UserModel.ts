@@ -5,7 +5,7 @@ export class UserModel implements DBItem {
     name: string = ""
     email: string = ""
     password: string = ""
-    currentAccountId: string = ""
+    currentAccountUid: string = ""
 
     constructor(name: string, email: string, password: string) {
         this.name = name

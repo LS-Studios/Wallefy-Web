@@ -1,8 +1,9 @@
 import React, {PropsWithChildren, useEffect, useRef} from 'react';
 import './ContentOverlay.scss';
 import {
-    MdAddCircleOutline,
-    MdCreate,
+    MdAdd,
+    MdAddCircleOutline, MdBarChart,
+    MdCreate, MdHome,
     MdIcecream,
     MdMenu,
     MdOutlineHome,
@@ -22,6 +23,7 @@ import {useCurrentAccount} from "../../Providers/AccountProvider";
 import Menu from "../Menu/Menu";
 import {useScreenScaleStep} from "../../CustomHooks/useScreenScaleStep";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
+import {RoutePath} from "../../Data/EnumTypes/RoutePath";
 
 const ContentOverlay = ({
     title,
@@ -74,7 +76,7 @@ const ContentOverlay = ({
             menuIsOpen={menuIsOpen}
             setMenuIsOpen={setMenuIsOpen}
         />
-        {(screenScaleStep < 2 || !menuIsOpen) && <div onClick={() => {
+        <div onClick={() => {
             if (screenScaleStep === 1 && menuIsOpen) {
                 setMenuIsOpen(false)
             }
@@ -90,7 +92,7 @@ const ContentOverlay = ({
                         {currentAccount?.name}
                     </div>}
                     <div className="content-overlay-header-navigation-actions">
-                        <a onClick={() => navigate("/home")}>
+                        <a onClick={() => navigate(RoutePath.HOME)}>
                             <MdOutlineHome/> {translate("home")}
                         </a>
                         <a onClick={() => {
@@ -98,7 +100,7 @@ const ContentOverlay = ({
                         }}>
                             <MdPowerSettingsNew/> {translate("logout")}
                         </a>
-                        {screenScaleStep !== 0 && <a onClick={() => {
+                        {screenScaleStep === 1 && <a onClick={() => {
                                 setMenuIsOpen(!menuIsOpen)
                             }}>
                                 <MdMenu className="content-overlay-header-navigation-actions-menu"/>
@@ -118,8 +120,13 @@ const ContentOverlay = ({
             <div className="content-overlay-body">
                 {children}
                 { screenScaleStep > 1 && getActionButtons(true) }
+                { screenScaleStep > 1 && <div className="content-overlay-bottom-bar">
+                    <div onClick={() => setMenuIsOpen(true)}><MdMenu />Menü</div>
+                    <div onClick={() => navigate(RoutePath.HOME)}><MdHome />Start</div>
+                    <div onClick={() => navigate(RoutePath.TRANSACTION_OVERVIEW)}><MdBarChart />Übersicht</div>
+                </div> }
             </div>
-        </div>}
+        </div>
     </>
 };
 

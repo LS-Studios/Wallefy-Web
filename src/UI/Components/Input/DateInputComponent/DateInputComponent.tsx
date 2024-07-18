@@ -2,11 +2,16 @@ import React, {CSSProperties, useEffect, useState} from 'react';
 import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './DateInputComponent.scss';
 import {MdCalendarMonth, MdDateRange} from "react-icons/md";
-import DatePicker from "./DatePicker/DatePicker";
+
 import {formatDate, formatDateToStandardString, getMonthAndYear} from "../../../../Helper/DateHelper";
 import DropDialog from "../../Dropdialog/DropDialog";
-import {DateObject} from "react-multi-date-picker";
+import DatePicker, {DateObject} from "react-multi-date-picker";
 import {DayOfWeekModel} from "../../../../Data/DataModels/Reptition/DayOfWeekModel";
+import {useScreenScaleStep} from "../../../../CustomHooks/useScreenScaleStep";
+import DateCalendar from "./DatePicker/DateCalendar";
+import {useDialog} from "../../../../Providers/DialogProvider";
+import {DialogModel} from "../../../../Data/DataModels/DialogModel";
+import DatePickerDialog from "../../../Dialogs/DatePickerDialog/DatePickerDialog";
 
 const DateInputComponent = ({
     title,
@@ -25,6 +30,9 @@ const DateInputComponent = ({
     disabledWeekDays?: DayOfWeekModel[] | undefined,
     onlyMonthPicker?: boolean
 }) => {
+    const dialog = useDialog()
+    const screenScaleStep = useScreenScaleStep()
+
     const inputRef = React.createRef<HTMLInputElement>();
 
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -34,7 +42,23 @@ const DateInputComponent = ({
     const openDatePicker = (e: React.MouseEvent) => {
         e.preventDefault()
 
-        setShowDatePicker(!showDatePicker);
+        if (screenScaleStep > 0) {
+            dialog.open(
+                new DialogModel(
+                    "Select Date",
+                    <DatePickerDialog
+                        initDate={value}
+                        onDateChange={onValueChange}
+                        minDate={minDate}
+                        maxDate={maxDate}
+                        disabledWeekDays={disabledWeekDays}
+                        onlyMonthPicker={onlyMonthPicker}
+                    />
+                )
+            )
+        } else {
+            setShowDatePicker(!showDatePicker);
+        }
     }
 
     const onKeyDown = (e: React.KeyboardEvent) => {
@@ -65,7 +89,6 @@ const DateInputComponent = ({
     const dateInput = <input
         ref={inputRef}
         className={"date-input-component-input " + (title ? "text" : "box")}
-        onClick={openDatePicker}
         type={onlyMonthPicker ? "text" : "date"}
         spellCheck="false"
         autoComplete="false"
@@ -80,12 +103,16 @@ const DateInputComponent = ({
         <MdCalendarMonth onClick={openDatePicker}/>
     </div> : dateInput
 
-    return (
+    return screenScaleStep > 0 ? <>
+        {title ? <InputBaseComponent title={title} onClick={openDatePicker}>
+            { dateInputContainer }
+        </InputBaseComponent> : dateInputContainer}
+    </> : (
         <DropDialog
             isOpen={showDatePicker}
             setIsOpen={setShowDatePicker}
             content={
-                <DatePicker
+                <DateCalendar
                     date={value}
                     setDate={onDatePickerDateChange}
                     minDate={minDate}

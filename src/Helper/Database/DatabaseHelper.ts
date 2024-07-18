@@ -1,5 +1,6 @@
 import {DBItem} from "../../Data/DatabaseModels/DBItem";
 import {UserModel} from "../../Data/DatabaseModels/UserModel";
+import {AccountModel} from "../../Data/DatabaseModels/AccountModel";
 
 export interface DatabaseHelper {
     getNewDBRef: (path: string) => any,
@@ -18,6 +19,6 @@ export interface DatabaseHelper {
     setDBObject: (path: string, item: any) => Promise<any>,
     dbLogin: (email: string, password: string) => Promise<UserModel>,
     dbLogout: () => Promise<void>
-    dbSignUp: (user: UserModel, translate: (key: string) => string) => Promise<UserModel>
+    dbSignUp: (user: UserModel, newAccount: AccountModel) => Promise<UserModel>
 
 }

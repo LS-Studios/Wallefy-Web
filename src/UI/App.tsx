@@ -25,6 +25,8 @@ import {AccountModel} from "../Data/DatabaseModels/AccountModel";
 import {useTransactions} from "../CustomHooks/Database/useTransactions";
 import {executePastTransactions} from "../Helper/TransactionHelper";
 import {getActiveDatabaseHelper} from "../Helper/Database/ActiveDBHelper";
+import Spinner from "./Components/Spinner/Spinner";
+import {SpinnerType} from "../Data/EnumTypes/SpinnerType";
 
 function App() {
     const settings = useSettings()
@@ -105,7 +107,7 @@ function App() {
 
     const isLoggedIn = settings?.currentUserUid !== null && settings?.currentUserUid !== undefined && settings?.currentUserUid !== ""
 
-    if (!settings) return null
+    if (!settings) return <Spinner type={SpinnerType.CYCLE} />
 
     return <div className={"app " + getTheme()}>
         <Providers>

@@ -3,14 +3,15 @@ import {SettingsContext} from "./Contexts";
 import {SettingsModel} from "../Data/DataModels/SettingsModel";
 import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
 import {getActiveDatabaseHelper} from "../Helper/Database/ActiveDBHelper";
+import {DatabaseType} from "../Data/EnumTypes/DatabaseType";
 
 export const SettingsProvider = ({ children }: PropsWithChildren) => {
     const [settings, setSettings] = useState<SettingsModel | null>(null);
 
     useEffect(() => {
-        getActiveDatabaseHelper().getDBObjectOnChange(DatabaseRoutes.SETTINGS, (settings: SettingsModel) => {
+        getActiveDatabaseHelper(DatabaseType.ACE_BASE).getDBObjectOnChange(DatabaseRoutes.SETTINGS, (settings: SettingsModel) => {
             if (!settings) {
-                getActiveDatabaseHelper().setDBObject(
+                getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(
                     DatabaseRoutes.SETTINGS,
                     new SettingsModel()
                 ).then((newSettings: SettingsModel) => {

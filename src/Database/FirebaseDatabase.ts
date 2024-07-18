@@ -3,23 +3,21 @@ import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-    databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
-    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.REACT_APP_FIREBASE_APP_ID
+    apiKey: "AIzaSyDuRMi3ApwuSg7SkxHPKFrHXozuZvOVN1E",
+    authDomain: "wallefy-cc58b.firebaseapp.com",
+    databaseURL: "https://wallefy-cc58b-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "wallefy-cc58b",
+    storageBucket: "wallefy-cc58b.appspot.com",
+    messagingSenderId: "103793020236",
+    appId: "1:103793020236:web:7d02b9ee651b662e1e93e9"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app)
-const auth = getAuth(app)
 
 export const getFirebaseDatabase = () => {
-    return db
+    return getDatabase(app)
 }
 
 export const getFirebaseAuth = () => {
-    return auth
+    return getAuth(app)
 }

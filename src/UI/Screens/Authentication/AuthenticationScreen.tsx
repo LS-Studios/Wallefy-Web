@@ -21,6 +21,11 @@ import {UserModel} from "../../../Data/DatabaseModels/UserModel";
 import {useNavigate} from "react-router-dom";
 import {useThemeDetector} from "../../../CustomHooks/useThemeDetector";
 import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import CurrencyInputComponent from "../../Components/Input/CurrencyInput/CurrencyInputComponent";
+import {CurrencyModel} from "../../../Data/DataModels/CurrencyModel";
+import {getDefaultCurrency} from "../../../Helper/CurrencyHelper";
+import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
+import {DatabaseType} from "../../../Data/EnumTypes/DatabaseType";
 
 const AuthenticationScreen = () => {
     const navigate = useNavigate()
@@ -38,6 +43,8 @@ const AuthenticationScreen = () => {
     const [name, setName] = React.useState<string>("")
     const [password, setPassword] = React.useState<string>("")
     const [repeatPassword, setRepeatPassword] = React.useState<string>("")
+    const [startingBalance, setStartingBalance] = React.useState<number | null>(null)
+    const [selectedCurrency, setSelectedCurrency] = React.useState<CurrencyModel | null>(null)
 
     const [error, setError] = React.useState<AuthenticationErrorModel>(new AuthenticationErrorModel())
 
@@ -61,11 +68,13 @@ const AuthenticationScreen = () => {
         setName("")
         setPassword("")
         setRepeatPassword("")
+        setStartingBalance(null)
+        setSelectedCurrency(getDefaultCurrency(null))
     }, [authType]);
 
     useEffect(() => {
         if (settings && (settings.theme !== theme || settings.language !== language)) {
-            getActiveDatabaseHelper().setDBObject(
+            getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(
                 DatabaseRoutes.SETTINGS,
                 {
                     ...settings,
@@ -112,10 +121,10 @@ const AuthenticationScreen = () => {
                 }
 
                 login(email, password).then((user) => {
-                    getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, {
+                    getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
                         ...settings,
                         currentUserUid: user.uid,
-                        currentAccountUid: user.currentAccountId
+                        currentAccountUid: user.currentAccountUid
                     }).then(() => {
                         navigate("/home")
                     })
@@ -184,6 +193,14 @@ const AuthenticationScreen = () => {
                 borderColor: error.repeatPasswordError ? "var(--error-color)" : ""
             }}
         />
+        <CurrencyInputComponent
+            title={translate("starting-balance")}
+            value={startingBalance}
+            onValueChange={setStartingBalance}
+            currency={selectedCurrency}
+            onCurrencyChange={setSelectedCurrency}
+            currencyRateIsDisabled={true}
+        />
         <ButtonInputComponent
             text={translate("sign-up")}
             onClick={() => {
@@ -208,18 +225,27 @@ const AuthenticationScreen = () => {
                     return
                 }
 
+                const newAccount = new AccountModel(
+                    translate("private-account"),
+                    startingBalance || 0,
+                )
+
+                newAccount.currencyCode = selectedCurrency?.currencyCode || getDefaultCurrency(null).currencyCode
+
                 signup(
                     translate,
                     new UserModel(
                         name,
                         email,
                         password
-                    )
+                    ),
+                    newAccount
                 ).then((newUser) => {
-                    getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, {
+                    console.log(newUser)
+                    getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
                         ...settings,
                         currentUserUid: newUser.uid,
-                        currentAccountUid: newUser.currentAccountId
+                        currentAccountUid: newUser.currentAccountUid
                     }).then(() => {
                         navigate("/home")
                     })

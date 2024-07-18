@@ -57,8 +57,8 @@ const Menu = ({
 
     return (
         <div className="menu" style={{
-            display: screenScaleStep < 1 ? "block" : (menuIsOpen ? "block" : "none"),
-            width:  screenScaleStep < 1 ? "300px" : (menuIsOpen ? (screenScaleStep > 1 ? "100%" : "300px") : "300px")
+            width:  screenScaleStep < 1 ? "300px" : (menuIsOpen ? (screenScaleStep > 1 ? "100%" : "300px") : "300px"),
+            left: screenScaleStep < 1 ? "0" : (menuIsOpen ? "0" : "-300px")
         }}>
             <div className="menu-app-title-container">
                 <div className="menu-app-title">

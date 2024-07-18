@@ -9,6 +9,42 @@
   color: var(--date-picker-calender-primary);
 }
 
+@media only screen and (max-width: $mobile-state-1) {
+  .date-picker.rmdp-wrapper,
+  .date-picker .rmdp-month-picker,
+  .date-picker .rmdp-year-picker,
+  .date-picker .rmdp-time-picker div input,
+  .rmdp-container .date-picker.ep-arrow::after {
+    width: 350px;
+  }
+
+  .date-picker .rmdp-calendar {
+    width: 100%;
+  }
+
+  .date-picker .rmdp-day-picker div {
+    width: 100%;
+  }
+
+  .date-picker .rmdp-header-values {
+    font-size: 16px;
+  }
+
+  .date-picker .rmdp-week-day {
+    height: 45px;
+    font-size: 14px;
+  }
+
+  .date-picker .rmdp-day {
+    height: 45px;
+    width: 20px;
+
+    span {
+      font-size: 14px;
+    }
+  }
+}
+
 .date-picker .rmdp-day:not(.rmdp-deactive),
 .date-picker .rmdp-time-picker div .rmdp-am,
 .date-picker .rmdp-header-values,

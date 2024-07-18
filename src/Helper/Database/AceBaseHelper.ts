@@ -8,6 +8,8 @@ import {UserModel} from "../../Data/DatabaseModels/UserModel";
 import {AccountType} from "../../Data/EnumTypes/AccountType";
 import {getDefaultDebtPresets, getDefaultPresets} from "../DefaultPresetHelper";
 import {DatabaseHelper} from "./DatabaseHelper";
+import {addPresetsForAccount, createNewUser, getActiveDatabaseHelper} from "./ActiveDBHelper";
+import {DatabaseType} from "../../Data/EnumTypes/DatabaseType";
 
 export class AceBaseHelper implements DatabaseHelper {
 
@@ -197,7 +199,7 @@ export class AceBaseHelper implements DatabaseHelper {
 
     dbLogout(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel()).then(() => {
+            getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel()).then(() => {
                 resolve();
             }).catch((error) => {
                 reject(error);
@@ -205,42 +207,13 @@ export class AceBaseHelper implements DatabaseHelper {
         });
     }
 
-    dbSignUp(user: UserModel, translate: (key: string) => string): Promise<UserModel> {
+    dbSignUp(user: UserModel, newAccount: AccountModel): Promise<UserModel> {
         return new Promise<UserModel>((resolve, reject) => {
             this.doPathExist(DatabaseRoutes.USERS).then((pathExist) => {
                 const createUser = () => {
-                    const ref = this.getNewDBRef(DatabaseRoutes.USERS);
-                    user.uid = ref.key!;
-
-                    const newAccount = new AccountModel(translate("private-account"), 0.00);
-                    newAccount.userId = user.uid;
-
-                    this.addDBItem(DatabaseRoutes.USERS, user).then(() => {
-                        this.addDBItem(`${DatabaseRoutes.USERS}/${user.uid}/${DatabaseRoutes.ACCOUNTS}`, newAccount).then(() => {
-                            let presets;
-
-                            if (newAccount.type === AccountType.DEFAULT) {
-                                presets = getDefaultPresets(newAccount.currencyCode, newAccount.uid);
-                            } else {
-                                presets = getDefaultDebtPresets(newAccount.currencyCode, newAccount.uid);
-                            }
-
-                            presets.forEach(preset => {
-                                this.addDBItem(`${DatabaseRoutes.USERS}/${user.uid}/${DatabaseRoutes.ACCOUNTS}/${newAccount.uid}/${DatabaseRoutes.PRESETS}`, preset);
-                            });
-
-                            user.currentAccountId = newAccount.uid;
-                            this.updateDBItem(`${DatabaseRoutes.USERS}`, user).then(() => {
-                                resolve(user as UserModel);
-                            }).catch((error) => {
-                                reject(error);
-                            });
-                        }).catch((error) => {
-                            reject(error);
-                        });
-                    }).catch((error) => {
-                        reject(error);
-                    });
+                    createNewUser(user, newAccount).then((user: UserModel) => {
+                        resolve(user);
+                    })
                 };
 
                 if (!pathExist) {

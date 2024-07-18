@@ -86,11 +86,7 @@ const StorageScreen = ({
     );
 };
 
-//TODO [] Bigger menu icon
-//TODO [] Animated Menu
-//TODO [] Padding bottonm is difrent in diffrent screens
-//TODO [] In overview add card for date range when mobile
-//tODO [] Add bottom bar in mobi
+//TODO [] Firebase dont creade nodes for null => labels undefined
 //TODO [] Add Firebase
 //TODO [] Public account with sync
 //TODO [] Popup dialog at beginning to explain the app

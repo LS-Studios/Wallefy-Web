@@ -7,7 +7,7 @@ import {getWeekDayNameShort} from "../../../../../Helper/DateHelper";
 import {useTranslation} from "../../../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../../../Providers/SettingsProvider";
 
-const DatePicker = ({
+const DateCalendar = ({
     date,
     setDate,
     minDate,
@@ -71,4 +71,4 @@ const DatePicker = ({
     );
 };
 
-export default DatePicker;
+export default DateCalendar;

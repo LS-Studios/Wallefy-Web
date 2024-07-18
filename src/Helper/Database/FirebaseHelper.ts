@@ -7,6 +7,9 @@ import {UserModel} from "../../Data/DatabaseModels/UserModel";
 import {DatabaseRoutes} from "../DatabaseRoutes";
 import {SettingsModel} from "../../Data/DataModels/SettingsModel";
 import {DatabaseHelper} from "./DatabaseHelper";
+import {AccountModel} from "../../Data/DatabaseModels/AccountModel";
+import {addPresetsForAccount, createNewUser, getActiveDatabaseHelper} from "./ActiveDBHelper";
+import {DatabaseType} from "../../Data/EnumTypes/DatabaseType";
 
 export class FirebaseHelper implements DatabaseHelper {
     getNewDBRef(path: string): any {
@@ -37,6 +40,8 @@ export class FirebaseHelper implements DatabaseHelper {
 
             set(newRef, item).then(() => {
                 resolve(item)
+            }).catch((error) => {
+                reject(error)
             })
         })
     }
@@ -98,7 +103,7 @@ export class FirebaseHelper implements DatabaseHelper {
                 return;
             }
             const items: T[] = []
-            Object.values(snapshot).forEach((childSnapshot) => {
+            snapshot.forEach((childSnapshot) => {
                 items.push(childSnapshot.val())
                 return true
             })
@@ -192,7 +197,7 @@ export class FirebaseHelper implements DatabaseHelper {
     dbLogout(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             signOut(getFirebaseAuth()).then(() => {
-                this.setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
+                getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
                 resolve()
             }).catch((error) => {
                 reject(error)
@@ -200,19 +205,29 @@ export class FirebaseHelper implements DatabaseHelper {
         })
     }
 
-    dbSignUp(user: UserModel, translate: (key: string) => string): Promise<UserModel> {
+    dbSignUp(user: UserModel, newAccount: AccountModel): Promise<UserModel> {
         return new Promise<UserModel>((resolve, reject) => {
             createUserWithEmailAndPassword(getFirebaseAuth(), user.email, user.password).then((userCredential) => {
-                updateProfile(userCredential.user, {
-                    displayName: user.name
-                }).then(() => {
-                    resolve(
-                        new UserModel(
-                            userCredential.user.uid,
-                            user.name,
-                            user.email,
+                user.uid = userCredential.user.uid
+                createNewUser(
+                    user,
+                    newAccount
+                ).then((newDBUser) => {
+                    resolve(newDBUser)
+                })
+
+                signInWithEmailAndPassword(getFirebaseAuth(), user.email, user.password).then(() => {
+                    updateProfile(userCredential.user, {
+                        displayName: user.name
+                    }).then(() => {
+                        resolve(
+                            new UserModel(
+                                userCredential.user.uid,
+                                user.name,
+                                user.email,
+                            )
                         )
-                    )
+                    })
                 })
             }).catch((error) => {
                 reject(error)

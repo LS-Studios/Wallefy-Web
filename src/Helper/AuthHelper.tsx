@@ -2,12 +2,13 @@ import {UserModel} from "../Data/DatabaseModels/UserModel";
 import {AuthenticationErrorModel} from "../Data/ErrorModels/AuthenticationErrorModel";
 import React from "react";
 import {getActiveDatabaseHelper} from "./Database/ActiveDBHelper";
+import {AccountModel} from "../Data/DatabaseModels/AccountModel";
 
 export function login(email: string, password: string): Promise<UserModel> {
     return new Promise<UserModel>((resolve, reject) => {
         const errorModel = new AuthenticationErrorModel()
 
-        if (email === "") {
+        if (email === "" || !checkIfEmailIsValid(email)) {
             reject({
                 ...errorModel,
                 emailError: true,
@@ -23,20 +24,19 @@ export function login(email: string, password: string): Promise<UserModel> {
             }).catch((error: any) => {
                 reject({
                     ...errorModel,
-                    loginError: true,
+                    userNotFound: true,
                 } as AuthenticationErrorModel)
             })
         }
     })
 }
 
-export function signup(translate: (key: string) => string, user: UserModel): Promise<UserModel> {
+export function signup(translate: (key: string) => string, user: UserModel, newAccount: AccountModel): Promise<UserModel> {
     return new Promise<UserModel>((resolve, reject) => {
         const errorModel = new AuthenticationErrorModel()
 
         const passwordCheck = checkIfPasswordIsValid(user.password, translate)
-
-        if (user.email === "") {
+        if (user.email === "" || !checkIfEmailIsValid(user.email)) {
             reject({
                 ...errorModel,
                 emailError: true,
@@ -52,7 +52,7 @@ export function signup(translate: (key: string) => string, user: UserModel): Pro
                 passwordError: true,
             } as AuthenticationErrorModel, passwordCheck])
         } else {
-            getActiveDatabaseHelper().dbSignUp(user, translate).then((user: UserModel) => {
+            getActiveDatabaseHelper().dbSignUp(user, newAccount).then((user: UserModel) => {
                 resolve(user)
             }).catch((error: any) => {
                 reject({
@@ -62,6 +62,11 @@ export function signup(translate: (key: string) => string, user: UserModel): Pro
             })
         }
     })
+}
+
+function checkIfEmailIsValid(email: string): boolean {
+    const regexp = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+    return regexp.test(email)
 }
 
 function checkIfPasswordIsValid(password: string, translate: (key: string) => string): React.ReactNode | null {

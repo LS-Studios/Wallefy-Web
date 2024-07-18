@@ -89,7 +89,7 @@ const BarChartCard = ({
                             valueFormatter: (value) => formatCurrency(value!, settings?.language, baseCurrency)
                         }]
                     }
-                    width={800}
+                    width={screenScaleStep > 0 ? 800 : undefined}
                     layout="vertical"
                     height={350}
                     sx={{

@@ -4,7 +4,7 @@ import {AccountType} from "../EnumTypes/AccountType";
 
 export class AccountModel implements DBItem {
     uid: string;
-    userId: string;
+    userUid: string;
     name: string;
     balance: number;
     currencyCode: string;
@@ -14,7 +14,7 @@ export class AccountModel implements DBItem {
 
     constructor(name?: string, balance?: number, type?: AccountType, visibility?: AccountVisibilityType) {
         this.uid = "";
-        this.userId = "";
+        this.userUid = "";
         this.name = name || "";
         this.balance = balance || 0;
         this.currencyCode = "EUR";

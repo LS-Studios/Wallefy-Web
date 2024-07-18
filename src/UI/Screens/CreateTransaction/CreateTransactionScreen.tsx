@@ -15,18 +15,21 @@ const CreateTransactionScreen = () => {
     return (
         <div className="create-transaction">
             <h2>{translate("presets")}</h2>
-            <div className="create-transaction-presets">
-                { presets ? (
-                    presets.length > 0 ? presets.map((preset, index) => (
-
-                        <CreateTransactionPresetSlot
-                            key={index}
-                            preset={preset}
-                            isBasic={false}
-                        />
-                    )) : <span className="create-transaction-no-presets">{translate("no-presets")}</span>
-                ) : <Spinner type={SpinnerType.CYCLE} />}
-            </div>
+            { presets ? (
+                presets.length > 0 ? (
+                    <div className="create-transaction-presets">
+                        {
+                            presets.map((preset, index) => (
+                                <CreateTransactionPresetSlot
+                                    key={index}
+                                    preset={preset}
+                                    isBasic={false}
+                                />
+                            ))
+                        }
+                    </div>
+                ) : <span className="create-transaction-no-presets">{translate("no-presets")}</span>
+            ) : <Spinner type={SpinnerType.CYCLE} />}
         </div>
     );
 };
