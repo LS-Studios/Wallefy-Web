@@ -1,11 +1,10 @@
 import React, {useEffect} from 'react';
 import Account from "./Account/Account";
-import {useAccounts} from "../../../CustomHooks/useAccounts";
+import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {getDBObject} from "../../../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
+import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
 
 const AccountsScreen = ({
     searchValue,
@@ -15,12 +14,20 @@ const AccountsScreen = ({
     const translate = useTranslation()
     const accounts = useAccounts()
 
+    const [filteredAccounts, setFilteredAccounts] = React.useState<AccountModel[]>([])
+
+    useEffect(() => {
+        if (!accounts) return
+
+        setFilteredAccounts(accounts.filter(account => account.name.toLowerCase().includes(searchValue.toLowerCase())))
+    }, [accounts, searchValue]);
+
     return (
         <div className="list-screen">
             <div className="screen-list-items">
                 {
                     accounts !== null ? (
-                        accounts.length > 0 ? accounts.filter((account) => account.name.toLowerCase().includes(searchValue.toLowerCase())).map((account, index) => (
+                        filteredAccounts.length > 0 ? filteredAccounts.map((account, index) => (
                             <Account key={index} account={account} />
                         )) : <span className="no-items">{translate("no-accounts-found")}</span>
                     ) : <Spinner type={SpinnerType.CYCLE} />

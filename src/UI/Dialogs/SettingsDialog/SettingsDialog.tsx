@@ -7,7 +7,6 @@ import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import AutoCompleteInputComponent from "../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
 import {InputNameValueModel} from "../../../Data/DataModels/Input/InputNameValueModel";
 import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
-import {deleteDBItemByUid, getDBItemsOnChange, getDBObject, setDBObject} from "../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {SettingsModel} from "../../../Data/DataModels/SettingsModel";
 import {ThemeType} from "../../../Data/EnumTypes/ThemeType";
@@ -17,11 +16,11 @@ import {useCurrentAccount} from "../../../Providers/AccountProvider";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useDialog} from "../../../Providers/DialogProvider";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
-import LoadingDialog from "../LoadingDialog/LoadingDialog";
 import ExportDialog from "../ExportDialog";
 import ImportDialog from "../ImportDialog";
 import DeleteDialog from "../DeleteDialog";
-import {useAccounts} from "../../../CustomHooks/useAccounts";
+import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const SettingsDialog = () => {
     const dialog = useDialog()
@@ -62,7 +61,7 @@ const SettingsDialog = () => {
     useEffect(() => {
         if (!accountsForSelection || fetchedInitialData) return
 
-        getDBObject(DatabaseRoutes.SETTINGS).then((settings: SettingsModel) => {
+        getActiveDatabaseHelper().getDBObject(DatabaseRoutes.SETTINGS).then((settings: SettingsModel) => {
             if (settings) {
                 setSelectedTheme(themeOptions.find(option => option.value === settings.theme) || themeOptions[0])
                 setSelectedLanguage(languageOptions.find(option => option.value === settings.language) || languageOptions[0])
@@ -82,7 +81,7 @@ const SettingsDialog = () => {
             selectedLanguage.value
         )
 
-        setDBObject(
+        getActiveDatabaseHelper().setDBObject(
             DatabaseRoutes.SETTINGS,
             newSettings
         ).then((s) => {
@@ -153,16 +152,17 @@ const SettingsDialog = () => {
             <ButtonInputComponent
                 text={translate("logout")}
                 onClick={() => {
-                    setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
-                    dialog.closeCurrent()
+                    getActiveDatabaseHelper().dbLogout().then(() => {
+                        dialog.closeCurrent()
+                    })
                 }}
             />
             <ButtonInputComponent
                 text={translate("delete-user-account")}
                 onClick={() => {
                     if (!settings) return;
-                    setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
-                    deleteDBItemByUid(DatabaseRoutes.USERS, settings.currentUserUid)
+                    getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
+                    getActiveDatabaseHelper().deleteDBItemByUid(DatabaseRoutes.USERS, settings.currentUserUid)
                     dialog.closeCurrent()
                 }}
             />

@@ -25,7 +25,7 @@ const CreateTransactionOverlay = () => {
             titleIcon={<MdAddCircleOutline />}
             actions={[
                 new ContentAction(
-                    translate("new-transaction"),
+                    translate("create"),
                     () => {
                         if (currentAccount?.type === AccountType.DEFAULT) {
                             dialog.open(
@@ -75,7 +75,7 @@ const CreateTransactionOverlay = () => {
                 //     <MdTune />,
                 // ),
                 new ContentAction(
-                    translate("paste-from-clipboard"),
+                    translate("paste"),
                     () => {
                         navigator.clipboard.readText()
                             .then((text) => {

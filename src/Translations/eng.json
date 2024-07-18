@@ -33,9 +33,8 @@
   "please-enter-a-transaction-partner": "Please enter a transaction partner!",
   "please-enter-a-category": "Please enter a category!",
 
-  "new-transaction": "New transaction",
   "new-preset": "New preset",
-  "paste-from-clipboard": "Paste from clipboard",
+  "paste-from-clipboard": "Paste",
   "no-presets": "There are no presets yet.",
 
   "create-transaction-preset": "Create transaction preset",
@@ -52,6 +51,7 @@
   "income": "Income",
   "expenses": "Expenses",
   "transaction-amount": "Transaction amount",
+  "transaction-amount-short": "Amount",
   "sender-of-transaction": "Sender of transaction",
   "receiver-of-transaction": "Receiver of transaction",
   "execution-type": "Execution type",
@@ -162,6 +162,8 @@
 
   "execute": "Execute",
 
+  "menu": "Menu",
+
   "edit-account": "Edit account",
   "account-name": "Account name",
   "account-balance": "Account balance",
@@ -224,6 +226,7 @@
   "user-not-found": "User not found",
   "invalid-email": "Invalid email",
   "invalid-password": "Invalid password",
+  "email-already-in-use": "Email already in use",
   "login": "Login",
   "sign-up": "Sign up",
   "email": "Email",
@@ -358,5 +361,12 @@
   "pets": "Pets",
   "trophy": "Trophy",
   "key": "Key",
-  "image": "Image"
+  "image": "Image",
+
+  "the_entered_password_is_not_valid": "The entered password is not valid",
+  "password_not_valid_length": "The password must be at least 8 characters long",
+  "password_not_valid_uppercase": "The password must contain at least one uppercase letter",
+  "password_not_valid_lowercase": "The password must contain at least one lowercase letter",
+  "password_not_valid_number": "The password must contain at least one number",
+  "password_not_valid_special_character": "The password must contain at least one special character"
 }

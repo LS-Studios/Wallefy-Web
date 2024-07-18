@@ -1,7 +1,5 @@
 import React, {useEffect} from 'react';
 
-// @ts-ignore
-import variables from "../../../Data/Variables.scss";
 import {MdAttachMoney, MdDescription, MdTune} from "react-icons/md";
 import DebtBasicsTab from "./BasicsTab/DebtBasicsTab";
 import DebtDistributionTab from "./DistributionTab/DebtDistributionTab";
@@ -9,13 +7,6 @@ import DebtDescriptionTab from "./DescriptionTab/DebtDescriptionTab";
 import {useDialog} from "../../../Providers/DialogProvider";
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
-import {
-    addDBItem,
-    deleteDBItemByUid,
-    getDBItemByUid,
-    getDBItemOnChange,
-    updateDBItem
-} from "../../../Helper/AceBaseHelper";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {InputNameValueModel} from "../../../Data/DataModels/Input/InputNameValueModel";
@@ -25,25 +16,19 @@ import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionP
 import LoadingDialog from "../LoadingDialog/LoadingDialog";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useLabels} from "../../../CustomHooks/useLabels";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import {DebtPresetModel} from "../../../Data/DatabaseModels/DebtPresetModel";
 import {CreateDebtInputErrorModel} from "../../../Data/ErrorModels/CreateDebtInputErrorModel";
-import {DBItem} from "../../../Data/DatabaseModels/DBItem";
-import {CreateDialogNewItems} from "../../../Data/DataModels/CreateDialogNewItems";
-import uuid from "react-uuid";
-import {DialogModel} from "../../../Data/DataModels/DialogModel";
-import EditStorageItemDialog from "../EditStorageItemDialog/EditStorageItemDialog";
-import {StorageItemModel} from "../../../Data/DatabaseModels/StorageItemModel";
 import {useNewItems} from "../../../CustomHooks/useNewItems";
 import {DistributionModel} from "../../../Data/DataModels/DistributionModel";
 import {DebtType} from "../../../Data/EnumTypes/DebtType";
 import {CurrencyValueModel} from "../../../Data/DataModels/CurrencyValueModel";
-import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const CreateDebtDialog = ({
     debt,
@@ -176,7 +161,7 @@ const CreateDebtDialog = ({
         if (!currentAccount || !getDatabaseRoute) return
 
         if (debt && debt.uid) {
-            getDBItemOnChange(
+            getActiveDatabaseHelper().getDBItemOnChange(
                 getDatabaseRoute(DatabaseRoutes.DEBTS),
                 debt.uid,
                 (changedTransaction) => {
@@ -308,7 +293,7 @@ const CreateDebtDialog = ({
                 workDebt.whoWasPaiForFallback = Object.fromEntries(workDebt.whoWasPaiFor.map(whoWasPaidForUid => [whoWasPaidForUid, allTransactionPartners.find(tp => tp.uid === whoWasPaidForUid)?.name || ""]))
                 newItems.newTransactionPartners.forEach((newTransactionPartner) => {
                     promises.push(
-                        addDBItem(
+                        getActiveDatabaseHelper().addDBItem(
                             getDatabaseRoute(DatabaseRoutes.TRANSACTION_PARTNERS),
                             newTransactionPartner
                         )
@@ -320,7 +305,7 @@ const CreateDebtDialog = ({
                 workDebt.categoryFallback = [...categories, ...newItems.newCategories]?.find(category => category.uid === workDebt.categoryUid)?.name || workDebt.categoryFallback
                 newItems.newCategories.forEach((newCategory) => {
                     promises.push(
-                        addDBItem(
+                        getActiveDatabaseHelper().addDBItem(
                             getDatabaseRoute(DatabaseRoutes.CATEGORIES),
                             newCategory
                         )
@@ -332,7 +317,7 @@ const CreateDebtDialog = ({
                 workDebt.labelsFallback = Object.fromEntries(workDebt.labels.map(labelUid => [labelUid, [...labels, ...newItems.newLabels].find(label => label.uid === labelUid)?.name || ""]))
                 newItems.newLabels.forEach((newLabel) => {
                     promises.push(
-                        addDBItem(
+                        getActiveDatabaseHelper().addDBItem(
                             getDatabaseRoute(DatabaseRoutes.LABELS),
                             newLabel
                         )
@@ -354,7 +339,7 @@ const CreateDebtDialog = ({
 
                     Promise.all(addNewValues()).then(() => {
                         if (isPreset) {
-                            // addDBItem(
+                            // getActiveDatabaseHelper().addDBItem(
                             //     getDatabaseRoute(DatabaseRoutes.PRESETS),
                             //     new DebtPresetModel(
                             //         currentAccount.uid,
@@ -369,7 +354,7 @@ const CreateDebtDialog = ({
                         } else {
                             workDebt.accountUid = currentAccount.uid
 
-                            addDBItem(
+                            getActiveDatabaseHelper().addDBItem(
                                 getDatabaseRoute(workDebt.debtType === DebtType.DEFAULT ? DatabaseRoutes.DEBTS : DatabaseRoutes.PAYED_DEBTS),
                                 workDebt
                             ).then(() => {
@@ -378,7 +363,7 @@ const CreateDebtDialog = ({
                                     return
                                 }
 
-                                updateDBItem(
+                                getActiveDatabaseHelper().updateDBItem(
                                     getDatabaseRoute(DatabaseRoutes.PRESETS),
                                     {
                                         ...preset,
@@ -409,7 +394,7 @@ const CreateDebtDialog = ({
                         // workTransaction.newCategory = categories.find(category => category.uid === workTransaction.categoryUid)?.name || workTransaction.newCategory
                         // workTransaction.newLabels = workTransaction.labels.map(labelUid => labels.find(label => label.uid === labelUid)?.name || "")
 
-                        updateDBItem(
+                        getActiveDatabaseHelper().updateDBItem(
                             getDatabaseRoute!(workDebt.debtType === DebtType.DEFAULT ? DatabaseRoutes.DEBTS : DatabaseRoutes.PAYED_DEBTS),
                             workDebt
                         ).then(() => {

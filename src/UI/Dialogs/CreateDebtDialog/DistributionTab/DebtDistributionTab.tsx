@@ -1,37 +1,12 @@
-import React, {useEffect} from 'react';
-import TextInputComponent from "../../../Components/Input/TextInput/TextInputComponent";
-//@ts-ignore
-import variables from "../../../../Data/Variables.scss";
-import RadioInputComponent from "../../../Components/Input/RadioInput/RadioInputComponent";
-import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
-import {ExecutionType} from "../../../../Data/EnumTypes/ExecutionType";
-import {RepetitionType} from "../../../../Data/EnumTypes/RepetitionType";
-import InputBaseComponent from "../../../Components/Input/InputBase/InputBaseComponent";
+import React from 'react';
 
 import './DebtDistributionTab.scss';
-import {RepetitionRateType} from "../../../../Data/EnumTypes/RepetitionRateType";
-import {DayOfWeekModel} from "../../../../Data/DataModels/Reptition/DayOfWeekModel";
-import DateInputComponent from "../../../Components/Input/DateInputComponent/DateInputComponent";
-import CheckboxInputComponent from "../../../Components/Input/CheckboxInput/CheckboxInputComponent";
-import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
-import {RepetitionModel} from "../../../../Data/DataModels/Reptition/RepetitionModel";
-import {
-    formatDateToStandardString, getCurrentDate,
-    getWeekDayNameShort
-} from "../../../../Helper/DateHelper";
-import {useToast} from "../../../../Providers/Toast/ToastProvider";
-import useEffectNotInitial from "../../../../CustomHooks/useEffectNotInitial";
-import {RepetitionHelper} from "../../../../Helper/RepetitionHelper";
-import {useTranslation} from "../../../../CustomHooks/useTranslation";
-import {useSettings} from "../../../../Providers/SettingsProvider";
-import {useCurrentAccount} from "../../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
-import {DebtModel} from "../../../../Data/DatabaseModels/DebtModel";
 import DistributionInputComponent from "../../../Components/Input/DistriutionInput/DistributionInputComponent";
 import {DistributionModel} from "../../../../Data/DataModels/DistributionModel";
 import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/TransactionPartnerModel";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
 import {CurrencyValueModel} from "../../../../Data/DataModels/CurrencyValueModel";
+
 ;
 
 const DebtDistributionTab = ({

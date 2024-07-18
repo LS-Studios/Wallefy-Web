@@ -7,7 +7,7 @@ const Toast = ({
     message,
     close
 }: {
-    message: string,
+    message: string | React.ReactNode,
     close: () => void
 }) => {
     useTimeout(close, 5000);

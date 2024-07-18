@@ -26,8 +26,10 @@
     align-items: center;
 
     background-color: var(--primary);
-    width: 400px;
+    max-width: 400px;
     border-radius: 24px;
+
+    margin: 12px;
 }
 
 .header {

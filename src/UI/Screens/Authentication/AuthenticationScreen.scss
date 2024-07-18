@@ -1,3 +1,5 @@
+@import "../../../Data/Variables.scss";
+
 .authentication-screen {
   display: flex;
   flex-direction: column;
@@ -26,62 +28,84 @@
       }
     }
   }
+}
 
-  .authentication-screen-title {
-    font-size: 30px;
-    font-weight: bold;
-    margin: 100px;
+.authentication-screen-title {
+  font-size: 30px;
+  font-weight: bold;
+  margin: 100px;
+}
+
+@media only screen and (max-width: $mobile-state-2) {
+  .authentication-screen-input-overlay {
+    flex-direction: column;
+    max-width: 400px;
   }
 
+  .authentication-screen-input-overlay-input {
+    border-bottom: 2px solid var(--stroke-color);
+  }
+}
+
+@media only screen and (min-width: $mobile-state-2) {
   .authentication-screen-input-overlay {
-    display: flex;
     flex-direction: row;
+    width: 700px;
+  }
+
+  .authentication-screen-input-overlay-input {
+    border-right: 2px solid var(--stroke-color);
+  }
+}
+
+.authentication-screen-input-overlay {
+  display: flex;
+
+  box-sizing: border-box;
+  text-align: center;
+
+  margin: 12px;
+
+  background-color: var(--primary);
+  border: 2px solid var(--stroke-color);
+  border-radius: 24px;
+
+  .authentication-screen-input-overlay-title {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 12px;
+  }
+
+  .authentication-screen-input-overlay-input {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+
+    .authentication-screen-input-overlay-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+    }
+  }
+
+  .authentication-screen-input-overlay-info {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding: 12px;
 
     box-sizing: border-box;
+
     text-align: center;
 
-    background-color: var(--primary);
-    border: 2px solid var(--stroke-color);
-    width: 700px;
-    border-radius: 24px;
-
-    .authentication-screen-input-overlay-title {
-      font-size: 24px;
-      font-weight: bold;
-      padding: 12px;
-    }
-
-    .authentication-screen-input-overlay-left {
-      display: flex;
-      flex-direction: column;
-
-      width: 400px;
-
-      border-right: 2px solid var(--stroke-color);
-
-      .authentication-screen-input-overlay-inputs {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 12px;
-      }
-    }
-
-    .authentication-screen-input-overlay-right {
-      width: 300px;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-
-      padding: 12px;
-
-      text-align: center;
-
-      h2 {
-        padding: 0;
-        margin: 0;
-      }
+    h2 {
+      padding: 0;
+      margin: 0;
     }
   }
 }

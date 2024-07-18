@@ -2,8 +2,6 @@ import React from 'react';
 import {AccountModel} from "../../../../Data/DatabaseModels/AccountModel";
 
 import './Account.scss';
-// @ts-ignore
-import variables from "../../../../Data/Variables.scss";
 import {formatCurrency} from "../../../../Helper/CurrencyHelper";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import CreateAccountDialog from "../../../Dialogs/CreateAccountDialog/CreateAccountDialog";

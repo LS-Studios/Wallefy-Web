@@ -6,39 +6,34 @@ import {TransactionPresetModel} from "../../Data/DatabaseModels/TransactionPrese
 import {PresetQuestionType} from "../../Data/EnumTypes/PresetQuestionType";
 import TextInputComponent from "../Components/Input/TextInput/TextInputComponent";
 import {RepetitionModel} from "../../Data/DataModels/Reptition/RepetitionModel";
-import {TransactionModel} from "../../Data/DatabaseModels/TransactionModel";
 import RepetitionRateInput from "./CreateTransactionDialog/RepetitionTab/RepetitionRateInput";
 import {formatDateToStandardString} from "../../Helper/DateHelper";
 import {RepetitionRateType} from "../../Data/EnumTypes/RepetitionRateType";
 import DateInputComponent from "../Components/Input/DateInputComponent/DateInputComponent";
 import {getDisabledWeekDays} from "../../Helper/RepetitionHelper";
-import {TransactionType} from "../../Data/EnumTypes/TransactionType";
 import {getInputValueUidByUid, getInputValueUidsByUids} from "../../Helper/HandyFunctionHelper";
 import {InputNameValueModel} from "../../Data/DataModels/Input/InputNameValueModel";
 import {TransactionPartnerModel} from "../../Data/DatabaseModels/TransactionPartnerModel";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
 import AutoCompleteInputComponent from "../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
-import {useTransactionPartners} from "../../CustomHooks/useTransactionPartners";
+import {useTransactionPartners} from "../../CustomHooks/Database/useTransactionPartners";
 import {useCurrentAccount} from "../../Providers/AccountProvider";
 import LoadingDialog from "./LoadingDialog/LoadingDialog";
 import {useNewItems} from "../../CustomHooks/useNewItems";
-import {DBItem} from "../../Data/DatabaseModels/DBItem";
 import CurrencyInputComponent from "../Components/Input/CurrencyInput/CurrencyInputComponent";
 import {CurrencyValueModel} from "../../Data/DataModels/CurrencyValueModel";
 import {CurrencyModel} from "../../Data/DataModels/CurrencyModel";
-import {getDefaultCurrency} from "../../Helper/CurrencyHelper";
-import {addDBItem} from "../../Helper/AceBaseHelper";
-import {useDatabaseRoute} from "../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../CustomHooks/Database/useDatabaseRoute";
 import {useDialog} from "../../Providers/DialogProvider";
 import {useToast} from "../../Providers/Toast/ToastProvider";
 import {DebtPresetModel} from "../../Data/DatabaseModels/DebtPresetModel";
-import ButtonInputComponent from "../Components/Input/ButtonInput/ButtonInputComponent";
-import {Md1K, MdTune} from "react-icons/md";
+import {MdTune} from "react-icons/md";
 import {DialogModel} from "../../Data/DataModels/DialogModel";
-import DebtDistributionTab from "./CreateDebtDialog/DistributionTab/DebtDistributionTab";
 import {DistributionModel} from "../../Data/DataModels/DistributionModel";
 import DistributionDialog from "./DistributionDialog/DistributionDialog";
 import {DebtModel} from "../../Data/DatabaseModels/DebtModel";
+import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
+
 interface AnswersType {
     [key: string]: string | string[] | CurrencyModel | boolean | number | RepetitionModel | CurrencyValueModel | null;
 }
@@ -210,7 +205,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
 
                             newItems.newTransactionPartners.forEach((newTransactionPartner) => {
                                 promises.push(
-                                    addDBItem(
+                                    getActiveDatabaseHelper().addDBItem(
                                         getDatabaseRoute!(DatabaseRoutes.TRANSACTION_PARTNERS),
                                         newTransactionPartner
                                     )
@@ -220,14 +215,14 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
 
                         Promise.all(promises).then(() => {
                             if (isDebt) {
-                                addDBItem(
+                                getActiveDatabaseHelper().addDBItem(
                                     getDatabaseRoute!(DatabaseRoutes.DEBTS),
                                     newPresetItem
                                 ).then(() => {
                                     dialog.closeCurrent()
                                 })
                             } else {
-                                addDBItem(
+                                getActiveDatabaseHelper().addDBItem(
                                     getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS),
                                     newPresetItem
                                 ).then(() => {

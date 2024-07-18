@@ -1,8 +1,6 @@
 import React, {useEffect} from 'react';
 import './RangeSliderInputComponent.scss';
 
-// @ts-ignore
-import variables from '../../../../Data/Variables.scss';
 import {useTimeout} from "../../../../CustomHooks/useTimeout";
 
 const RangeSliderInputComponent = ({
@@ -35,12 +33,12 @@ const RangeSliderInputComponent = ({
         const toPosition = Number(toSliderRef.current!.value) - Number(toSliderRef.current!.min);
         toSliderRef.current!.style.background = `linear-gradient(
           to right,
-          ${variables.stroke_color} 0%,
-          ${variables.stroke_color} ${(fromPosition)/(rangeDistance)*100}%,
-          ${variables.text_color} ${((fromPosition)/(rangeDistance))*100}%,
-          ${variables.text_color} ${(toPosition)/(rangeDistance)*100}%, 
-          ${variables.stroke_color} ${(toPosition)/(rangeDistance)*100}%, 
-          ${variables.stroke_color} 100%)`;
+          var(--stroke-color) 0%,
+          var(--stroke-color) ${(fromPosition)/(rangeDistance)*100}%,
+          var(--text) ${((fromPosition)/(rangeDistance))*100}%,
+          var(--text) ${(toPosition)/(rangeDistance)*100}%, 
+          var(--stroke-color) ${(toPosition)/(rangeDistance)*100}%, 
+          var(--stroke-color) 100%)`;
     }
 
     function setToggleAccessible(currentTarget: HTMLInputElement) {

@@ -1,35 +1,22 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import TextInputComponent from "../../../Components/Input/TextInput/TextInputComponent";
-//@ts-ignore
-import variables from "../../../../Data/Variables.scss";
 import RadioInputComponent from "../../../Components/Input/RadioInput/RadioInputComponent";
 import CurrencyInputComponent from "../../../Components/Input/CurrencyInput/CurrencyInputComponent";
 import AutoCompleteInputComponent from "../../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
 import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
-import {TransactionType} from "../../../../Data/EnumTypes/TransactionType";
-import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
-import * as MDIcons from "react-icons/md";
-import {CreateTransactionInputErrorModel} from "../../../../Data/ErrorModels/CreateTransactionInputErrorModel";
 import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/TransactionPartnerModel";
-import {deleteDBItemByUid, getDBItemsOnChange} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
 import {InputNameValueModel} from "../../../../Data/DataModels/Input/InputNameValueModel";
 import {getInputValueUidByUid, getInputValueUidsByUids} from "../../../../Helper/HandyFunctionHelper";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../../Providers/DialogProvider";
-import {DialogModel} from "../../../../Data/DataModels/DialogModel";
-import EditStorageItemDialog from "../../EditStorageItemDialog/EditStorageItemDialog";
-import {StorageItemModel} from "../../../../Data/DatabaseModels/StorageItemModel";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
 import {CreateDebtInputErrorModel} from "../../../../Data/ErrorModels/CreateDebtInputErrorModel";
 import {DebtModel} from "../../../../Data/DatabaseModels/DebtModel";
-import {LabelModel} from "../../../../Data/DatabaseModels/LabelModel";
-import uuid from "react-uuid";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
 import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
-import {ExecutionType} from "../../../../Data/EnumTypes/ExecutionType";
 import {formatDateToStandardString} from "../../../../Helper/DateHelper";
 import DateInputComponent from "../../../Components/Input/DateInputComponent/DateInputComponent";
 import {getIcon, getIcons} from "../../../../Helper/IconMapper";
@@ -154,7 +141,7 @@ const DebtBasicsTab = ({
                     });
                 }}
                 style={{
-                    borderColor: inputError.nameError ? variables.error_color : null
+                    borderColor: inputError.nameError ? "var(--error-color)" : "null"
                 }}
             /> }
             <CurrencyInputComponent
@@ -174,7 +161,7 @@ const DebtBasicsTab = ({
                     });
                 }}
                 style={{
-                    borderColor: inputError.transactionAmountError ? variables.error_color : null
+                    borderColor: inputError.transactionAmountError ? "var(--error-color)" : "null"
                 }}
             />
             { workDebt.debtType === DebtType.DEFAULT && <AutoCompleteInputComponent
@@ -205,7 +192,7 @@ const DebtBasicsTab = ({
                 }}
                 suggestions={nonUserTransactionPartners}
                 style={{
-                    borderColor: inputError.transactionExecutorError ? variables.error_color : null
+                    borderColor: inputError.transactionExecutorError ? "var(--error-color)" : "null"
                 }}
                 allowCreatingNew={true}
                 contextMenuOptions={(value) => getDbItemContextMenuOptions(
@@ -243,7 +230,7 @@ const DebtBasicsTab = ({
                 }}
                 suggestions={userTransactionPartners}
                 style={{
-                    borderColor: inputError.whoHasPaidError ? variables.error_color : null
+                    borderColor: inputError.whoHasPaidError ? "var(--error-color)" : "null"
                 }}
                 allowCreatingNew={true}
                 contextMenuOptions={(value) => getDbItemContextMenuOptions(
@@ -276,7 +263,7 @@ const DebtBasicsTab = ({
                 suggestions={userTransactionPartners}
                 placeholder={translate("add-person")}
                 style={{
-                    borderColor: inputError.whoWasPaidForError ? variables.error_color : null
+                    borderColor: inputError.whoWasPaidForError ? "var(--error-color)" : "null"
                 }}
                 allowCreatingNew={true}
                 contextMenuOptions={(value) => getDbItemContextMenuOptions(
@@ -313,7 +300,7 @@ const DebtBasicsTab = ({
                 }}
                 suggestions={userTransactionPartners}
                 style={{
-                    borderColor: inputError.whoHasPaidError ? variables.error_color : null
+                    borderColor: inputError.whoHasPaidError ? "var(--error-color)" : "null"
                 }}
                 allowCreatingNew={true}
                 contextMenuOptions={(value) => getDbItemContextMenuOptions(

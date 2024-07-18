@@ -7,6 +7,7 @@ function DropDialog({
     setIsDroppedUp,
     content,
     wrapContent=false,
+    parentStyle,
     style,
     children
 }: React.PropsWithChildren<{
@@ -15,6 +16,7 @@ function DropDialog({
     setIsDroppedUp?: (value: boolean) => void,
     content: React.ReactNode,
     wrapContent?: boolean,
+    parentStyle?: React.CSSProperties,
     style?: React.CSSProperties
 }>) {
     const [menuHeight, setMenuHeight] = useState<string | number>("auto");
@@ -66,7 +68,7 @@ function DropDialog({
     }, [isOpen]);
 
     return (
-        <div className="dropDialog" ref={dropDialogRef}>
+        <div className="dropDialog" style={parentStyle} ref={dropDialogRef}>
             {children}
             <div className={"dialogHeightAdjust" + " " + (isOpen ? "show" : "") + " " + (dropUp ? "dropUp" : "")  + " " + (wrapContent ? "wrapContent" : "")} style={{...style, height: menuHeight}} ref={dropDialogMenuRef}>
                 {content}

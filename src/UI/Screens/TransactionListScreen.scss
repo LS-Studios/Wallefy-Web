@@ -8,12 +8,24 @@
     gap: 20px
 }
 
+@media only screen and (max-width: $mobile-state-2) {
+    .screen-tabs {
+        gap: 16px;
+    }
+}
+
+@media only screen and (min-width: $mobile-state-2) {
+    .screen-tabs {
+        gap: 32px;
+    }
+}
+
 .screen-tabs {
     display: flex;
     align-items: center;
     justify-content: center;
 
-    gap: 80px;
+    width: 95%;
 
     span {
         text-decoration: none;
@@ -23,7 +35,7 @@
         border: 2px solid var(--stroke-color);
         border-radius: 24px;
 
-        width: 200px;
+        width: 100%;
         text-align: center;
 
         cursor: pointer;

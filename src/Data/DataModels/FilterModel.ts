@@ -4,6 +4,7 @@ import {PriceRangeModel} from "./PriceRangeModel";
 import {CurrencyModel} from "./CurrencyModel";
 
 export class FilterModel {
+    searchName: string | null = null;
     transactionType: TransactionType | null = null;
     dateRange: DateRangeModel | null = null;
     priceRange: PriceRangeModel | null = null;

@@ -2,7 +2,6 @@ import React, {useEffect, useState} from 'react';
 import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
 
 import CurrencyInputComponent from "../../Components/Input/CurrencyInput/CurrencyInputComponent";
-import InputBaseComponent from "../../Components/Input/InputBase/InputBaseComponent";
 import RadioInputComponent from "../../Components/Input/RadioInput/RadioInputComponent";
 import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel";
 import {AccountVisibilityType} from "../../../Data/EnumTypes/AccountVisibilityType";
@@ -10,32 +9,24 @@ import TextInputComponent from "../../Components/Input/TextInput/TextInputCompon
 import AutoCompleteInputComponent from "../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
-import {getDatabase} from "../../../Database/AceBaseDatabase";
 import {useDialog} from "../../../Providers/DialogProvider";
-import {
-    addDBItem,
-    deleteDBItem, getDBItemsOnChange, setDBObject,
-    updateDBItem
-} from "../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
 import {InputNameValueModel} from "../../../Data/DataModels/Input/InputNameValueModel";
 import {getInputValueUidsByUids} from "../../../Helper/HandyFunctionHelper";
 import {CreateAccountInputErrorModel} from "../../../Data/ErrorModels/CreateAccountInputErrorModel";
-// @ts-ignore
-import variables from "../../../Data/Variables.scss";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {CurrencyModel} from "../../../Data/DataModels/CurrencyModel";
-import {getCurrencyOptions, getDefaultCurrency} from "../../../Helper/CurrencyHelper";
+import {getDefaultCurrency} from "../../../Helper/CurrencyHelper";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
-import {SettingsModel} from "../../../Data/DataModels/SettingsModel";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import {useSettings} from "../../../Providers/SettingsProvider";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
-import {useAccounts} from "../../../CustomHooks/useAccounts";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
 import {AccountType} from "../../../Data/EnumTypes/AccountType";
 import {getDefaultDebtPresets, getDefaultPresets} from "../../../Helper/DefaultPresetHelper";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const CreateAccountDialog = ({
     account
@@ -110,7 +101,7 @@ const CreateAccountDialog = ({
                     translate("switch"),
                     () => {
                         dialog.closeCurrent();
-                        setDBObject(
+                        getActiveDatabaseHelper().setDBObject(
                             DatabaseRoutes.SETTINGS,
                             {
                                 ...settings,
@@ -125,7 +116,7 @@ const CreateAccountDialog = ({
                 () => {
                     dialog.closeCurrent();
                     if (workAccount.balance === null) workAccount.balance = 0;
-                    updateDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount)
+                    getActiveDatabaseHelper().updateDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount)
                 },
                 false,
                 !getDatabaseRoute
@@ -137,13 +128,13 @@ const CreateAccountDialog = ({
                         toast.open(translate("there-must-be-at-least-one-account"))
                         return;
                     } else if (workAccount.uid === currentAccount?.uid) {
-                        setDBObject(DatabaseRoutes.SETTINGS, {
+                        getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, {
                             ...settings,
                             currentAccountUid: accounts!.filter(account => account.uid !== workAccount.uid)[0].uid
                         })
                     }
 
-                    deleteDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount)
+                    getActiveDatabaseHelper().deleteDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount)
                     dialog.closeCurrent();
                 },
                 false,
@@ -163,7 +154,7 @@ const CreateAccountDialog = ({
                         return;
                     }
                     if (workAccount.balance === null) workAccount.balance = 0;
-                    addDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount).then((newAccount) => {
+                    getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount).then((newAccount) => {
                         const castedAccount = newAccount as AccountModel;
 
                         let presets
@@ -175,15 +166,13 @@ const CreateAccountDialog = ({
                         }
 
                         presets.forEach(preset => {
-                            addDBItem(
+                            getActiveDatabaseHelper().addDBItem(
                                 getDatabaseRoute!(DatabaseRoutes.ACCOUNTS) + "/" + castedAccount.uid + "/" + DatabaseRoutes.PRESETS,
                                 preset
                             ).then(() => {
                                 dialog.closeCurrent()
                             })
                         })
-
-
                     })
                 },
                 false,
@@ -198,7 +187,7 @@ const CreateAccountDialog = ({
                     return oldAccount;
                 })}
                 style={{
-                    borderColor: inputError.nameError ? variables.error_color : null
+                    borderColor: inputError.nameError ? "var(--error-color)" : "null"
                 }}
             />
             <RadioInputComponent

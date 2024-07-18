@@ -1,9 +1,8 @@
-import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
+import {TransactionModel} from "../../Data/DatabaseModels/TransactionModel";
 import {useEffect, useState} from "react";
-import {getDBItemsOnChange} from "../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
-import {useCurrentAccount} from "../Providers/AccountProvider";
+import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
 import {useDatabaseRoute} from "./useDatabaseRoute";
+import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 export const useTransactions = () => {
     const getDatabaseRoute = useDatabaseRoute()
@@ -12,7 +11,7 @@ export const useTransactions = () => {
     useEffect(() => {
         if (!getDatabaseRoute) return
 
-        getDBItemsOnChange(
+        getActiveDatabaseHelper().getDBItemsOnChange(
             getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
             setTransactions
         )

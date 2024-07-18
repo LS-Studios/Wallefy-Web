@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import "./AuthenticationScreen.scss";
 import TextInputComponent from "../../Components/Input/TextInput/TextInputComponent";
 import ButtonInputComponent from "../../Components/Input/ButtonInput/ButtonInputComponent";
@@ -7,11 +7,10 @@ import {AuthType} from "../../../Data/EnumTypes/AuthType";
 import {login, signup} from "../../../Helper/AuthHelper";
 import {AuthenticationErrorModel} from "../../../Data/ErrorModels/AuthenticationErrorModel";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
-import {MdDarkMode, MdLanguage, MdLight, MdLightMode} from "react-icons/md";
+import {MdDarkMode, MdLanguage, MdLightMode} from "react-icons/md";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {LanguageType} from "../../../Data/EnumTypes/LanguageType";
 import {ThemeType} from "../../../Data/EnumTypes/ThemeType";
-import {getDBObject, getDBObjectOnChange, setDBObject} from "../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {SettingsModel} from "../../../Data/DataModels/SettingsModel";
 import {useDialog} from "../../../Providers/DialogProvider";
@@ -21,6 +20,7 @@ import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {UserModel} from "../../../Data/DatabaseModels/UserModel";
 import {useNavigate} from "react-router-dom";
 import {useThemeDetector} from "../../../CustomHooks/useThemeDetector";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const AuthenticationScreen = () => {
     const navigate = useNavigate()
@@ -65,7 +65,7 @@ const AuthenticationScreen = () => {
 
     useEffect(() => {
         if (settings && (settings.theme !== theme || settings.language !== language)) {
-            setDBObject(
+            getActiveDatabaseHelper().setDBObject(
                 DatabaseRoutes.SETTINGS,
                 {
                     ...settings,
@@ -112,7 +112,7 @@ const AuthenticationScreen = () => {
                 }
 
                 login(email, password).then((user) => {
-                    setDBObject(DatabaseRoutes.SETTINGS, {
+                    getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, {
                         ...settings,
                         currentUserUid: user.uid,
                         currentAccountUid: user.currentAccountId
@@ -216,23 +216,32 @@ const AuthenticationScreen = () => {
                         password
                     )
                 ).then((newUser) => {
-                    setDBObject(DatabaseRoutes.SETTINGS, {
+                    getActiveDatabaseHelper().setDBObject(DatabaseRoutes.SETTINGS, {
                         ...settings,
                         currentUserUid: newUser.uid,
                         currentAccountUid: newUser.currentAccountId
                     }).then(() => {
                         navigate("/home")
                     })
-                }).catch((error: AuthenticationErrorModel) => {
-                    setError(error)
+                }).catch((error: AuthenticationErrorModel | [AuthenticationErrorModel, React.ReactNode]) => {
+                    const errorModel = Array.isArray(error) ? error[0] : error
+                    const errorMessage = Array.isArray(error) ? error[1] : null
 
-                    if (error.userNotFound) {
+                    setError(errorModel)
+
+                    if (errorMessage) {
+                        toast.open(errorMessage)
+                        return
+                    }
+
+
+                    if (errorModel.userNotFound) {
                         toast.open(translate("user-not-found"))
-                    } else if (error.emailError) {
+                    } else if (errorModel.emailError) {
                         toast.open(translate("invalid-email"))
-                    } else if (error.passwordError) {
+                    } else if (errorModel.passwordError) {
                         toast.open(translate("invalid-password"))
-                    } else if (error.emailAlreadyInUse) {
+                    } else if (errorModel.emailAlreadyInUse) {
                         toast.open(translate("email-already-in-use"))
                     }
                 })
@@ -289,7 +298,7 @@ const AuthenticationScreen = () => {
             </div>
             <span className="authentication-screen-title">Wallefy</span>
             <div className="authentication-screen-input-overlay">
-                <div className="authentication-screen-input-overlay-left">
+                <div className="authentication-screen-input-overlay-input">
                     <span className="authentication-screen-input-overlay-title">
                         { authType === AuthType.LOGIN ? translate("login") : translate("sign-up") }
                     </span>
@@ -298,7 +307,7 @@ const AuthenticationScreen = () => {
                         { authType === AuthType.LOGIN ? loginInputs : signUpInputs }
                     </div>
                 </div>
-                <div className="authentication-screen-input-overlay-right">
+                <div className="authentication-screen-input-overlay-info">
                     { authType === AuthType.LOGIN ? signUpInfo : loginInfo }
                 </div>
             </div>

@@ -1,7 +1,5 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import TextInputComponent from "../../../Components/Input/TextInput/TextInputComponent";
-//@ts-ignore
-import variables from "../../../../Data/Variables.scss";
 import RadioInputComponent from "../../../Components/Input/RadioInput/RadioInputComponent";
 import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
 import {ExecutionType} from "../../../../Data/EnumTypes/ExecutionType";
@@ -15,18 +13,15 @@ import DateInputComponent from "../../../Components/Input/DateInputComponent/Dat
 import CheckboxInputComponent from "../../../Components/Input/CheckboxInput/CheckboxInputComponent";
 import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
 import {RepetitionModel} from "../../../../Data/DataModels/Reptition/RepetitionModel";
-import {
-    formatDateToStandardString, getCurrentDate,
-    getWeekDayNameShort
-} from "../../../../Helper/DateHelper";
+import {formatDateToStandardString, getCurrentDate} from "../../../../Helper/DateHelper";
 import {useToast} from "../../../../Providers/Toast/ToastProvider";
 import useEffectNotInitial from "../../../../CustomHooks/useEffectNotInitial";
 import {getDisabledWeekDays, RepetitionHelper} from "../../../../Helper/RepetitionHelper";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../../Providers/SettingsProvider";
-import {useCurrentAccount} from "../../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
 import RepetitionRateInput from "./RepetitionRateInput";
+
 ;
 
 const RepetitionTab = ({
@@ -191,7 +186,7 @@ const RepetitionTab = ({
                 <InputBaseComponent
                     title={translate("number-of-repetitions")}
                     style={{
-                        border: "2px solid " + variables.stroke_color
+                        border: "2px solid var(--stroke-color)"
                     }}
                 >
                     <div className="create-transaction-dialog-repetition-amount">
@@ -245,7 +240,7 @@ const RepetitionTab = ({
                         })
                     }}
                     style={{
-                        border: "2px solid " + variables.stroke_color
+                        border: "2px solid var(--stroke-color)"
                     }}
                 /> }
             </>}

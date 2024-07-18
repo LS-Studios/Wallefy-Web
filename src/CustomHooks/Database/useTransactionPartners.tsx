@@ -1,10 +1,8 @@
-import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
 import {useEffect, useState} from "react";
-import {getDBItemsOnChange} from "../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
-import {TransactionPartnerModel} from "../Data/DatabaseModels/TransactionPartnerModel";
-import {useCurrentAccount} from "../Providers/AccountProvider";
+import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
+import {TransactionPartnerModel} from "../../Data/DatabaseModels/TransactionPartnerModel";
 import {useDatabaseRoute} from "./useDatabaseRoute";
+import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 export const useTransactionPartners = (initial: TransactionPartnerModel[] | null = null) => {
     const getDatabaseRoute = useDatabaseRoute()
@@ -13,7 +11,7 @@ export const useTransactionPartners = (initial: TransactionPartnerModel[] | null
     useEffect(() => {
         if (!getDatabaseRoute) return
 
-        getDBItemsOnChange(
+        getActiveDatabaseHelper().getDBItemsOnChange(
             getDatabaseRoute(DatabaseRoutes.TRANSACTION_PARTNERS),
             setTransactionPartners
         )

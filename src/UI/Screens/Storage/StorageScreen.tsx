@@ -5,11 +5,14 @@ import StorageItem from "./StorageItem/StorageItem";
 
 import '../TransactionListScreen.scss';
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useLabels} from "../../../CustomHooks/useLabels";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
+import SelectionInput from "../../Components/SelectionInput/SelectionInput";
+import {useScreenScaleStep} from "../../../CustomHooks/useScreenScaleStep";
+import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel";
 
 const StorageScreen = ({
     searchValue,
@@ -17,6 +20,7 @@ const StorageScreen = ({
     searchValue: string,
 }) => {
     const translate = useTranslation()
+    const screenScaleStep = useScreenScaleStep()
 
     const [currentTab, setCurrentTab] = React.useState<number>(0);
 
@@ -27,6 +31,12 @@ const StorageScreen = ({
     const labels = useLabels()
 
     const [filteredStorageItems, setFilteredStorageItems] = React.useState<StorageItemModel[] | null>(null);
+
+    const tabOptions= [
+        new InputOptionModel(translate("transaction-partners"), 0),
+        new InputOptionModel(translate("categories"), 1),
+        new InputOptionModel(translate("labels"), 2)
+    ]
 
     useEffect(() => {
         switch (currentTab) {
@@ -48,7 +58,11 @@ const StorageScreen = ({
 
     return (
         <div className="list-screen">
-            <div className="screen-tabs">
+            { screenScaleStep === 2 ? <SelectionInput
+                value={tabOptions.find((option) => option.value === currentTab) || tabOptions[0]}
+                onValueChanged={(value) => setCurrentTab(value.value)}
+                options={tabOptions}
+            /> : <div className="screen-tabs">
                 <span className={currentTab === 0 ? "selected" : ""} onClick={() => {
                     setCurrentTab(0)
                 }}>{translate("transaction-partners")}</span>
@@ -58,27 +72,29 @@ const StorageScreen = ({
                 <span className={currentTab === 2 ? "selected" : ""} onClick={() => {
                     setCurrentTab(2)
                 }}>{translate("labels")}</span>
-            </div>
+            </div> }
             <div className="screen-list-items">
                 {
                     filteredStorageItems ? (
-                        filteredStorageItems.length > 0 ? filteredStorageItems.map((item, index) => (
-                            <StorageItem key={index} storageItem={item} translate={translate} />
-                        )) : <span className="no-items">{translate("no-items")}</span>) :
-                        <Spinner type={SpinnerType.CYCLE} />
+                            filteredStorageItems.length > 0 ? filteredStorageItems.map((item, index) => (
+                                <StorageItem key={index} storageItem={item} translate={translate}/>
+                            )) : <span className="no-items">{translate("no-items")}</span>) :
+                        <Spinner type={SpinnerType.CYCLE}/>
                 }
             </div>
         </div>
     );
 };
 
-//TODO [] Edit transaction dont fill the form
-//TODO [] Add function to calculate done transactions
-//TODO [] Popup dialog at beginning to explain the app
-//TODO [] Popup dialog to put the current balance and recent transactions
-//TODO [] Mobile Screens
+//TODO [] Bigger menu icon
+//TODO [] Animated Menu
+//TODO [] Padding bottonm is difrent in diffrent screens
+//TODO [] In overview add card for date range when mobile
+//tODO [] Add bottom bar in mobi
 //TODO [] Add Firebase
 //TODO [] Public account with sync
+//TODO [] Popup dialog at beginning to explain the app
+//TODO [] Popup dialog to put the current balance and recent transactions
 //TODO [] Help screen with Chat
 //TODO [] Chatbot which is able to create transactions and read data
 

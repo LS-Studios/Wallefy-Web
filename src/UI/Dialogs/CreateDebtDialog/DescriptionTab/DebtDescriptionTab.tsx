@@ -1,39 +1,20 @@
 import React, {useEffect} from 'react';
-import TextInputComponent from "../../../Components/Input/TextInput/TextInputComponent";
-//@ts-ignore
-import variables from "../../../../Data/Variables.scss";
-import RadioInputComponent from "../../../Components/Input/RadioInput/RadioInputComponent";
-import CurrencyInputComponent from "../../../Components/Input/CurrencyInput/CurrencyInputComponent";
 import AutoCompleteInputComponent from "../../../Components/Input/AutoCompleteInput/AutoCompleteInputComponent";
-import {InputOptionModel} from "../../../../Data/DataModels/Input/InputOptionModel";
-import {TransactionType} from "../../../../Data/EnumTypes/TransactionType";
-import InputBaseComponent from "../../../Components/Input/InputBase/InputBaseComponent";
 import TextAreaInputComponent from "../../../Components/Input/TextAreaInput/TextAreaInputComponent";
-import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
-import {CreateTransactionInputErrorModel} from "../../../../Data/ErrorModels/CreateTransactionInputErrorModel";
 import {CategoryModel} from "../../../../Data/DatabaseModels/CategoryModel";
 import {LabelModel} from "../../../../Data/DatabaseModels/LabelModel";
 import {InputNameValueModel} from "../../../../Data/DataModels/Input/InputNameValueModel";
-import {deleteDBItemByUid, getDBItemsOnChange} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
-import {
-    getInputValueUidByUid,
-    getInputValueUidsByUids
-} from "../../../../Helper/HandyFunctionHelper";
+import {getInputValueUidByUid, getInputValueUidsByUids} from "../../../../Helper/HandyFunctionHelper";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
-import {DialogModel} from "../../../../Data/DataModels/DialogModel";
-import EditStorageItemDialog from "../../EditStorageItemDialog/EditStorageItemDialog";
-import {StorageItemModel} from "../../../../Data/DatabaseModels/StorageItemModel";
 import {useDialog} from "../../../../Providers/DialogProvider";
-import useEffectNotInitial from "../../../../CustomHooks/useEffectNotInitial";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
 import {DebtModel} from "../../../../Data/DatabaseModels/DebtModel";
 import {CreateDebtInputErrorModel} from "../../../../Data/ErrorModels/CreateDebtInputErrorModel";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
 import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
-import {TransactionPartnerModel} from "../../../../Data/DatabaseModels/TransactionPartnerModel";
 import {getIcon, getIcons} from "../../../../Helper/IconMapper";
 import LoadingDialog from "../../LoadingDialog/LoadingDialog";
 
@@ -121,7 +102,7 @@ const DebtDescriptionTab = ({
                 }}
                 suggestions={categoriesForSelection}
                 style={{
-                    borderColor: inputError.categoryError ? variables.error_color : null
+                    borderColor: inputError.categoryError ? "var(--error-color)" : "null"
                 }}
                 allowCreatingNew={true}
                 contextMenuOptions={(value) => getDbItemContextMenuOptions(

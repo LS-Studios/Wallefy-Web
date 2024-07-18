@@ -1,18 +1,10 @@
 import {RepetitionRateType} from "../Data/EnumTypes/RepetitionRateType";
-import {
-    addDays,
-    addMonths,
-    addWeeks,
-    addYears,
-    formatDate,
-    formatDateToStandardString,
-    getWeekDayNameShort
-} from "./DateHelper";
+import {addDays, addMonths, addWeeks, addYears, formatDateToStandardString, getWeekDayNameShort} from "./DateHelper";
 import {DayOfWeekModel} from "../Data/DataModels/Reptition/DayOfWeekModel";
 import {RepetitionModel} from "../Data/DataModels/Reptition/RepetitionModel";
-import {deleteDBItem, deleteDBItemByUid} from "./AceBaseHelper";
 import {DatabaseRoutes} from "./DatabaseRoutes";
 import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
+import {getActiveDatabaseHelper} from "./Database/ActiveDBHelper";
 
 export class RepetitionHelper {
     transactionUid: string;
@@ -110,7 +102,7 @@ export class RepetitionHelper {
         }
 
         if (deleteFromDB && newRepetitionAmount !== null && newRepetitionAmount === 0) {
-            deleteDBItemByUid(
+            getActiveDatabaseHelper().deleteDBItemByUid(
                 getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
                 this.transactionUid
             )

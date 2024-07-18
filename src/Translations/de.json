@@ -34,9 +34,8 @@
   "please-enter-a-transaction-partner": "Bitte geben Sie einen Transaktionspartner ein!",
   "please-enter-a-category": "Bitte geben Sie eine Kategorie ein!",
 
-  "new-transaction": "Neue Transaktion",
   "new-preset": "Neue Vorlage",
-  "paste-from-clipboard": "Aus Zwischenablage einfügen",
+  "paste": "Einfügen",
   "no-presets": "Es sind noch keine Vorlagen vorhanden",
 
   "create-transaction-preset": "Transaktionsvorlage erstellen",
@@ -53,6 +52,7 @@
   "income": "Einkommen",
   "expenses": "Ausgaben",
   "transaction-amount": "Transaktionsbetrag",
+  "transaction-amount-short": "Betrag",
   "sender-of-transaction": "Absender der Transaktion",
   "receiver-of-transaction": "Empfänger der Transaktion",
   "execution-type": "Ausführungstyp",
@@ -162,6 +162,8 @@
 
   "execute": "Ausführen",
 
+  "menu": "Menü",
+
   "edit-account": "Konto bearbeiten",
   "account-name": "Kontoname",
   "account-balance": "Kontostand",
@@ -224,6 +226,7 @@
   "user-not-found": "Benutzer nicht gefunden",
   "invalid-email": "Ungültige E-Mail",
   "invalid-password": "Ungültiges Passwort",
+  "email-already-in-use": "E-Mail wird bereits verwendet",
   "login": "Anmelden",
   "sign-up": "Registrieren",
   "email": "E-Mail",
@@ -359,5 +362,12 @@
   "pets": "Haustiere",
   "trophy": "Trophäe",
   "key": "Schlüssel",
-  "image": "Bild"
+  "image": "Bild",
+
+  "the_entered_password_is_not_valid": "Das eingegebene Passwort ist nicht gültig",
+  "password_not_valid_length": "Das Passwort muss mindestens 6 Zeichen lang sein",
+  "password_not_valid_uppercase": "Das Passwort muss mindestens einen Großbuchstaben enthalten",
+  "password_not_valid_lowercase": "Das Passwort muss mindestens einen Kleinbuchstaben enthalten",
+  "password_not_valid_number": "Das Passwort muss mindestens eine Zahl enthalten",
+  "password_not_valid_special_character": "Das Passwort muss mindestens ein Sonderzeichen enthalten"
 }

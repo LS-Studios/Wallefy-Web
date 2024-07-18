@@ -4,33 +4,29 @@ import {TransactionGroupModel} from "../../../Data/DataModels/TransactionGroupMo
 import TransactionGroup from "./TransactionGroup/TransactionGroup";
 import {SortType} from "../../../Data/EnumTypes/SortType";
 import {FilterModel} from "../../../Data/DataModels/FilterModel";
-import {getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
 import {calculateNFutureTransactions, groupTransactions} from "../../../Helper/TransactionHelper";
 import LoadMoreButton from "./LoadMoreButton/LoadMoreButton";
 import {getTransactionAmount} from "../../../Helper/CurrencyHelper";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {useTransactions} from "../../../CustomHooks/useTransactions";
+import {useTransactions} from "../../../CustomHooks/Database/useTransactions";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
-import {getDataSetPath} from "acebase/dist/types/test/dataset";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
-import {AccountType} from "../../../Data/EnumTypes/AccountType";
-import {useHistoryTransactions} from "../../../CustomHooks/useHistoryTransactions";
-import {useDebts} from "../../../CustomHooks/useDebts";
-import {DebtGroupModel} from "../../../Data/DataModels/DebtGroupModel";
-import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useHistoryTransactions} from "../../../CustomHooks/Database/useHistoryTransactions";
+import {useDebts} from "../../../CustomHooks/Database/useDebts";
+import {MdSearch} from "react-icons/md";
+import {ContentSearchAction} from "../../../Data/ContentAction/ContentSearchAction";
+import SelectionInput from "../../Components/SelectionInput/SelectionInput";
+import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel";
+import {useScreenScaleStep} from "../../../CustomHooks/useScreenScaleStep";
 
 const TransactionsScreen = ({
-    searchValue,
     sortValue,
     filterValue,
 }: {
-    searchValue: string,
     sortValue: SortType,
     filterValue: FilterModel
 }) => {
@@ -38,6 +34,7 @@ const TransactionsScreen = ({
     const translate = useTranslation()
     const getDatabaseRoute = useDatabaseRoute()
     const { currentAccount } = useCurrentAccount();
+    const screenScaleStep = useScreenScaleStep()
 
     const [currentTab, setCurrentTab] = React.useState<number>(1);
 
@@ -46,10 +43,18 @@ const TransactionsScreen = ({
     const debtTransactions = useDebts()
     const transactionPartners = useTransactionPartners()
 
+    const [searchValue, setSearchValue] = React.useState<string>("")
+
     const [futureTransactions, setFutureTransactions] = React.useState<TransactionModel[]>([]);
     const [futureTransactionsAmount, setFutureTransactionsAmount] = React.useState<number>(30);
     const [transactions, setTransactions] = React.useState<TransactionModel[] | null>(null);
     const [transactionGroups, setTransactionGroups] = React.useState<TransactionGroupModel[] | null>(null)
+
+    const tabOptions= [
+        new InputOptionModel(translate("past"), 0),
+        new InputOptionModel(translate("presets"), 1),
+        new InputOptionModel(translate("upcoming"), 2)
+    ]
 
     useEffect(() => {
         switch (currentTab) {
@@ -108,6 +113,11 @@ const TransactionsScreen = ({
 
         //Filter
         filteredTransactions = filteredTransactions.filter((transaction) => {
+            if (filterValue.searchName) {
+                if (!transaction.name.toLowerCase().includes(filterValue.searchName.toLowerCase())) {
+                    return false
+                }
+            }
             if (filterValue.transactionPartners && filterValue.transactionPartners.length > 0) {
                 if (!filterValue.transactionPartners.includes(transaction.transactionExecutorUid!)) {
                     return false
@@ -185,7 +195,11 @@ const TransactionsScreen = ({
 
     return (
         <div className="list-screen">
-            <div className="screen-tabs">
+            { screenScaleStep === 2 ? <SelectionInput
+                value={tabOptions.find((option) => option.value === currentTab) || tabOptions[0]}
+                onValueChanged={(value) => setCurrentTab(value.value)}
+                options={tabOptions}
+            /> : <div className="screen-tabs">
                 <span className={currentTab === 0 ? "selected" : ""} onClick={() => {
                     setCurrentTab(0)
                 }}>{translate("past")}</span>
@@ -195,9 +209,9 @@ const TransactionsScreen = ({
                 <span className={currentTab === 2 ? "selected" : ""} onClick={() => {
                     setCurrentTab(2)
                 }}>{translate("upcoming")}</span>
-            </div>
+            </div> }
             <div className="screen-list-items">
-                { transactionGroups ? (
+                {transactionGroups ? (
                     transactionGroups.length > 0 ? <>
                         {
                             transactionGroups.map((transactionGroup, index) => (
@@ -214,7 +228,7 @@ const TransactionsScreen = ({
                             })
                         }}/>}
                     </> : <span className="no-items">{translate("no-transactions-found")}</span>
-                ) : <Spinner type={SpinnerType.CYCLE} /> }
+                ) : <Spinner type={SpinnerType.CYCLE}/>}
             </div>
         </div>
     );

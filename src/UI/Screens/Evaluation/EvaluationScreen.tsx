@@ -1,39 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import {
-    MdAccountBalance,
-    MdCalendarMonth,
-    MdChair, MdEmojiEvents, MdLabel, MdPayments,
-    MdPeople, MdPieChart,
-    MdSavings, MdStackedBarChart,
-    MdTrendingDown,
-    MdTrendingUp
-} from "react-icons/md";
+import {MdEmojiEvents, MdLabel, MdPayments, MdPieChart, MdStackedBarChart} from "react-icons/md";
 import "../Home/HomeScreen.scss";
 import {ChartDataModel} from "../../../Data/DataModels/Chart/ChartDataModel";
-import BarChartCard
-    from "../TransactionOverview/TransactionOverviewBalancesCard/BarChartCard";
-// @ts-ignore
-import variables from "../../../Data/Variables.scss";
-import {CalculationType} from "../../../Data/EnumTypes/CalculationType";
-import CardContentRow from "../TransactionOverview/TransactionOverviewBalancesCard/CardContentRow";
-import Divider from "../../Components/Divider/Divider";
+import BarChartCard from "../TransactionOverview/TransactionOverviewBalancesCard/BarChartCard";
 import {formatCurrency, getTransactionAmount} from "../../../Helper/CurrencyHelper";
-import {calculateBalancesAtDateInDateRange} from "../../../Helper/TransactionHelper";
-import {BalanceAtDateModel} from "../../../Data/DataModels/Chart/BalanceAtDateModel";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useAccounts} from "../../../CustomHooks/useAccounts";
 import ValueCard from "../Home/ValueCard/ValueCard";
-import {useDebts} from "../../../CustomHooks/useDebts";
-import {BarChart} from "@mui/x-charts";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useDebts} from "../../../CustomHooks/Database/useDebts";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import TransactionOverviewPieCard from "../TransactionOverview/TransactionOverviewPieCard/TransactionOverviewPieCard";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useLabels} from "../../../CustomHooks/useLabels";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
 import {DBItem} from "../../../Data/DatabaseModels/DBItem";
-import {TransactionType} from "../../../Data/EnumTypes/TransactionType";
-import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import PieChartDetailDialog from "../../Dialogs/PieChartDetailDialog/PieChartDetailDialog";

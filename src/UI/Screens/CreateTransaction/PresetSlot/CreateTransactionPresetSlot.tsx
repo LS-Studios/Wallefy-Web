@@ -1,26 +1,20 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 
 import './CreateTransactionPresetSlot.scss';
-import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import {DialogModel} from "../../../../Data/DataModels/DialogModel";
-import CreateTransactionDialog from "../../../Dialogs/CreateTransactionDialog/CreateTransactionDialog";
 import {TransactionPresetModel} from "../../../../Data/DatabaseModels/TransactionPresetModel";
-import * as MDIcons from "react-icons/md";
-import {ContextMenuModel} from "../../../../Data/DataModels/ContextMenuModel";
-import ContextMenuBase from "../../../Components/ContextMenuBase/ContextMenuBase";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {useContextMenu} from "../../../../Providers/ContextMenuProvider";
-import {deleteDBItem} from "../../../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {DebtPresetModel} from "../../../../Data/DatabaseModels/DebtPresetModel";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
 import {AccountType} from "../../../../Data/EnumTypes/AccountType";
-import CreateDebtDialog from "../../../Dialogs/CreateDebtDialog/CreateDebtDialog";
 import {getIcon} from "../../../../Helper/IconMapper";
-import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
 import PresetDialog from "../../../Dialogs/PresetDialog";
+import {getActiveDatabaseHelper} from "../../../../Helper/Database/ActiveDBHelper";
 
 const CreateTransactionPresetSlot = ({
     preset,
@@ -59,7 +53,7 @@ const CreateTransactionPresetSlot = ({
                 new ContentAction("Delete", () => {
                     if (!getDatabaseRoute) return
 
-                    deleteDBItem(getDatabaseRoute(DatabaseRoutes.PRESETS), preset)
+                    getActiveDatabaseHelper().deleteDBItem(getDatabaseRoute(DatabaseRoutes.PRESETS), preset)
                 })
             ])}
         >

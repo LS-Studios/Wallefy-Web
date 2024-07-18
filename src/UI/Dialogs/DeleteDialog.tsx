@@ -4,10 +4,9 @@ import {ContentAction} from "../../Data/ContentAction/ContentAction";
 import CheckboxInputComponent from "../Components/Input/CheckboxInput/CheckboxInputComponent";
 import {useTranslation} from "../../CustomHooks/useTranslation";
 import {useDialog} from "../../Providers/DialogProvider";
-import {deleteDBItem, deleteDBObject} from "../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
-import {useCurrentAccount} from "../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../CustomHooks/Database/useDatabaseRoute";
+import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 const DeleteDialog = () => {
     const dialog = useDialog();
@@ -28,14 +27,14 @@ const DeleteDialog = () => {
             new ContentAction(
                 "Delete",
                 () => {
-                    deletePresets && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PRESETS))
-                    deleteHistory && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.HISTORY_TRANSACTIONS))
-                    deleteTransactions && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS))
-                    deleteTransactions && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.DEBTS))
-                    deleteTransactions && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS))
-                    deleteCategories && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.CATEGORIES))
-                    deleteTransactionPartners && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.TRANSACTION_PARTNERS))
-                    deleteLabels && deleteDBObject(getDatabaseRoute!(DatabaseRoutes.LABELS))
+                    deletePresets && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PRESETS))
+                    deleteHistory && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.HISTORY_TRANSACTIONS))
+                    deleteTransactions && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS))
+                    deleteTransactions && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.DEBTS))
+                    deleteTransactions && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS))
+                    deleteCategories && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.CATEGORIES))
+                    deleteTransactionPartners && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.TRANSACTION_PARTNERS))
+                    deleteLabels && getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.LABELS))
 
                     dialog.closeCurrent()
                 },

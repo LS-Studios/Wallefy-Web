@@ -4,11 +4,35 @@
   width: 100%;
 }
 
+@media only screen and (max-width: $mobile-state-2) {
+  .transaction-overview-card-chart-content-row {
+    flex-direction: column;
+
+    div {
+      &:first-child {
+        border-bottom: 2px solid var(--outline-color)
+      }
+    }
+  }
+}
+
+@media only screen and (min-width: $mobile-state-2) {
+  .transaction-overview-card-chart-content-row {
+    flex-direction: row;
+
+    div {
+      &:first-child {
+        border-right: 2px solid var(--outline-color)
+      }
+    }
+  }
+}
+
 .transaction-overview-card-chart-content-row {
   width: 100%;
 
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
 
   div {
@@ -19,13 +43,11 @@
 
     gap: 4px;
 
-    &:first-child {
-      border-right: 2px solid var(--outline-color)
-    }
+    width: 100%;
+
+    box-sizing: border-box;
 
     padding: 8px;
-
-    width: 50%;
   }
 
   .transaction-overview-card-chart-label {

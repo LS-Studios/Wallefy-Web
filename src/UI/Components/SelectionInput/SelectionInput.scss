@@ -1,0 +1,61 @@
+.selection-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border: 2px solid var(--outline-color);
+  color: var(--text);
+
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  width: 100%;
+
+  cursor: pointer;
+
+  //transition: 0.05s ease-in-out;
+
+  border-radius: 24px;
+  &.open {
+    border-radius: 24px 24px 0 0;
+  }
+}
+
+.selection-input-icon {
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+}
+
+.selection-input-options {
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--background);
+
+  border: 2px solid var(--outline-color);
+  border-top: none;
+
+  border-radius: 0 0 24px 24px;
+
+  box-sizing: border-box;
+
+  div {
+    cursor: pointer;
+
+    padding: 12px 18px;
+
+    &:hover {
+      background-color: var(--hover);
+    }
+
+    &:last-child {
+      border-radius: 0 0 22px 22px;
+    }
+  }
+
+  .selected {
+    background-color: var(--hover);
+  }
+}

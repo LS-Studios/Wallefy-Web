@@ -7,12 +7,11 @@ import {ContentAction} from "../Data/ContentAction/ContentAction";
 import {DialogModel} from "../Data/DataModels/DialogModel";
 import EditStorageItemDialog from "../UI/Dialogs/EditStorageItemDialog/EditStorageItemDialog";
 import {StorageItemModel} from "../Data/DatabaseModels/StorageItemModel";
-import {addDBItem, deleteDBItemByUid, getDBItemByUid} from "../Helper/AceBaseHelper";
 import React from "react";
 import {useTranslation} from "./useTranslation";
 import {useDialog} from "../Providers/DialogProvider";
-import {useDatabaseRoute} from "./useDatabaseRoute";
-import {TransactionPartnerModel} from "../Data/DatabaseModels/TransactionPartnerModel";
+import {useDatabaseRoute} from "./Database/useDatabaseRoute";
+import {getActiveDatabaseHelper} from "../Helper/Database/ActiveDBHelper";
 
 export const useNewItems = () => {
     const getDatabaseRoute = useDatabaseRoute()
@@ -90,7 +89,7 @@ export const useNewItems = () => {
                     if (newItems[newItemsKey].includes(value.value!)) {
                         deleteNewItems(value.value!, newItemsKey)
                     } else {
-                        deleteDBItemByUid(
+                        getActiveDatabaseHelper().deleteDBItemByUid(
                             getDatabaseRoute!(databaseRoute),
                             value.value!.uid
                         )
@@ -113,7 +112,7 @@ export const useNewItems = () => {
             if (Array.isArray(item[key])) {
                 // @ts-ignore
                 const promises = item[key].map((itemUid) => {
-                    getDBItemByUid(
+                    getActiveDatabaseHelper().getDBItemByUid(
                         getDatabaseRoute!(databaseRoute),
                         itemUid
                     ).then((whoWasPaiFor) => {
@@ -131,7 +130,7 @@ export const useNewItems = () => {
                     resolve(item)
                 })
             } else {
-                getDBItemByUid(
+                getActiveDatabaseHelper().getDBItemByUid(
                     getDatabaseRoute!(databaseRoute),
                     // @ts-ignore
                     item[key]

@@ -10,22 +10,18 @@ import {useDialog} from "../../../Providers/DialogProvider";
 import CreateTransactionDialog from "../CreateTransactionDialog/CreateTransactionDialog";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import {RepetitionHelper} from "../../../Helper/RepetitionHelper";
-import {deleteDBItem, getDBItemOnChange, getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
-import {CategoryModel} from "../../../Data/DatabaseModels/CategoryModel";
-import {LabelModel} from "../../../Data/DatabaseModels/LabelModel";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useLabels} from "../../../CustomHooks/useLabels";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
-import {DebtType} from "../../../Data/EnumTypes/DebtType";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
 import {getIcon} from "../../../Helper/IconMapper";
-import {executeTransaction} from "../../../Helper/TransactionHelper";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const TransactionDetailDialog = ({
     transaction,
@@ -49,7 +45,7 @@ const TransactionDetailDialog = ({
     useEffect(() => {
         if (!getDatabaseRoute) return
 
-        getDBItemOnChange(
+        getActiveDatabaseHelper().getDBItemOnChange(
             getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
             transaction.uid,
             (fetchedTransaction: TransactionModel | null) => {
@@ -73,7 +69,7 @@ const TransactionDetailDialog = ({
             expandOnRight: true
         },
         {
-            title: translate("transaction-amount"),
+            title: translate("transaction-amount-short"),
             value: <div>
                 <span>{formatCurrencyFromTransaction(detailTransaction, settings?.language)}</span>
                 { detailTransaction.currency.currencyCode !== currentAccount?.currencyCode && <>
@@ -145,20 +141,20 @@ const TransactionDetailDialog = ({
                     toast.open(translate("transaction-copied-to-clipboard"))
                 }
             ),
-            new ContentAction(
-                translate("execute"),
-                () => {
-                    executeTransaction(
-                        detailTransaction,
-                        currentAccount!,
-                        updateAccountBalance,
-                        getDatabaseRoute!
-                    )
-                    dialog.closeCurrent()
-                },
-                false,
-                !currentAccount || !getDatabaseRoute
-            ),
+            // new ContentAction(
+            //     translate("execute"),
+            //     () => {
+            //         executeTransaction(
+            //             detailTransaction,
+            //             currentAccount!,
+            //             updateAccountBalance,
+            //             getDatabaseRoute!
+            //         )
+            //         dialog.closeCurrent()
+            //     },
+            //     false,
+            //     !currentAccount || !getDatabaseRoute
+            // ),
             new ContentAction(
                 translate("delete"),
                 () => {
@@ -168,7 +164,7 @@ const TransactionDetailDialog = ({
 
                     const transactionPath = detailTransaction.history ? DatabaseRoutes.HISTORY_TRANSACTIONS : DatabaseRoutes.TRANSACTIONS
 
-                    deleteDBItem(
+                    getActiveDatabaseHelper().deleteDBItem(
                         getDatabaseRoute!(transactionPath),
                         detailTransaction
                     )

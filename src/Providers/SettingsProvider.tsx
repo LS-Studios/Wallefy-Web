@@ -1,26 +1,20 @@
-import React, {useState, useMemo, PropsWithChildren, useContext, useEffect} from 'react';
-import uuid from "react-uuid";
-import {DialogModel} from "../Data/DataModels/DialogModel";
-import DialogBase from "../UI/Provider/DialogBase/DialogBase";
-import {ContextMenuContext, DialogContext, SettingsContext} from "./Contexts";
-import {ContextMenuModel} from "../Data/DataModels/ContextMenuModel";
-import ContextMenuBase from "../UI/Components/ContextMenuBase/ContextMenuBase";
-import {ContentAction} from "../Data/ContentAction/ContentAction";
+import React, {PropsWithChildren, useContext, useEffect, useMemo, useState} from 'react';
+import {SettingsContext} from "./Contexts";
 import {SettingsModel} from "../Data/DataModels/SettingsModel";
-import {getDBObjectOnChange, setDBObject} from "../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
+import {getActiveDatabaseHelper} from "../Helper/Database/ActiveDBHelper";
 
 export const SettingsProvider = ({ children }: PropsWithChildren) => {
     const [settings, setSettings] = useState<SettingsModel | null>(null);
 
     useEffect(() => {
-        getDBObjectOnChange(DatabaseRoutes.SETTINGS, (settings) => {
+        getActiveDatabaseHelper().getDBObjectOnChange(DatabaseRoutes.SETTINGS, (settings: SettingsModel) => {
             if (!settings) {
-                setDBObject(
+                getActiveDatabaseHelper().setDBObject(
                     DatabaseRoutes.SETTINGS,
                     new SettingsModel()
-                ).then((newSettings) => {
-                    setSettings(newSettings as SettingsModel)
+                ).then((newSettings: SettingsModel) => {
+                    setSettings(newSettings)
                 })
             } else {
                 setSettings(settings as SettingsModel)

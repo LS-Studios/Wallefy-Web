@@ -6,12 +6,12 @@ import {ToastContext} from "../Contexts";
 import Toast from "../../UI/Provider/Toast/Toast";
 
 export interface ToastProviderProps {
-    open: (message: string) => void;
+    open: (message: string | React.ReactNode) => void;
 }
 
 export const ToastProvider = ({ children }: PropsWithChildren) => {
     const [toasts, setToasts] = useState<ToastModel[]>([]);
-    const open = (message: string) => {
+    const open = (message: string | React.ReactNode) => {
         setToasts(currentToasts => {
             return [
                 ...currentToasts,

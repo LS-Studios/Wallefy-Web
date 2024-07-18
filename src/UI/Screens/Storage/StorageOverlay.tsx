@@ -17,22 +17,34 @@ const StorageOverlay = () => {
     const translate = useTranslation()
     const dialog = useDialog()
 
-    const [searchValue, setSearchValue] = useState<string>("")
+    const [filterValue, setFilterValue] = useState<FilterModel>(new FilterModel())
 
     return (
         <ContentOverlay
             title={translate("storage")}
             titleIcon={<MdInventory />}
             actions={[
-                new ContentSearchAction(
-                    translate("search-in-storage"),
-                    (searchText) => {
-                        setSearchValue(searchText);
-                    }
+                new ContentAction(
+                    translate("filter"),
+                    () => {
+                        dialog.open(
+                            new DialogModel(
+                                translate("filter-transactions"),
+                                <FilterTransactionsDialog
+                                    currentFilter={filterValue}
+                                    onFilterChange={setFilterValue}
+                                    onlyName={true}
+                                />
+                            )
+                        )
+                    },
+                    false,
+                    false,
+                    <MdTune />,
                 )
             ]}
         >
-            <StorageScreen searchValue={searchValue} />
+            <StorageScreen searchValue={filterValue.searchName || ""} />
         </ContentOverlay>
     );
 };

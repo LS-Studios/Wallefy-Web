@@ -1,5 +1,5 @@
-import {useSettings} from "../Providers/SettingsProvider";
-import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
+import {useSettings} from "../../Providers/SettingsProvider";
+import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
 import {useMemo} from "react";
 
 export const useDatabaseRoute = (isPartOfAccount: boolean = true) => {

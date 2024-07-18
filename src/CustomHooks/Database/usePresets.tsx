@@ -1,11 +1,9 @@
-import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
 import {useEffect, useState} from "react";
-import {getDBItemsOnChange} from "../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
-import {useCurrentAccount} from "../Providers/AccountProvider";
-import {TransactionPresetModel} from "../Data/DatabaseModels/TransactionPresetModel";
+import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
+import {TransactionPresetModel} from "../../Data/DatabaseModels/TransactionPresetModel";
 import {useDatabaseRoute} from "./useDatabaseRoute";
-import {DebtPresetModel} from "../Data/DatabaseModels/DebtPresetModel";
+import {DebtPresetModel} from "../../Data/DatabaseModels/DebtPresetModel";
+import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 export const usePresets = () => {
     const getDatabaseRoute = useDatabaseRoute()
@@ -14,7 +12,7 @@ export const usePresets = () => {
     useEffect(() => {
         if (!getDatabaseRoute) return
 
-        getDBItemsOnChange(
+        getActiveDatabaseHelper().getDBItemsOnChange(
             getDatabaseRoute(DatabaseRoutes.PRESETS),
             setPresets
         )

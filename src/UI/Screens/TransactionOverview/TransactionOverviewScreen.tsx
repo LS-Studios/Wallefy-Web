@@ -1,43 +1,24 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import BarChartCard from "./TransactionOverviewBalancesCard/BarChartCard";
 import {MdAccountBalance, MdLabel, MdPeople, MdPieChart, MdSavings, MdTrendingDown, MdTrendingUp} from "react-icons/md";
 import './TransactionOverviewScreen.scss';
-// @ts-ignore
-import variables from '../../../Data/Variables.scss';
-import {
-    getDBItemByUid,
-    getDBItemsOnChange,
-    getDBObject,
-} from "../../../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {
-    calculateBalancesAtDateInDateRange,
-    calculateFutureTransactionsUntilDate
-} from "../../../Helper/TransactionHelper";
+import {calculateBalancesAtDateInDateRange} from "../../../Helper/TransactionHelper";
 import {DateRangeModel} from "../../../Data/DataModels/DateRangeModel";
 import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {BalanceAtDateModel} from "../../../Data/DataModels/Chart/BalanceAtDateModel";
-import {CategoryModel} from "../../../Data/DatabaseModels/CategoryModel";
-import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
-import {LabelModel} from "../../../Data/DatabaseModels/LabelModel";
 import {TransactionType} from "../../../Data/EnumTypes/TransactionType";
 import {DBItem} from "../../../Data/DatabaseModels/DBItem";
-import {
-    dateRangeIsMonth,
-    getCurrentDate,
-    getMonthAndYear, speakableDateRange,
-} from "../../../Helper/DateHelper";
+import {getCurrentDate, speakableDateRange,} from "../../../Helper/DateHelper";
 import TransactionOverviewPieCard from "./TransactionOverviewPieCard/TransactionOverviewPieCard";
-import useTransactionsInDateRange from "../../../CustomHooks/useTransactionInDateRange";
+import useTransactionsInDateRange from "../../../CustomHooks/Database/useTransactionInDateRange";
 import {ChartDataModel} from "../../../Data/DataModels/Chart/ChartDataModel";
 import ValueCard from "../Home/ValueCard/ValueCard";
 import {formatCurrency, getTransactionAmount} from "../../../Helper/CurrencyHelper";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {DateRangeType} from "../../../Data/EnumTypes/DateRangeType";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useLabels} from "../../../CustomHooks/useLabels";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useDialog} from "../../../Providers/DialogProvider";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
@@ -118,29 +99,29 @@ const TransactionOverviewScreen = ({
         if (new Date(balanceAtDate.date) < getCurrentDate()) {
             if (!selectedBalanceData || balanceAtDate.date === selectedBalanceData.label) {
                 if (balanceAtDate.balance < 0) {
-                    return variables.expenses_bar_past_color
+                    return "var(--expenses-bar-past-color)"
                 } else {
-                    return variables.income_bar_past_color;
+                    return "var(--income-bar-past-color)"
                 }
             } else {
                 if (balanceAtDate.balance < 0) {
-                    return variables.expenses_bar_past_not_selected_color
+                    return "var(--expenses-bar-past-not-selected-color)"
                 } else {
-                    return variables.income_bar_past_not_selected_color;
+                    return "var(--income-bar-past-not-selected-color)"
                 }
             }
         } else {
             if (!selectedBalanceData || balanceAtDate.date === selectedBalanceData.label) {
                 if (balanceAtDate.balance < 0) {
-                    return variables.expenses_bar_color
+                    return "var(--expenses-bar-color)"
                 } else {
-                    return variables.income_bar_color
+                    return "var(--income-bar-color)"
                 }
             } else {
                 if (balanceAtDate.balance < 0) {
-                    return variables.expenses_bar_not_selected_color
+                    return "var(--expenses-bar-not-selected-color)"
                 } else {
-                    return variables.income_bar_not_selected_color
+                    return "var(--income-bar-not-selected-color)"
                 }
             }
         }

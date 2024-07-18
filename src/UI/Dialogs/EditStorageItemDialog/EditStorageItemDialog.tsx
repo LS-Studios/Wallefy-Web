@@ -1,14 +1,12 @@
 import React from 'react';
-import DialogBase from "../../Provider/DialogBase/DialogBase";
 import {StorageItemModel} from "../../../Data/DatabaseModels/StorageItemModel";
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../Providers/DialogProvider";
-import {deleteDBItem, updateDBItem} from "../../../Helper/AceBaseHelper";
 import TextInputComponent from "../../Components/Input/TextInput/TextInputComponent";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const EditStorageItemDialog = ({
     storageItem,
@@ -37,7 +35,7 @@ const EditStorageItemDialog = ({
                         onEdit && onEdit(storageItem);
                         dialog.closeCurrent()
                     } else {
-                        updateDBItem(getDatabaseRoute!(storageItem.itemType), storageItem.item).then(() => dialog.closeCurrent());
+                        getActiveDatabaseHelper().updateDBItem(getDatabaseRoute!(storageItem.itemType), storageItem.item).then(() => dialog.closeCurrent());
                     }
                 },
                 false,
@@ -50,7 +48,7 @@ const EditStorageItemDialog = ({
                         onDelete && onDelete();
                         dialog.closeCurrent()
                     } else {
-                        deleteDBItem(getDatabaseRoute!(storageItem.itemType), storageItem.item).then(() => dialog.closeCurrent());
+                        getActiveDatabaseHelper().deleteDBItem(getDatabaseRoute!(storageItem.itemType), storageItem.item).then(() => dialog.closeCurrent());
                     }
                 },
                 false,

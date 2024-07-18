@@ -8,23 +8,37 @@ import {useDialog} from "../../../Providers/DialogProvider";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import CreateAccountDialog from "../../Dialogs/CreateAccountDialog/CreateAccountDialog";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
+import FilterTransactionsDialog from "../../Dialogs/FilterTransactionsDialog/FilterTransactionsDialog";
+import {FilterModel} from "../../../Data/DataModels/FilterModel";
 
 const AccountsOverlay = () => {
     const translate = useTranslation()
     const dialog = useDialog()
 
-    const [searchValue, setSearchValue] = useState<string>("");
+    const [filterValue, setFilterValue] = useState<FilterModel>(new FilterModel())
 
     return (
         <ContentOverlay
             title={translate("accounts")}
             titleIcon={<MdOutlineAccountCircle />}
             actions={[
-                new ContentSearchAction(
-                    translate("search-for-accounts"),
-                    (searchText) => {
-                        setSearchValue(searchText);
-                    }
+                new ContentAction(
+                    translate("filter"),
+                    () => {
+                        dialog.open(
+                            new DialogModel(
+                                translate("filter-transactions"),
+                                <FilterTransactionsDialog
+                                    currentFilter={filterValue}
+                                    onFilterChange={setFilterValue}
+                                    onlyName={true}
+                                />
+                            )
+                        )
+                    },
+                    false,
+                    false,
+                    <MdTune />,
                 ),
                 new ContentAction(
                     translate("add-account"),
@@ -41,7 +55,7 @@ const AccountsOverlay = () => {
                     <MdAdd />,
                 )
             ]}>
-            <AccountsScreen searchValue={searchValue} />
+            <AccountsScreen searchValue={filterValue.searchName || ""} />
         </ContentOverlay>
     );
 };

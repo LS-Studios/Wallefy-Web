@@ -1,25 +1,22 @@
 import React from 'react';
-import DialogBase from "../Provider/DialogBase/DialogBase";
 import DialogOverlay from "./DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../Data/ContentAction/ContentAction";
 import {useTranslation} from "../../CustomHooks/useTranslation";
 import TextInputComponent from "../Components/Input/TextInput/TextInputComponent";
 import CheckboxInputComponent from "../Components/Input/CheckboxInput/CheckboxInputComponent";
 import InputBaseComponent from "../Components/Input/InputBase/InputBaseComponent";
-import {formatDate, formatDateToStandardString, formatTime} from "../../Helper/DateHelper";
+import {formatDateToStandardString, formatTime} from "../../Helper/DateHelper";
 import {ExportErrorModel} from "../../Data/ErrorModels/ExportErrorModel";
-// @ts-ignore
-import variables from "../../Data/Variables.scss";
 import {useToast} from "../../Providers/Toast/ToastProvider";
-import {useTransactions} from "../../CustomHooks/useTransactions";
-import {useTransactionPartners} from "../../CustomHooks/useTransactionPartners";
-import {useCategories} from "../../CustomHooks/useCategories";
+import {useTransactions} from "../../CustomHooks/Database/useTransactions";
+import {useTransactionPartners} from "../../CustomHooks/Database/useTransactionPartners";
+import {useCategories} from "../../CustomHooks/Database/useCategories";
 import {useDialog} from "../../Providers/DialogProvider";
 import {ExportDataModel} from "../../Data/DataModels/ExportDataModel";
-import {usePresets} from "../../CustomHooks/usePresets";
-import {useHistoryTransactions} from "../../CustomHooks/useHistoryTransactions";
-import {useDebts} from "../../CustomHooks/useDebts";
-import {usePayedDebts} from "../../CustomHooks/usePayedDebts";
+import {usePresets} from "../../CustomHooks/Database/usePresets";
+import {useHistoryTransactions} from "../../CustomHooks/Database/useHistoryTransactions";
+import {useDebts} from "../../CustomHooks/Database/useDebts";
+import {usePayedDebts} from "../../CustomHooks/Database/usePayedDebts";
 
 const ExportDialog = () => {
     const dialog = useDialog()
@@ -110,7 +107,7 @@ const ExportDialog = () => {
                     setFileName(newName as string);
                 }}
                 style={{
-                    borderColor: error.fileNameError ? variables.error_color : null
+                    borderColor: error.fileNameError ? "var(--error-color)" : "null"
                 }}
             />
             <CheckboxInputComponent

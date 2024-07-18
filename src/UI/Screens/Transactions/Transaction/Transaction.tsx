@@ -1,9 +1,7 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import './Transaction.scss';
 import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
-// @ts-ignore
-import variables from "../../../../Data/Variables.scss"
-import {formatCurrency, formatCurrencyFromTransaction} from "../../../../Helper/CurrencyHelper";
+import {formatCurrencyFromTransaction} from "../../../../Helper/CurrencyHelper";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import TransactionDetailDialog from "../../../Dialogs/TransactionDetailDialog/TransactionDetailDialog";
 import {DialogModel} from "../../../../Data/DataModels/DialogModel";

@@ -1,3 +1,6 @@
+$mobile-state-1: 1140px;
+$mobile-state-2: 720px;
+
 :root {
     --accent-light: #3890e4;
     --accent-dark: #3890e4;
@@ -80,22 +83,8 @@
 }
 
 :export {
-    background_color: var(--background);
-    income_color: var(--income-color);
-    expenses_color: var(--expenses-color);
-    stroke_color: var(--stroke-color);
-    disabled_stroke_color: var(--disabled-stroke-color);
-    text_color: var(--text);
-    primary: var(--primary);
-    error_color: var(--error-color);
-    income_bar_color: var(--income-bar-color);
-    income_bar_not_selected_color: var(--income-bar-not-selected-color);
-    income_bar_past_color: var(--income-bar-past-color);
-    income_bar_past_not_selected_color: var(--income-bar-past-not-selected-color);
-    expenses_bar_color: var(--expenses-bar-color);
-    expenses_bar_not_selected_color: var(--expenses-bar-not-selected-color);
-    expenses_bar_past_color: var(--expenses-bar-past_color);
-    expenses_bar_not_selected_past_color: var(--expenses-bar-not-selected-past_color);
+    mobile_state_1: $mobile-state-1;
+    mobile_state_2: $mobile-state-2;
 }
 
 .text-input {

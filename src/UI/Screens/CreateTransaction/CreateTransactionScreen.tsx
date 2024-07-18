@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import './CreateTransactionScreen.scss';
 import CreateTransactionPresetSlot from "./PresetSlot/CreateTransactionPresetSlot";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {usePresets} from "../../../CustomHooks/usePresets";
+import {usePresets} from "../../../CustomHooks/Database/usePresets";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
 import {getDefaultPresets} from "../../../Helper/DefaultPresetHelper";

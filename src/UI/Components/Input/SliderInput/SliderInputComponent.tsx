@@ -1,8 +1,6 @@
 import React, {ChangeEvent, ChangeEventHandler, useEffect} from 'react';
 import './SliderInputComponent.scss';
 
-// @ts-ignore
-import variables from '../../../../Data/Variables.scss';
 import {useTimeout} from "../../../../CustomHooks/useTimeout";
 
 const SliderInputComponent = ({
@@ -24,12 +22,12 @@ const SliderInputComponent = ({
         const toPosition = Number(sliderRef.current!.value) - Number(sliderRef.current!.min);
         sliderRef.current!.style.background = `linear-gradient(
           to right,
-          ${variables.stroke_color} 0%,
-          ${variables.stroke_color} 0%,
-          ${variables.text_color} 0%,
-          ${variables.text_color} ${(toPosition)/(rangeDistance)*100}%, 
-          ${variables.stroke_color} ${(toPosition)/(rangeDistance)*100}%, 
-          ${variables.stroke_color} 100%)`;
+          var(--stroke-color) 0%,
+          var(--stroke-color) 0%,
+          var(--text) 0%,
+          var(--text) ${(toPosition)/(rangeDistance)*100}%, 
+          var(--stroke-color) ${(toPosition)/(rangeDistance)*100}%, 
+          var(--stroke-color) 100%)`;
     }
 
     const onChange = (e: ChangeEvent<HTMLInputElement>) => {

@@ -1,9 +1,9 @@
 import React, {useEffect} from 'react';
 import './Menu.scss';
 import {
-    MdAddCircleOutline,
+    MdAddCircleOutline, MdClose,
     MdHelpOutline,
-    MdHome,
+    MdHome, MdIcecream,
     MdInventory,
     MdOutlineAccountCircle,
     MdOutlineBarChart,
@@ -20,10 +20,18 @@ import SettingsDialog from "../Dialogs/SettingsDialog/SettingsDialog";
 import {useTranslation} from "../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../Providers/AccountProvider";
 import {AccountType} from "../../Data/EnumTypes/AccountType";
+import {useScreenScaleStep} from "../../CustomHooks/useScreenScaleStep";
 
-const Menu = () => {
+const Menu = ({
+    menuIsOpen,
+    setMenuIsOpen
+  }: {
+    menuIsOpen: boolean,
+    setMenuIsOpen: (isOpen: boolean) => void
+}) => {
     const translate = useTranslation()
     const dialog = useDialog()
+    const screenScaleStep = useScreenScaleStep()
 
     const navigate = useNavigate()
     const location = useLocation()
@@ -48,8 +56,19 @@ const Menu = () => {
     }
 
     return (
-        <div className="menu">
-            <div className="menu-app-title">Wallefy</div>
+        <div className="menu" style={{
+            display: screenScaleStep < 1 ? "block" : (menuIsOpen ? "block" : "none"),
+            width:  screenScaleStep < 1 ? "300px" : (menuIsOpen ? (screenScaleStep > 1 ? "100%" : "300px") : "300px")
+        }}>
+            <div className="menu-app-title-container">
+                <div className="menu-app-title">
+                    <MdIcecream />
+                    <span>Wallefy</span>
+                </div>
+                { screenScaleStep > 0 && <MdClose onClick={() => {
+                    setMenuIsOpen(false)
+                }} /> }
+            </div>
             <Divider />
             <nav className="menu-navigation main">
                 <ul>
@@ -81,7 +100,7 @@ const Menu = () => {
                 </nav>
             </div>
         </div>
-    );
+    )
 };
 
 export default Menu;

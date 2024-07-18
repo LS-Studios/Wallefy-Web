@@ -1,32 +1,19 @@
 import React, {useEffect, useState} from 'react';
 import ValueCard from "./ValueCard/ValueCard";
-import {MdCalendarMonth, MdPeople, MdSavings} from "react-icons/md";
+import {MdPeople} from "react-icons/md";
 import "./HomeScreen.scss";
 import TransactionOverviewPieCard from "../TransactionOverview/TransactionOverviewPieCard/TransactionOverviewPieCard";
 import {ChartDataModel} from "../../../Data/DataModels/Chart/ChartDataModel";
 import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
-import BarChartCard from "../TransactionOverview/TransactionOverviewBalancesCard/BarChartCard";
-import useTransactionInDateRange from "../../../CustomHooks/useTransactionInDateRange";
 import {DateRangeModel} from "../../../Data/DataModels/DateRangeModel";
-import {
-    formatDateToStandardString,
-    getCurrentDate,
-    getEndOfMonth,
-    getStartOfMonth,
-    speakableDate
-} from "../../../Helper/DateHelper";
-// @ts-ignore
-import variables from "../../../Data/Variables.scss";
-import {CalculationType} from "../../../Data/EnumTypes/CalculationType";
+import {formatDateToStandardString, getEndOfMonth, getStartOfMonth, speakableDate} from "../../../Helper/DateHelper";
 import CardContentRow from "../TransactionOverview/TransactionOverviewBalancesCard/CardContentRow";
 import {formatCurrency} from "../../../Helper/CurrencyHelper";
-import {calculateBalancesAtDateInDateRange} from "../../../Helper/TransactionHelper";
-import {BalanceAtDateModel} from "../../../Data/DataModels/Chart/BalanceAtDateModel";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useAccounts} from "../../../CustomHooks/useAccounts";
-import {useUsers} from "../../../CustomHooks/useUsers";
+import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
+import {useUsers} from "../../../CustomHooks/Database/useUsers";
 import {UserModel} from "../../../Data/DatabaseModels/UserModel";
 import {AccountType} from "../../../Data/EnumTypes/AccountType";
 import BalanceCard from "./BalanceCard/BalanceCard";

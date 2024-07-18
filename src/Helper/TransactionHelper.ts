@@ -9,9 +9,9 @@ import {TransactionGroupModel} from "../Data/DataModels/TransactionGroupModel";
 import {DebtModel} from "../Data/DatabaseModels/DebtModel";
 import {DebtGroupModel} from "../Data/DataModels/DebtGroupModel";
 import {AccountModel} from "../Data/DatabaseModels/AccountModel";
-import {addDBItem, deleteDBItem, updateDBItem} from "./AceBaseHelper";
 import {RepetitionModel} from "../Data/DataModels/Reptition/RepetitionModel";
 import {ExecutionType} from "../Data/EnumTypes/ExecutionType";
+import {getActiveDatabaseHelper} from "./Database/ActiveDBHelper";
 
 export const calculateNFutureTransactions = (getDatabaseRoute: (databaseRoute: DatabaseRoutes) => string, transactions: TransactionModel[], amount: number) => {
     const clonedTransactions: TransactionModel[] = structuredClone(transactions)
@@ -244,7 +244,7 @@ export const executeTransaction = (
         const nextDate = new RepetitionHelper(transaction).calculateNextRepetitionDate(getDatabaseRoute);
 
         if (transaction.history) {
-            addDBItem(
+            getActiveDatabaseHelper().addDBItem(
                 getDatabaseRoute(DatabaseRoutes.HISTORY_TRANSACTIONS),
                 {
                     ...transaction,
@@ -259,7 +259,7 @@ export const executeTransaction = (
                 resolve()
             })
         } else if (nextDate) {
-            addDBItem(
+            getActiveDatabaseHelper().addDBItem(
                 getDatabaseRoute(DatabaseRoutes.HISTORY_TRANSACTIONS),
                 {
                     ...transaction,
@@ -271,7 +271,7 @@ export const executeTransaction = (
                     history: true
                 }
             ).then(() => {
-                updateDBItem(
+                getActiveDatabaseHelper().updateDBItem(
                     getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
                     {
                         ...transaction,
@@ -282,7 +282,7 @@ export const executeTransaction = (
                 })
             })
         } else {
-            deleteDBItem(
+            getActiveDatabaseHelper().deleteDBItem(
                 getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
                 transaction
             ).then(() => {

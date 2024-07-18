@@ -1,8 +1,5 @@
 import React, {useEffect} from 'react';
 import './CreateTransactionDialog.scss';
-
-// @ts-ignore
-import variables from "../../../Data/Variables.scss";
 import {MdAttachMoney, MdDescription, MdRepeat} from "react-icons/md";
 import BasicsTab from "./BasicsTab/BasicsTab";
 import RepetitionTab from "./RepetitionTab/RepetitionTab";
@@ -11,13 +8,6 @@ import {useDialog} from "../../../Providers/DialogProvider";
 import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
-import {
-    addDBItem,
-    getDBItemByUid,
-    getDBItemOnChange,
-    getDBItemsOnChange,
-    updateDBItem
-} from "../../../Helper/AceBaseHelper";
 import {TransactionPresetModel} from "../../../Data/DatabaseModels/TransactionPresetModel";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {CreateTransactionInputErrorModel} from "../../../Data/ErrorModels/CreateTransactionInputErrorModel";
@@ -30,14 +20,13 @@ import {ExecutionType} from "../../../Data/EnumTypes/ExecutionType";
 import LoadingDialog from "../LoadingDialog/LoadingDialog";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useLabels} from "../../../CustomHooks/useLabels";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
-import {CreateDialogNewItems} from "../../../Data/DataModels/CreateDialogNewItems";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
 import {useNewItems} from "../../../CustomHooks/useNewItems";
-import {DBItem} from "../../../Data/DatabaseModels/DBItem";
 import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const CreateTransactionDialog = ({
     transaction,
@@ -135,7 +124,7 @@ const CreateTransactionDialog = ({
         if (!getDatabaseRoute || !currentAccount) return
 
         if (transaction && transaction.uid) {
-            getDBItemOnChange(
+            getActiveDatabaseHelper().getDBItemOnChange(
                 getDatabaseRoute(transaction.history ? DatabaseRoutes.HISTORY_TRANSACTIONS : DatabaseRoutes.TRANSACTIONS),
                 transaction.uid,
                 (changedTransaction) => {
@@ -235,7 +224,7 @@ const CreateTransactionDialog = ({
                 workTransaction.transactionExecutorFallback = [...transactionPartners, ...newItems.newTransactionPartners].find(partner => partner.uid === workTransaction.transactionExecutorUid)?.name || workTransaction.transactionExecutorFallback
                 newItems.newTransactionPartners.forEach((newTransactionPartner) => {
                     promises.push(
-                        addDBItem(
+                        getActiveDatabaseHelper().addDBItem(
                             getDatabaseRoute(DatabaseRoutes.TRANSACTION_PARTNERS),
                             newTransactionPartner
                         )
@@ -247,7 +236,7 @@ const CreateTransactionDialog = ({
                 workTransaction.categoryFallback = [...categories, ...newItems.newCategories]?.find(category => category.uid === workTransaction.categoryUid)?.name || workTransaction.categoryFallback
                 newItems.newCategories.forEach((newCategory) => {
                     promises.push(
-                        addDBItem(
+                        getActiveDatabaseHelper().addDBItem(
                             getDatabaseRoute(DatabaseRoutes.CATEGORIES),
                             newCategory
                         )
@@ -260,7 +249,7 @@ const CreateTransactionDialog = ({
 
                 newItems.newLabels.forEach((newLabel) => {
                     promises.push(
-                        addDBItem(
+                        getActiveDatabaseHelper().addDBItem(
                             getDatabaseRoute(DatabaseRoutes.LABELS),
                             newLabel
                         )
@@ -285,7 +274,7 @@ const CreateTransactionDialog = ({
 
                             //TODO [] Remove custom preset creation
 
-                            // addDBItem(
+                            // getActiveDatabaseHelper().addDBItem(
                             //     getDatabaseRoute(DatabaseRoutes.PRESETS),
                             //     new TransactionPresetModel(
                             //         currentAccount.uid,
@@ -307,7 +296,7 @@ const CreateTransactionDialog = ({
 
                             workTransaction.accountUid = currentAccount.uid
 
-                            addDBItem(
+                            getActiveDatabaseHelper().addDBItem(
                                 getDatabaseRoute(transactionPath),
                                 workTransaction
                             ).then(() => {
@@ -316,7 +305,7 @@ const CreateTransactionDialog = ({
                                     return
                                 }
 
-                                updateDBItem(
+                                getActiveDatabaseHelper().updateDBItem(
                                     getDatabaseRoute(DatabaseRoutes.PRESETS),
                                     {
                                         ...preset,
@@ -345,7 +334,7 @@ const CreateTransactionDialog = ({
                         // workTransaction.newCategory = categories.find(category => category.uid === workTransaction.categoryUid)?.name || workTransaction.newCategory
                         // workTransaction.newLabels = workTransaction.labels.map(labelUid => labels.find(label => label.uid === labelUid)?.name || "")
 
-                        updateDBItem(
+                        getActiveDatabaseHelper().updateDBItem(
                             getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS),
                             workTransaction
                         ).then(() => {

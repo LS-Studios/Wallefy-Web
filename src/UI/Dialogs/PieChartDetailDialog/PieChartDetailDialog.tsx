@@ -3,7 +3,7 @@ import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import Transaction from "../../Screens/Transactions/Transaction/Transaction";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import TransactionGroup from "../../Screens/Transactions/TransactionGroup/TransactionGroup";
 import {TransactionGroupModel} from "../../../Data/DataModels/TransactionGroupModel";

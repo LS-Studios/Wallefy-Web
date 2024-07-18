@@ -1,9 +1,35 @@
 @import "../../Data/Variables.scss";
 
+@media only screen and (max-width: $mobile-state-1) {
+  .content-overlay {
+    margin-left: 60px;
+    margin-right: 60px;
+  }
+}
+
+@media only screen and (max-width: $mobile-state-2) {
+  .content-overlay {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+@media only screen and (min-width: $mobile-state-1) {
+  .content-overlay {
+    margin-left: 360px;
+    margin-right: 60px;
+  }
+}
+
 .content-overlay {
-  //width: 100%;
-  margin-left: 360px;
-  margin-right: 60px;
+  &.blurred {
+    opacity: 0.5;
+    filter: blur(1px);
+
+    * {
+      pointer-events: none;
+    }
+  }
 }
 
 .content-overlay-header {
@@ -20,7 +46,20 @@
   align-items: center;
   padding: 12px 24px;
 
-  margin: 0 42px;
+  .content-overlay-navigation-page-name {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+
+    :first-child {
+      width: 28px;
+      height: 28px;
+    }
+    :last-child {
+        font-size: 18px;
+    }
+  }
 
   .content-overlay-header-navigation-account {
     font-style: italic;
@@ -31,28 +70,34 @@
     display: flex;
     justify-content: center;
     align-items: center;
-  }
 
-  a {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    gap: 10px;
 
-    margin-left: 16px;
-
-    color: var(--text);
-    text-decoration: none;
-
-    cursor: pointer;
-
-    &:hover {
-      opacity: 0.6;
+    .content-overlay-header-navigation-actions-menu {
+      width: 26px;
+      height: 26px;
     }
 
-    * {
-      width: 22px;
-      height: 22px;
-      margin-right: 6px;
+    a {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      color: var(--text);
+      text-decoration: none;
+
+      gap: 6px;
+
+      cursor: pointer;
+
+      &:hover {
+        opacity: 0.6;
+      }
+
+      * {
+        width: 22px;
+        height: 22px;
+      }
     }
   }
 }
@@ -79,13 +124,23 @@
 }
 
 .content-overlay-header-content-actions {
+  &.absolute {
+    position: fixed;
+
+    left: 0;
+    right: 0;
+    bottom: 22px;
+  }
+
   display: flex;
   justify-content: center;
   align-items: center;
+
+  gap: 10px;
 }
 
 .content-overlay-header-content-actions-button {
-  //border: 1px solid $stroke;
+  background-color: var(--background);
   border: 2px solid var(--outline-color);
   color: var(--text);
   border-radius: 24px;
@@ -94,8 +149,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-
-  margin-left: 16px;
 
   text-decoration: none;
 
@@ -113,7 +166,7 @@
 }
 
 .content-overlay-header-content-actions-search-action {
-  //border: 1px solid $stroke;
+  background-color: var(--background);
   border: 2px solid var(--outline-color);
   color: var(--text);
 
@@ -124,7 +177,7 @@
   justify-content: start;
   align-items: center;
 
-  width: 300px;
+  width: 100%;
 
   margin-left: 16px;
 
@@ -165,6 +218,21 @@
   width: 95%;
 }
 
-.content-overlay-body {
-  margin: 24px 42px;
+@media only screen and (max-width: $mobile-state-1) {
+  .content-overlay-body {
+    margin: 24px 24px;
+  }
+}
+
+@media only screen and (max-width: $mobile-state-2) {
+  .content-overlay-body {
+    margin: 24px 12px;
+    padding-bottom: 64px;
+  }
+}
+
+@media only screen and (min-width: $mobile-state-1) {
+  .content-overlay-body {
+    margin: 24px 42px;
+  }
 }

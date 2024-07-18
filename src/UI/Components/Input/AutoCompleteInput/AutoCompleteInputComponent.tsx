@@ -2,13 +2,10 @@ import React, {CSSProperties, useEffect, useState} from 'react';
 import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './AutoCompleteInputComponent.scss';
 import DropDialog from "../../Dropdialog/DropDialog";
-import {MdBolt, MdClose} from "react-icons/md";
+import {MdClose} from "react-icons/md";
 import {InputNameValueModel} from "../../../../Data/DataModels/Input/InputNameValueModel";
-import {getInputValueUidByUid} from "../../../../Helper/HandyFunctionHelper";
 import {useContextMenu} from "../../../../Providers/ContextMenuProvider";
 import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
-import {deleteDBItem, deleteDBItemByUid} from "../../../../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../../../../Helper/DatabaseRoutes";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {IconType} from "react-icons";
 

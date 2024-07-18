@@ -4,20 +4,19 @@ import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import {CashCheckModel} from "../../../Data/DataModels/CashCheckModel";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import "./CashCheckDialog.scss";
-import {formatCurrency, getTransactionAmount} from "../../../Helper/CurrencyHelper";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import LoadingDialog from "../LoadingDialog/LoadingDialog";
-import {useDebts} from "../../../CustomHooks/useDebts";
+import {useDebts} from "../../../CustomHooks/Database/useDebts";
 import {calculateCashChecks} from "../../../Helper/CalculationHelper";
 import {useSettings} from "../../../Providers/SettingsProvider";
-import {addDBItem, deleteDBObject, getDBObject, getDBObjectOnChange, setDBObject} from "../../../Helper/AceBaseHelper";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
-import {usePayedDebts} from "../../../CustomHooks/usePayedDebts";
+import {usePayedDebts} from "../../../CustomHooks/Database/usePayedDebts";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import {DebtType} from "../../../Data/EnumTypes/DebtType";
 import CashCheckCard from "./CashCheckCard";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const CashCheckDialog = () => {
     const translate = useTranslation()
@@ -33,7 +32,7 @@ const CashCheckDialog = () => {
 
     useEffect(() => {
         if (!debts || !payedDebts || !currentAccount) return
-        //deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS))
+        //getActiveDatabaseHelper().deleteDBObject(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS))
         setCashChecks(calculateCashChecks(debts,payedDebts || [], currentAccount?.currencyCode))
     }, [debts, payedDebts]);
 
@@ -54,13 +53,13 @@ const CashCheckDialog = () => {
 
         if (Array.isArray(cashCheck)) {
             cashCheck.forEach(cashCheck => {
-                addDBItem(
+                getActiveDatabaseHelper().addDBItem(
                     getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS),
                     buildPayedDebtModel(cashCheck)
                 )
             })
         } else {
-            addDBItem(
+            getActiveDatabaseHelper().addDBItem(
                 getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS),
                 buildPayedDebtModel(cashCheck)
             )

@@ -9,7 +9,6 @@ import RadioInputComponent from "../../Components/Input/RadioInput/RadioInputCom
 import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel";
 import {TransactionType} from "../../../Data/EnumTypes/TransactionType";
 import InputBaseComponent from "../../Components/Input/InputBase/InputBaseComponent";
-import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {DateRangeModel} from "../../../Data/DataModels/DateRangeModel";
 import DateInputComponent from "../../Components/Input/DateInputComponent/DateInputComponent";
 import {formatDateToStandardString} from "../../../Helper/DateHelper";
@@ -18,8 +17,6 @@ import {PriceRangeModel} from "../../../Data/DataModels/PriceRangeModel";
 import CurrencyInputComponent from "../../Components/Input/CurrencyInput/CurrencyInputComponent";
 import RangeSliderInputComponent from "../../Components/Input/RangeSliderInput/RangeSliderInputComponent";
 import {InputNameValueModel} from "../../../Data/DataModels/Input/InputNameValueModel";
-import {getDBItemsOnChange} from "../../../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {CategoryModel} from "../../../Data/DatabaseModels/CategoryModel";
 import {LabelModel} from "../../../Data/DatabaseModels/LabelModel";
 import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
@@ -30,20 +27,23 @@ import {useTranslation} from "../../../CustomHooks/useTranslation";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactions} from "../../../CustomHooks/useTransactions";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useLabels} from "../../../CustomHooks/useLabels";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
-import {useDebts} from "../../../CustomHooks/useDebts";
-import {usePayedDebts} from "../../../CustomHooks/usePayedDebts";
+import {useTransactions} from "../../../CustomHooks/Database/useTransactions";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
+import {useDebts} from "../../../CustomHooks/Database/useDebts";
+import {usePayedDebts} from "../../../CustomHooks/Database/usePayedDebts";
+import TextInputComponent from "../../Components/Input/TextInput/TextInputComponent";
 
 const FilterTransactionsDialog = ({
     currentFilter,
     onFilterChange,
+    onlyName = false,
     isDebt = false,
 }: {
     currentFilter: FilterModel,
     onFilterChange: (filter: FilterModel) => void,
+    onlyName?: boolean,
     isDebt?: boolean
 }) => {
     const translate = useTranslation();
@@ -147,175 +147,198 @@ const FilterTransactionsDialog = ({
                 }
             ),
         ]}>
-            {!isDebt && <InputBaseComponent
-                title={translate("transaction-type")}
-                enabled={filter.transactionType !== null}
+            <InputBaseComponent
+                title={translate("name")}
+                enabled={filter.searchName !== null}
                 setEnabled={(enabled) => {
                     updateFilter((oldFilter) => {
-                        oldFilter.transactionType = enabled ? TransactionType.INCOME : null;
+                        oldFilter.searchName = enabled ? "" : null;
                         return oldFilter;
                     });
-                }}
-            >
-                <RadioInputComponent
-                    value={transactionTypeInputOptions.find(option => option.value === filter.transactionType) || transactionTypeInputOptions[0]}
-                    onValueChange={(value) => {
+                }}>
+                <TextInputComponent
+                    value={filter.searchName}
+                    onValueChange={
+                        (value) => {
+                            updateFilter((oldFilter) => {
+                                oldFilter.searchName = value as string;
+                                return oldFilter;
+                            });
+                        }
+                    }
+                />
+            </InputBaseComponent>
+            { !onlyName && <>
+                {!isDebt && <InputBaseComponent
+                    title={translate("transaction-type")}
+                    enabled={filter.transactionType !== null}
+                    setEnabled={(enabled) => {
                         updateFilter((oldFilter) => {
-                            oldFilter.transactionType = (value as InputOptionModel<TransactionType>).value;
+                            oldFilter.transactionType = enabled ? TransactionType.INCOME : null;
                             return oldFilter;
                         });
                     }}
-                    options={transactionTypeInputOptions}
-                />
-            </InputBaseComponent>}
-            <InputBaseComponent
-                title={translate("date-range")}
-                enabled={filter.dateRange !== null}
-                setEnabled={(enabled) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.dateRange = enabled ? new DateRangeModel() : null;
-                        return oldFilter;
-                    });
-                }}
-            >
-                <div className="filter-transaction-dialog-date-range">
-                    <DateInputComponent
-                        value={filter.dateRange ? new Date(filter.dateRange!.startDate) : new Date()}
+                >
+                    <RadioInputComponent
+                        value={transactionTypeInputOptions.find(option => option.value === filter.transactionType) || transactionTypeInputOptions[0]}
                         onValueChange={(value) => {
                             updateFilter((oldFilter) => {
-                                oldFilter.dateRange = new DateRangeModel(formatDateToStandardString(value), oldFilter.dateRange?.endDate || formatDateToStandardString(new Date()));
+                                oldFilter.transactionType = (value as InputOptionModel<TransactionType>).value;
                                 return oldFilter;
                             });
                         }}
+                        options={transactionTypeInputOptions}
                     />
-                    <span>{translate("to")}</span>
-                    <DateInputComponent
-                        value={filter.dateRange ? new Date(filter.dateRange!.endDate) : new Date()}
-                        onValueChange={(value) => {
-                            updateFilter((oldFilter) => {
-                                oldFilter.dateRange = new DateRangeModel(oldFilter.dateRange?.startDate || formatDateToStandardString(new Date()), formatDateToStandardString(value));
-                                return oldFilter;
-                            });
-                        }}
-                    />
-                </div>
-            </InputBaseComponent>
-            <InputBaseComponent
-                title={translate("price-range")}
-                enabled={filter.priceRange !== null}
-                setEnabled={(enabled) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.priceRange = enabled ? new PriceRangeModel() : null;
-                        return oldFilter;
-                    });
-                }}
-            >
-                <div className="filter-transaction-dialog-price-range">
-                    <CurrencyInputComponent
-                        value={filter.priceRange?.minPrice}
-                        onValueChange={(value) => {
+                </InputBaseComponent>}
+                <InputBaseComponent
+                    title={translate("date-range")}
+                    enabled={filter.dateRange !== null}
+                    setEnabled={(enabled) => {
+                        updateFilter((oldFilter) => {
+                            oldFilter.dateRange = enabled ? new DateRangeModel() : null;
+                            return oldFilter;
+                        });
+                    }}
+                >
+                    <div className="filter-transaction-dialog-date-range">
+                        <DateInputComponent
+                            value={filter.dateRange ? new Date(filter.dateRange!.startDate) : new Date()}
+                            onValueChange={(value) => {
+                                updateFilter((oldFilter) => {
+                                    oldFilter.dateRange = new DateRangeModel(formatDateToStandardString(value), oldFilter.dateRange?.endDate || formatDateToStandardString(new Date()));
+                                    return oldFilter;
+                                });
+                            }}
+                        />
+                        <span>{translate("to")}</span>
+                        <DateInputComponent
+                            value={filter.dateRange ? new Date(filter.dateRange!.endDate) : new Date()}
+                            onValueChange={(value) => {
+                                updateFilter((oldFilter) => {
+                                    oldFilter.dateRange = new DateRangeModel(oldFilter.dateRange?.startDate || formatDateToStandardString(new Date()), formatDateToStandardString(value));
+                                    return oldFilter;
+                                });
+                            }}
+                        />
+                    </div>
+                </InputBaseComponent>
+                <InputBaseComponent
+                    title={translate("price-range")}
+                    enabled={filter.priceRange !== null}
+                    setEnabled={(enabled) => {
+                        updateFilter((oldFilter) => {
+                            oldFilter.priceRange = enabled ? new PriceRangeModel() : null;
+                            return oldFilter;
+                        });
+                    }}
+                >
+                    <div className="filter-transaction-dialog-price-range">
+                        <CurrencyInputComponent
+                            value={filter.priceRange?.minPrice}
+                            onValueChange={(value) => {
+                                updateFilter((oldFilter) => {
+                                    oldFilter.priceRange = new PriceRangeModel(value, oldFilter.priceRange?.maxPrice || 0);
+                                    return oldFilter;
+                                });
+                            }}
+                            changeOnBlur={true}
+                            allowNegativeValue={true}
+                            currency={selectedCurrency}
+                            onCurrencyChange={setSelectedCurrency}
+                            currencyRateIsDisabled={true}
+                        />
+                        <span>{translate("to")}</span>
+                        <CurrencyInputComponent
+                            value={filter.priceRange?.maxPrice}
+                            onValueChange={(value) => {
+                                updateFilter((oldFilter) => {
+                                    oldFilter.priceRange = new PriceRangeModel(oldFilter.priceRange?.minPrice || 0, value);
+                                    return oldFilter;
+                                });
+                            }}
+                            changeOnBlur={true}
+                            allowNegativeValue={true}
+                            currency={selectedCurrency}
+                            onCurrencyChange={setSelectedCurrency}
+                            currencyRateIsDisabled={true}
+                        />
+                    </div>
+                    { priceRangeMin && priceRangeMax ? <RangeSliderInputComponent
+                        fromValue={filter.priceRange ? filter.priceRange!.minPrice : 0}
+                        onFromValueChange={(value) => {
                             updateFilter((oldFilter) => {
                                 oldFilter.priceRange = new PriceRangeModel(value, oldFilter.priceRange?.maxPrice || 0);
                                 return oldFilter;
                             });
                         }}
-                        changeOnBlur={true}
-                        allowNegativeValue={true}
-                        currency={selectedCurrency}
-                        onCurrencyChange={setSelectedCurrency}
-                        currencyRateIsDisabled={true}
-                    />
-                    <span>{translate("to")}</span>
-                    <CurrencyInputComponent
-                        value={filter.priceRange?.maxPrice}
-                        onValueChange={(value) => {
+                        toValue={filter.priceRange ? filter.priceRange!.maxPrice : 0}
+                        onToValueChange={(value) => {
                             updateFilter((oldFilter) => {
                                 oldFilter.priceRange = new PriceRangeModel(oldFilter.priceRange?.minPrice || 0, value);
                                 return oldFilter;
                             });
                         }}
-                        changeOnBlur={true}
-                        allowNegativeValue={true}
-                        currency={selectedCurrency}
-                        onCurrencyChange={setSelectedCurrency}
-                        currencyRateIsDisabled={true}
-                    />
-                </div>
-                { priceRangeMin && priceRangeMax ? <RangeSliderInputComponent
-                    fromValue={filter.priceRange ? filter.priceRange!.minPrice : 0}
-                    onFromValueChange={(value) => {
+                        min={priceRangeMin || 0}
+                        max={priceRangeMax || 0}
+                    /> : <Spinner type={SpinnerType.DOTS} center={true} style={{
+                        margin: "16px"
+                    }}/>}
+                </InputBaseComponent>
+                <AutoCompleteInputComponent
+                    title={translate("categories")}
+                    enabled={filter.categories !== null}
+                    setEnabled={(enabled) => {
                         updateFilter((oldFilter) => {
-                            oldFilter.priceRange = new PriceRangeModel(value, oldFilter.priceRange?.maxPrice || 0);
+                            oldFilter.categories = enabled ? [] : null;
                             return oldFilter;
                         });
                     }}
-                    toValue={filter.priceRange ? filter.priceRange!.maxPrice : 0}
-                    onToValueChange={(value) => {
+                    value={getInputValueUidsByUids(filter.categories || [], categoriesInputOptions)}
+                    onValueChange={(value) => {
                         updateFilter((oldFilter) => {
-                            oldFilter.priceRange = new PriceRangeModel(oldFilter.priceRange?.minPrice || 0, value);
+                            oldFilter.categories = (value as InputNameValueModel<CategoryModel>[]).map(category => category.value?.uid!);
+                            return oldFilter;
+                        })
+                    }}
+                    suggestions={categoriesInputOptions}
+                />
+                <AutoCompleteInputComponent
+                    title={translate("labels")}
+                    enabled={filter.labels !== null}
+                    setEnabled={(enabled) => {
+                        updateFilter((oldFilter) => {
+                            oldFilter.labels = enabled ? [] : null;
                             return oldFilter;
                         });
                     }}
-                    min={priceRangeMin || 0}
-                    max={priceRangeMax || 0}
-                /> : <Spinner type={SpinnerType.DOTS} center={true} style={{
-                    margin: "16px"
-                }}/>}
-            </InputBaseComponent>
-            <AutoCompleteInputComponent
-                title={translate("categories")}
-                enabled={filter.categories !== null}
-                setEnabled={(enabled) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.categories = enabled ? [] : null;
-                        return oldFilter;
-                    });
-                }}
-                value={getInputValueUidsByUids(filter.categories || [], categoriesInputOptions)}
-                onValueChange={(value) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.categories = (value as InputNameValueModel<CategoryModel>[]).map(category => category.value?.uid!);
-                        return oldFilter;
-                    })
-                }}
-                suggestions={categoriesInputOptions}
-            />
-            <AutoCompleteInputComponent
-                title={translate("labels")}
-                enabled={filter.labels !== null}
-                setEnabled={(enabled) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.labels = enabled ? [] : null;
-                        return oldFilter;
-                    });
-                }}
-                value={getInputValueUidsByUids(filter.labels || [], labelsInputOptions)}
-                onValueChange={(value) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.labels = (value as InputNameValueModel<LabelModel>[]).map(label => label.value?.uid!);
-                        return oldFilter;
-                    })
-                }}
-                suggestions={labelsInputOptions}
-            />
-            <AutoCompleteInputComponent
-                title={translate("transaction-partners")}
-                enabled={filter.transactionPartners !== null}
-                setEnabled={(enabled) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.transactionPartners = enabled ? [] : null;
-                        return oldFilter;
-                    });
-                }}
-                value={getInputValueUidsByUids(filter.transactionPartners || [], transactionPartnersInputOptions)}
-                onValueChange={(value) => {
-                    updateFilter((oldFilter) => {
-                        oldFilter.transactionPartners = (value as InputNameValueModel<TransactionPartnerModel>[]).map(partner => partner.value?.uid!);
-                        return oldFilter;
-                    })
-                }}
-                suggestions={transactionPartnersInputOptions}
-            />
+                    value={getInputValueUidsByUids(filter.labels || [], labelsInputOptions)}
+                    onValueChange={(value) => {
+                        updateFilter((oldFilter) => {
+                            oldFilter.labels = (value as InputNameValueModel<LabelModel>[]).map(label => label.value?.uid!);
+                            return oldFilter;
+                        })
+                    }}
+                    suggestions={labelsInputOptions}
+                />
+                <AutoCompleteInputComponent
+                    title={translate("transaction-partners")}
+                    enabled={filter.transactionPartners !== null}
+                    setEnabled={(enabled) => {
+                        updateFilter((oldFilter) => {
+                            oldFilter.transactionPartners = enabled ? [] : null;
+                            return oldFilter;
+                        });
+                    }}
+                    value={getInputValueUidsByUids(filter.transactionPartners || [], transactionPartnersInputOptions)}
+                    onValueChange={(value) => {
+                        updateFilter((oldFilter) => {
+                            oldFilter.transactionPartners = (value as InputNameValueModel<TransactionPartnerModel>[]).map(partner => partner.value?.uid!);
+                            return oldFilter;
+                        })
+                    }}
+                    suggestions={transactionPartnersInputOptions}
+                />
+            </>}
         </DialogOverlay>
     );
 };

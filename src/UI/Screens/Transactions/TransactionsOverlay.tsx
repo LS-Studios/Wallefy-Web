@@ -23,7 +23,6 @@ const TransactionsOverlay = () => {
         new InputOptionModel(translate("price-high-to-low"), SortType.PRICE_HIGH_TO_LOW),
     ];
 
-    const [searchValue, setSearchValue] = useState<string>("")
     const [sortValue, setSortValue] = useState<SortType>(SortType.NEWEST_FIRST);
     const [filterValue, setFilterValue] = useState<FilterModel>(new FilterModel())
 
@@ -48,14 +47,8 @@ const TransactionsOverlay = () => {
             title={translate("transactions")}
             titleIcon={<MdOutlineMonetizationOn />}
             actions={[
-                new ContentSearchAction(
-                    translate("search-for-transactions"),
-                    (searchText) => {
-                        setSearchValue(searchText);
-                    }
-                ),
                 new ContentAction(
-                    translate("sort") + ": " + sortTypeOptions.find((option) => option.value === sortValue)!.name,
+                    translate("sort"),
                     () => {
                         dialog.open(
                             new DialogModel(
@@ -91,7 +84,7 @@ const TransactionsOverlay = () => {
                     <MdTune />,
                 )
             ]}>
-            <TransactionsScreen searchValue={searchValue} sortValue={sortValue} filterValue={filterValue}/>
+            <TransactionsScreen sortValue={sortValue} filterValue={filterValue}/>
         </ContentOverlay>
     );
 };

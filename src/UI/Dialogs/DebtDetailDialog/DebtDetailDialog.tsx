@@ -5,23 +5,23 @@ import {formatCurrency} from "../../../Helper/CurrencyHelper";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../Providers/DialogProvider";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
-import {deleteDBItem, getDBItemOnChange} from "../../../Helper/AceBaseHelper";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
-import {useCategories} from "../../../CustomHooks/useCategories";
-import {useLabels} from "../../../CustomHooks/useLabels";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
+import {useCategories} from "../../../CustomHooks/Database/useCategories";
+import {useLabels} from "../../../CustomHooks/Database/useLabels";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import CreateDebtDialog from "../CreateDebtDialog/CreateDebtDialog";
 import "../TransactionDetailDialog/TransactionDetailDialog.scss";
 import {roundToNearest} from "../../../Helper/CalculationHelper";
 import {getIcon} from "../../../Helper/IconMapper";
 import {DebtType} from "../../../Data/EnumTypes/DebtType";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const DebtDetailDialog = ({
     debt,
@@ -45,7 +45,7 @@ const DebtDetailDialog = ({
     useEffect(() => {
         if (!getDatabaseRoute) return
 
-        getDBItemOnChange(
+        getActiveDatabaseHelper().getDBItemOnChange(
             getDatabaseRoute(DatabaseRoutes.DEBTS),
             debt.uid,
             (fetchedDebt: DebtModel | null) => {
@@ -69,7 +69,7 @@ const DebtDetailDialog = ({
             expandOnRight: true
         },
         {
-            title: translate("transaction-amount"),
+            title: translate("transaction-amount-short"),
             value: <div>
                 <span>{formatCurrency(detailDebt.transactionAmount || 0, settings?.language, detailDebt.currency.baseCurrencyCode)}</span>
                 { detailDebt.currency.currencyCode !== currentAccount?.currencyCode && <>
@@ -158,7 +158,7 @@ const DebtDetailDialog = ({
 
                     dialog.closeCurrent();
 
-                    deleteDBItem(
+                    getActiveDatabaseHelper().deleteDBItem(
                         getDatabaseRoute!(DatabaseRoutes.DEBTS),
                         detailDebt
                     )
@@ -181,7 +181,7 @@ const DebtDetailDialog = ({
 
                     dialog.closeCurrent();
 
-                    deleteDBItem(
+                    getActiveDatabaseHelper().deleteDBItem(
                         getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS),
                         detailDebt
                     )

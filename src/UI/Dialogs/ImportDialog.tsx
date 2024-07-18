@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import DialogOverlay from "./DialogOverlay/DialogOverlay";
 import {ContentAction} from "../../Data/ContentAction/ContentAction";
 import {useTranslation} from "../../CustomHooks/useTranslation";
@@ -8,15 +8,12 @@ import InputBaseComponent from "../Components/Input/InputBase/InputBaseComponent
 import {ConfigType} from "dayjs";
 import CheckboxInputComponent from "../Components/Input/CheckboxInput/CheckboxInputComponent";
 import {ImportErrorModel} from "../../Data/ErrorModels/ImportErrorModel";
-// @ts-ignore
-import variables from "../../Data/Variables.scss";
 import {useToast} from "../../Providers/Toast/ToastProvider";
 import {useDialog} from "../../Providers/DialogProvider";
 import {ExportDataModel} from "../../Data/DataModels/ExportDataModel";
-import {addDBItem} from "../../Helper/AceBaseHelper";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
-import {useCurrentAccount} from "../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../CustomHooks/Database/useDatabaseRoute";
+import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 const ImportDialog = () => {
     const dialog = useDialog();
@@ -55,14 +52,14 @@ const ImportDialog = () => {
                     const fileContent: ExportDataModel = JSON.parse(selectedFile.content as string)
 
                     Promise.all([
-                        importPresets && fileContent.presets.map((preset) => addDBItem(getDatabaseRoute!(DatabaseRoutes.PRESETS), preset)),
-                        importHistory && fileContent.history.map((transaction) => addDBItem(getDatabaseRoute!(DatabaseRoutes.HISTORY_TRANSACTIONS), transaction)),
-                        importTransactions && fileContent.transactions.map((transaction) => addDBItem(getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS), transaction)),
-                        importTransactions && fileContent.debts.map((debt) => addDBItem(getDatabaseRoute!(DatabaseRoutes.DEBTS), debt)),
-                        importTransactions && fileContent.payedDebts.map((debt) => addDBItem(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS), debt)),
-                        importCategories && fileContent.categories.map((category) => addDBItem(getDatabaseRoute!(DatabaseRoutes.CATEGORIES), category)),
-                        importTransactionPartners && fileContent.transactionPartners.map((partner) => addDBItem(getDatabaseRoute!(DatabaseRoutes.TRANSACTION_PARTNERS), partner)),
-                        importLabels && fileContent.labels.map((label) => addDBItem(getDatabaseRoute!(DatabaseRoutes.LABELS), label))
+                        importPresets && fileContent.presets.map((preset) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.PRESETS), preset)),
+                        importHistory && fileContent.history.map((transaction) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.HISTORY_TRANSACTIONS), transaction)),
+                        importTransactions && fileContent.transactions.map((transaction) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS), transaction)),
+                        importTransactions && fileContent.debts.map((debt) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.DEBTS), debt)),
+                        importTransactions && fileContent.payedDebts.map((debt) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS), debt)),
+                        importCategories && fileContent.categories.map((category) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.CATEGORIES), category)),
+                        importTransactionPartners && fileContent.transactionPartners.map((partner) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.TRANSACTION_PARTNERS), partner)),
+                        importLabels && fileContent.labels.map((label) => getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.LABELS), label))
                     ]).then(() => {
                         dialog.closeCurrent()
                     })
@@ -84,7 +81,7 @@ const ImportDialog = () => {
             <InputBaseComponent
                 title={translate("selected-file")}
                 style={{
-                    borderColor: error.selectedFileError ? variables.error_color : null
+                    borderColor: error.selectedFileError ? "var(--error-color)" : "null"
                 }}
             >
                 { selectedFile ? selectedFile.name : <span className="no-items">No file selected</span> }

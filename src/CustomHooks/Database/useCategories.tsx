@@ -1,11 +1,8 @@
-import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
 import {useEffect, useState} from "react";
-import {getDBItemsOnChange} from "../Helper/AceBaseHelper";
-import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
-import {TransactionPartnerModel} from "../Data/DatabaseModels/TransactionPartnerModel";
-import {useCurrentAccount} from "../Providers/AccountProvider";
-import {CategoryModel} from "../Data/DatabaseModels/CategoryModel";
+import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
+import {CategoryModel} from "../../Data/DatabaseModels/CategoryModel";
 import {useDatabaseRoute} from "./useDatabaseRoute";
+import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 export const useCategories = () => {
     const getDatabaseRoute = useDatabaseRoute()
@@ -15,7 +12,7 @@ export const useCategories = () => {
     useEffect(() => {
         if (!getDatabaseRoute) return
 
-        getDBItemsOnChange(
+        getActiveDatabaseHelper().getDBItemsOnChange(
             getDatabaseRoute(DatabaseRoutes.CATEGORIES),
             setCategories
         )

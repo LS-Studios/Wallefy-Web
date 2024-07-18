@@ -5,6 +5,7 @@ import {formatCurrency} from "../../../../../Helper/CurrencyHelper";
 import {ThemeType} from "../../../../../Data/EnumTypes/ThemeType";
 import {useToolTip} from "../../../../../CustomHooks/useToolTip";
 import {SettingsModel} from "../../../../../Data/DataModels/SettingsModel";
+import {useScreenScaleStep} from "../../../../../CustomHooks/useScreenScaleStep";
 
 interface ItemChartCurrencyValueToolTipProps extends ChartsItemContentProps {
     valueFormatter: (value: number | undefined) => string
@@ -21,6 +22,12 @@ const ItemChartCurrencyValueToolTip = ({
     const data: DefaultizedPieValueType | null = series.data[itemData.dataIndex!] as DefaultizedPieValueType | null;
 
     const { isOnRight, isOnBottom } = useToolTip(settings)
+
+    const screenScaleStep = useScreenScaleStep()
+
+    if (screenScaleStep !== 0) {
+        return null
+    }
 
     return (
         <div className={"chart-tool-tip " + (isOnRight ? "onRight" : "onLeft") + (isOnBottom ? " onBottom" : " onTop")}>

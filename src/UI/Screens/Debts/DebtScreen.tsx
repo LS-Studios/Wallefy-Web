@@ -5,15 +5,15 @@ import {calculateNFutureTransactions, groupTransactions} from "../../../Helper/T
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/useTransactionPartners";
+import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
-import {useDatabaseRoute} from "../../../CustomHooks/useDatabaseRoute";
-import {useDebts} from "../../../CustomHooks/useDebts";
+import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useDebts} from "../../../CustomHooks/Database/useDebts";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import {DebtGroupModel} from "../../../Data/DataModels/DebtGroupModel";
 import DebtGroup from "./DebtGroup/DebtGroup";
-import {usePayedDebts} from "../../../CustomHooks/usePayedDebts";
+import {usePayedDebts} from "../../../CustomHooks/Database/usePayedDebts";
 import {getTransactionAmount} from "../../../Helper/CurrencyHelper";
 
 const DebtScreen = ({
@@ -82,6 +82,11 @@ const DebtScreen = ({
 
         //Filter
         filteredDebts = filteredDebts.filter((debt) => {
+            if (filterValue.searchName) {
+                if (!debt.name.toLowerCase().includes(filterValue.searchName.toLowerCase())) {
+                    return false
+                }
+            }
             if (filterValue.transactionPartners && filterValue.transactionPartners.length > 0) {
                 if (!filterValue.transactionPartners.includes(debt.transactionExecutorUid!)) {
                     return false

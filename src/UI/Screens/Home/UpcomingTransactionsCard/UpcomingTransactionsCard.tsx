@@ -2,17 +2,17 @@ import React, {useEffect} from 'react';
 import {MdBalance, MdPunchClock, MdSchedule} from "react-icons/md";
 import Divider from "../../../Components/Divider/Divider";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
-import {useTransactions} from "../../../../CustomHooks/useTransactions";
-import useTransactionInDateRange from "../../../../CustomHooks/useTransactionInDateRange";
+import {useTransactions} from "../../../../CustomHooks/Database/useTransactions";
+import useTransactionInDateRange from "../../../../CustomHooks/Database/useTransactionInDateRange";
 import {DateRangeModel} from "../../../../Data/DataModels/DateRangeModel";
 import {formatDateToStandardString} from "../../../../Helper/DateHelper";
 import Transaction from "../../Transactions/Transaction/Transaction";
-import {useTransactionPartners} from "../../../../CustomHooks/useTransactionPartners";
+import {useTransactionPartners} from "../../../../CustomHooks/Database/useTransactionPartners";
 import {calculateNFutureTransactions, groupTransactions} from "../../../../Helper/TransactionHelper";
 import {TransactionGroupModel} from "../../../../Data/DataModels/TransactionGroupModel";
 import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
 import TransactionGroup from "../../Transactions/TransactionGroup/TransactionGroup";
-import {useDatabaseRoute} from "../../../../CustomHooks/useDatabaseRoute";
+import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
 import "./UpcomingTransactionsCard.scss";
 
 const UpcomingTransactionsCard = () => {
