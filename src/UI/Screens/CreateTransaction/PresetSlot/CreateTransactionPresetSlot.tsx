@@ -12,7 +12,7 @@ import {DebtPresetModel} from "../../../../Data/DatabaseModels/DebtPresetModel";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
 import {AccountType} from "../../../../Data/EnumTypes/AccountType";
 import {getIcon} from "../../../../Helper/IconMapper";
-import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../../CustomHooks/Database/useAccountRoute";
 import PresetDialog from "../../../Dialogs/PresetDialog";
 import {getActiveDatabaseHelper} from "../../../../Helper/Database/ActiveDBHelper";
 
@@ -27,12 +27,12 @@ const CreateTransactionPresetSlot = ({
     const { currentAccount } = useCurrentAccount();
     const dialog = useDialog()
     const contextMenu = useContextMenu()
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
 
     const openCreateTransactionDialog = () => {
         dialog.open(
             new DialogModel(
-                preset.name + " - " + translate("create-transaction"),
+                translate("create-transaction"),
                 <PresetDialog
                     preset={preset}
                     isDebt={currentAccount?.type === AccountType.DEBTS}

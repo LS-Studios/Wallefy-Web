@@ -10,11 +10,11 @@ import {StorageItemModel} from "../Data/DatabaseModels/StorageItemModel";
 import React from "react";
 import {useTranslation} from "./useTranslation";
 import {useDialog} from "../Providers/DialogProvider";
-import {useDatabaseRoute} from "./Database/useDatabaseRoute";
+import {useAccountRoute} from "./Database/useAccountRoute";
 import {getActiveDatabaseHelper} from "../Helper/Database/ActiveDBHelper";
 
 export const useNewItems = () => {
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const dialog = useDialog()
     const translate = useTranslation()
     const [newItems, setNewItems] = React.useState(new CreateDialogNewItems())

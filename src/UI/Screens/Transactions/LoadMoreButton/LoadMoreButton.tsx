@@ -1,17 +1,21 @@
 import React from 'react';
 import './LoadMoreButton.scss';
+import Spinner from "../../../Components/Spinner/Spinner";
+import {SpinnerType} from "../../../../Data/EnumTypes/SpinnerType";
 
 const LoadMoreButton = ({
-    onClick
+    onClick,
+    isLoading
 }: {
-    onClick: () => void
+    onClick: () => void,
+    isLoading: boolean
 }) => {
     return (
         <button
             className="load-more-button"
             onClick={onClick}
         >
-            Weitere Transaktionen laden
+            { isLoading ? <Spinner type={SpinnerType.DOTS} center={true} /> : "Weitere Transaktionen laden" }
         </button>
     );
 };

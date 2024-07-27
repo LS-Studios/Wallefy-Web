@@ -1,0 +1,27 @@
+@import "../../Components/Input/ButtonInput/ButtonInputComponent.scss";
+
+.invasion-dialog-card {
+  padding: 8px 12px;
+  border: 2px solid var(--stroke-color);
+  border-radius: 12px;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  .invasion-dialog-card-text {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .invasion-dialog-card-join-button {
+    @extend .button-input;
+    height: 35px;
+    padding: 0;
+  }
+}

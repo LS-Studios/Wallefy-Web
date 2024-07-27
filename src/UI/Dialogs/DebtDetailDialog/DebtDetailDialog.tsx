@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {speakableDate} from "../../../Helper/DateHelper";
 import {formatCurrency} from "../../../Helper/CurrencyHelper";
@@ -14,7 +14,7 @@ import {useCurrentAccount} from "../../../Providers/AccountProvider";
 import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import {useCategories} from "../../../CustomHooks/Database/useCategories";
 import {useLabels} from "../../../CustomHooks/Database/useLabels";
-import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../CustomHooks/Database/useAccountRoute";
 import {DebtModel} from "../../../Data/DatabaseModels/DebtModel";
 import CreateDebtDialog from "../CreateDebtDialog/CreateDebtDialog";
 import "../TransactionDetailDialog/TransactionDetailDialog.scss";
@@ -33,7 +33,7 @@ const DebtDetailDialog = ({
     const settings = useSettings()
     const translate = useTranslation()
     const { currentAccount, updateAccountBalance } = useCurrentAccount();
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const dialog = useDialog()
     const toast = useToast()
 
@@ -41,6 +41,9 @@ const DebtDetailDialog = ({
     const transactionPartners = useTransactionPartners(preFetchedTransactionPartners || [])
     const categories = useCategories()
     const labels = useLabels()
+
+    const [isLoading, setIsLoading] = useState<boolean>(false)
+
 
     useEffect(() => {
         if (!getDatabaseRoute) return
@@ -116,7 +119,7 @@ const DebtDetailDialog = ({
         },
         {
             title: translate("labels"),
-            value: labels ? detailDebt.labels.reduce((result: string[], labelUid) => {
+            value: labels ? detailDebt.labels?.reduce((result: string[], labelUid) => {
                 const foundLabel = labels.find(label => label.uid === labelUid)
                 if (foundLabel) {
                     result.push(foundLabel.name)
@@ -132,7 +135,7 @@ const DebtDetailDialog = ({
     ]
 
     return (
-        <DialogOverlay actions={detailDebt.debtType === DebtType.DEFAULT ? [
+        <DialogOverlay actions={[
             new ContentAction(
                 translate("edit"),
                 () => {
@@ -142,52 +145,42 @@ const DebtDetailDialog = ({
                             <CreateDebtDialog debt={detailDebt} />
                         )
                     )
-                }
+                },
+                false,
+                isLoading
             ),
             new ContentAction(
                 translate("copy"),
                 () => {
                     navigator.clipboard.writeText(JSON.stringify(detailDebt))
-                    toast.open(translate("transaction-copied-to-clipboard"))
-                }
+                    toast.open(translate("copied"))
+                },
+                false,
+                isLoading
             ),
             new ContentAction(
                 translate("delete"),
                 () => {
                     if (!currentAccount) return
 
-                    dialog.closeCurrent();
+                    setIsLoading(true)
+
+                    let databaseRoute = getDatabaseRoute!(DatabaseRoutes.DEBTS)
+
+                    if (detailDebt.debtType === DebtType.MONEY_TRANSFER) {
+                        databaseRoute = getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS)
+                    }
 
                     getActiveDatabaseHelper().deleteDBItem(
-                        getDatabaseRoute!(DatabaseRoutes.DEBTS),
+                        databaseRoute,
                         detailDebt
-                    )
+                    ).then(() => {
+                        setIsLoading(false)
+                        dialog.closeCurrent();
+                    })
                 },
                 false,
-                getDatabaseRoute === null
-            ),
-        ] : [
-            new ContentAction(
-                translate("copy"),
-                () => {
-                    navigator.clipboard.writeText(JSON.stringify(detailDebt))
-                    toast.open(translate("transaction-copied-to-clipboard"))
-                }
-            ),
-            new ContentAction(
-                translate("delete"),
-                () => {
-                    if (!currentAccount) return
-
-                    dialog.closeCurrent();
-
-                    getActiveDatabaseHelper().deleteDBItem(
-                        getDatabaseRoute!(DatabaseRoutes.PAYED_DEBTS),
-                        detailDebt
-                    )
-                },
-                false,
-                getDatabaseRoute === null
+                isLoading || getDatabaseRoute === null
             ),
         ]}>
             <div className="transaction-detail-dialog">

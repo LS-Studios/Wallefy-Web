@@ -14,3 +14,9 @@ body {
 .app {
     color: var(--text);
 }
+
+.app-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

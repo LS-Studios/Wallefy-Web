@@ -6,10 +6,13 @@ import {AccountType} from "../../Data/EnumTypes/AccountType";
 import {getDefaultDebtPresets, getDefaultPresets} from "../DefaultPresetHelper";
 import {DatabaseRoutes} from "../DatabaseRoutes";
 import {AccountModel} from "../../Data/DatabaseModels/AccountModel";
-import {UserModel} from "../../Data/DatabaseModels/UserModel";
 import uuid from "react-uuid";
+import {TransactionPresetModel} from "../../Data/DatabaseModels/TransactionPresetModel";
+import {DebtPresetModel} from "../../Data/DatabaseModels/DebtPresetModel";
+import {UserDataModel} from "../../Data/DatabaseModels/UserDataModel";
+import {AccountVisibilityType} from "../../Data/EnumTypes/AccountVisibilityType";
 
-export const getActiveDatabaseHelper = (databaseType: DatabaseType = DatabaseType.ACE_BASE): DatabaseHelper => {
+export const getActiveDatabaseHelper = (databaseType: DatabaseType = DatabaseType.FIREBASE): DatabaseHelper => {
     switch (databaseType) {
         case DatabaseType.ACE_BASE:
             return new AceBaseHelper()
@@ -18,20 +21,17 @@ export const getActiveDatabaseHelper = (databaseType: DatabaseType = DatabaseTyp
     }
 }
 
-export const createNewUser = (newUser: UserModel, newAccount: AccountModel) => {
-    return new Promise<UserModel>((resolve, reject) => {
+export const createNewUser = (newUser: UserDataModel, newAccount: AccountModel) => {
+    return new Promise<UserDataModel>((resolve, reject) => {
         if (!newUser.uid) {
             newUser.uid = uuid()
         }
 
-        newAccount.uid = uuid();
-        newUser.currentAccountUid = newAccount.uid;
-
-        getActiveDatabaseHelper().addDBItem(DatabaseRoutes.USERS, newUser).then(() => {
+        getActiveDatabaseHelper().addDBItem(DatabaseRoutes.USER_DATA, newUser).then(() => {
             newAccount.userUid = newUser.uid;
 
-            getActiveDatabaseHelper().addDBItem(`${DatabaseRoutes.USERS}/${newUser.uid}/${DatabaseRoutes.ACCOUNTS}`, newAccount).then(() => {
-                addPresetsForAccount(newUser.uid, newAccount);
+            getActiveDatabaseHelper().addDBItem(`${DatabaseRoutes.USER_ACCOUNTS}/${newUser.uid}/${DatabaseRoutes.PRIVATE_ACCOUNTS}`, newAccount).then(() => {
+                addPresetsForAccount(`${DatabaseRoutes.USER_ACCOUNTS}/${newUser.uid}/${DatabaseRoutes.PRIVATE_ACCOUNTS}/${newAccount.uid}`, newAccount)
                 resolve(newUser);
             }).catch((error) => {
                 reject(error);
@@ -42,16 +42,38 @@ export const createNewUser = (newUser: UserModel, newAccount: AccountModel) => {
     })
 }
 
-export const addPresetsForAccount = (userUid: string, newAccount: AccountModel) => {
-    let presets;
+export const addPresetsForAccount = (accountRoute: string, newAccount: AccountModel) => {
+    return new Promise<void>((resolve, reject) => {
+        let presets;
 
-    if (newAccount.type === AccountType.DEFAULT) {
-        presets = getDefaultPresets(newAccount.currencyCode, newAccount.uid);
-    } else {
-        presets = getDefaultDebtPresets(newAccount.currencyCode, newAccount.uid);
-    }
+        if (newAccount.type === AccountType.DEFAULT) {
+            presets = getDefaultPresets(newAccount.currencyCode, newAccount.uid);
+        } else {
+            presets = getDefaultDebtPresets(newAccount.currencyCode, newAccount.uid);
+        }
 
-    presets.forEach(preset => {
-        getActiveDatabaseHelper().addDBItem(`${DatabaseRoutes.USERS}/${userUid}/${DatabaseRoutes.ACCOUNTS}/${newAccount.uid}/${DatabaseRoutes.PRESETS}`, preset);
-    });
+        const promises: Promise<TransactionPresetModel | DebtPresetModel>[] = []
+
+        presets.forEach(preset => {
+            promises.push(getActiveDatabaseHelper().addDBItem(`${accountRoute}/${DatabaseRoutes.PRESETS}`, preset));
+        });
+
+        Promise.all(promises).then(() => {
+            resolve()
+        })
+    })
+}
+
+export const deleteUserFromPublicAccounts = (userUid: string, accountUid: string, done: () => void) => {
+    getActiveDatabaseHelper().deleteDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_USERS}/${accountUid}/${userUid}`).then(() => {
+        done()
+
+        getActiveDatabaseHelper().getDBObjects(`${DatabaseRoutes.PUBLIC_ACCOUNT_USERS}/${accountUid}`).then((users) => {
+            if (users.length === 0) {
+                getActiveDatabaseHelper().deleteDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNTS}/${accountUid}`)
+                getActiveDatabaseHelper().deleteDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_INVITES}/${accountUid}`)
+                getActiveDatabaseHelper().deleteDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_LINK_INVITES}/${accountUid}`)
+            }
+        })
+    })
 }

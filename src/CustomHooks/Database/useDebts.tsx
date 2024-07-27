@@ -1,11 +1,11 @@
 import {useEffect, useState} from "react";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
-import {useDatabaseRoute} from "./useDatabaseRoute";
+import {useAccountRoute} from "./useAccountRoute";
 import {DebtModel} from "../../Data/DatabaseModels/DebtModel";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 export const useDebts = () => {
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const [debts, setDebts] = useState<DebtModel[] | null>(null);
 
     useEffect(() => {

@@ -28,8 +28,9 @@ function OptionDialog <T>({
     return (
         <DialogOverlay actions={[]}>
             <div className="option-dialog">
-                { options.map((option) => (
+                { options.map((option, index) => (
                     <div
+                        key={index}
                         className="option-dialog-item"
                         onClick={() => setOption(option)}
                     >

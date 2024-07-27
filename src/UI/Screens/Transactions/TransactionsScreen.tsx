@@ -1,10 +1,9 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {TransactionGroupModel} from "../../../Data/DataModels/TransactionGroupModel";
 import TransactionGroup from "./TransactionGroup/TransactionGroup";
 import {SortType} from "../../../Data/EnumTypes/SortType";
 import {FilterModel} from "../../../Data/DataModels/FilterModel";
-import {calculateNFutureTransactions, groupTransactions} from "../../../Helper/TransactionHelper";
 import LoadMoreButton from "./LoadMoreButton/LoadMoreButton";
 import {getTransactionAmount} from "../../../Helper/CurrencyHelper";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
@@ -14,14 +13,16 @@ import {useCurrentAccount} from "../../../Providers/AccountProvider";
 import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import Spinner from "../../Components/Spinner/Spinner";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
-import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../CustomHooks/Database/useAccountRoute";
 import {useHistoryTransactions} from "../../../CustomHooks/Database/useHistoryTransactions";
 import {useDebts} from "../../../CustomHooks/Database/useDebts";
-import {MdSearch} from "react-icons/md";
-import {ContentSearchAction} from "../../../Data/ContentAction/ContentSearchAction";
 import SelectionInput from "../../Components/SelectionInput/SelectionInput";
 import {InputOptionModel} from "../../../Data/DataModels/Input/InputOptionModel";
 import {useScreenScaleStep} from "../../../CustomHooks/useScreenScaleStep";
+import {useWebWorker} from "../../../CustomHooks/useWebWorker";
+import {CalculateNFutureTransactionsWorkerData} from "../../../Workers/CalculateNFutureTransactionsWorker";
+import {SortFilterGroupWorkerData} from "../../../Workers/SortFilterGroupWorker";
+import transaction from "./Transaction/Transaction";
 
 const TransactionsScreen = ({
     sortValue,
@@ -32,7 +33,7 @@ const TransactionsScreen = ({
 }) => {
     const settings = useSettings()
     const translate = useTranslation()
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const { currentAccount } = useCurrentAccount();
     const screenScaleStep = useScreenScaleStep()
 
@@ -43,18 +44,31 @@ const TransactionsScreen = ({
     const debtTransactions = useDebts()
     const transactionPartners = useTransactionPartners()
 
-    const [searchValue, setSearchValue] = React.useState<string>("")
-
     const [futureTransactions, setFutureTransactions] = React.useState<TransactionModel[]>([]);
     const [futureTransactionsAmount, setFutureTransactionsAmount] = React.useState<number>(30);
     const [transactions, setTransactions] = React.useState<TransactionModel[] | null>(null);
     const [transactionGroups, setTransactionGroups] = React.useState<TransactionGroupModel[] | null>(null)
+
+    const [isLoadingMore, setIsLoadingMore] = React.useState<boolean>(false)
 
     const tabOptions= [
         new InputOptionModel(translate("past"), 0),
         new InputOptionModel(translate("presets"), 1),
         new InputOptionModel(translate("upcoming"), 2)
     ]
+
+    const runLoadMore = useWebWorker<CalculateNFutureTransactionsWorkerData, TransactionModel[]>(() => new Worker(
+        new URL(
+            "../../../Workers/CalculateNFutureTransactionsWorker.ts",
+            import.meta.url
+        )
+    ), [])
+    const runSortFilterGroup = useWebWorker<SortFilterGroupWorkerData, TransactionGroupModel[]>(() => new Worker(
+        new URL(
+            "../../../Workers/SortFilterGroupWorker.ts",
+            import.meta.url
+        )
+    ), [transactions, sortValue, filterValue])
 
     useEffect(() => {
         switch (currentTab) {
@@ -73,125 +87,34 @@ const TransactionsScreen = ({
     useEffect(() => {
         if (!presetTransactions || !getDatabaseRoute) return
 
-        const nextFutureTransactions = calculateNFutureTransactions(getDatabaseRoute, presetTransactions, futureTransactionsAmount);
-        setFutureTransactions(nextFutureTransactions)
-    }, [getDatabaseRoute, presetTransactions, futureTransactionsAmount]);
+        setIsLoadingMore(true)
+
+        runLoadMore({
+            getDatabaseRoute: getDatabaseRoute,
+            transactions: presetTransactions,
+            amount: futureTransactionsAmount
+        }).then((futureTransactions) => {
+            setIsLoadingMore(false)
+            setFutureTransactions(futureTransactions)
+        })
+    }, [runLoadMore, getDatabaseRoute, presetTransactions, futureTransactionsAmount]);
 
     useEffect(() => {
-        if (!currentAccount) return
-
-        let filteredTransactions = []
-
-        if (transactions === null) {
+        if (!currentAccount || !transactions) {
             setTransactionGroups(null)
             return
         }
 
-        //Search
-        filteredTransactions = transactions.filter((transaction) => transaction.name.toLowerCase().includes(searchValue.toLowerCase()))
-
-        //Sort
-        const sortTransactions = (transactions: TransactionModel[]) => {
-            switch (sortValue) {
-                case SortType.NEWEST_FIRST:
-                    transactions.sort((a, b) => {
-                        return new Date(a.date) > new Date(b.date) ? 1 : -1;
-                    })
-                    break;
-                case SortType.PRICE_HIGH_TO_LOW:
-                    transactions.sort((a, b) => {
-                        return (getTransactionAmount(a, currentAccount?.currencyCode) || 0) < (getTransactionAmount(b, currentAccount?.currencyCode) || 0) ? 1 : -1;
-                    })
-                    break;
-                case SortType.PRICE_LOW_TO_HIGH:
-                    transactions.sort((a, b) => {
-                        return (getTransactionAmount(a, currentAccount?.currencyCode) || 0) > (getTransactionAmount(b, currentAccount?.currencyCode) || 0) ? 1 : -1;
-                    })
-                    break;
-            }
-        }
-
-        //Filter
-        filteredTransactions = filteredTransactions.filter((transaction) => {
-            if (filterValue.searchName) {
-                if (!transaction.name.toLowerCase().includes(filterValue.searchName.toLowerCase())) {
-                    return false
-                }
-            }
-            if (filterValue.transactionPartners && filterValue.transactionPartners.length > 0) {
-                if (!filterValue.transactionPartners.includes(transaction.transactionExecutorUid!)) {
-                    return false
-                }
-            }
-            if (filterValue.categories && filterValue.categories.length > 0) {
-                if (!filterValue.categories.includes(transaction.categoryUid!)) {
-                    return false
-                }
-            }
-            if (filterValue.labels && filterValue.labels.length > 0) {
-                if (!filterValue.labels.some((label) => transaction.labels?.includes(label))) {
-                    return false
-                }
-            }
-            if (filterValue.dateRange) {
-                if (new Date(transaction.date) < new Date(filterValue.dateRange.startDate) || new Date(transaction.date) > new Date(filterValue.dateRange.endDate)) {
-                    return false
-                }
-            }
-            if (filterValue.priceRange) {
-                if ((getTransactionAmount(transaction, filterValue.priceRange.currency) || 0) < filterValue.priceRange.minPrice || (getTransactionAmount(transaction, filterValue.priceRange.currency) || 0) > filterValue.priceRange.maxPrice) {
-                    return false
-                }
-            }
-            if (filterValue.transactionType !== null) {
-                if (transaction.transactionType !== filterValue.transactionType) {
-                    return false
-                }
-            }
-
-            return true
+        runSortFilterGroup({
+            translate: translate,
+            currentAccount: currentAccount,
+            transactions: transactions || [],
+            sortValue: sortValue,
+            filterValue: filterValue
+        }).then((transactionGroups) => {
+            setTransactionGroups(transactionGroups)
         })
-
-        // Group
-        if (filteredTransactions.length <= 0) {
-            setTransactionGroups([])
-            return
-        }
-
-        sortTransactions(filteredTransactions)
-
-        const groups: TransactionGroupModel[] = [];
-
-        const pausedTransactions = filteredTransactions.filter(transaction => transaction.repetition.isPaused)
-        pausedTransactions.length > 0 && groups.push(
-            new TransactionGroupModel(
-                translate("paused"),
-                pausedTransactions
-            )
-        )
-
-        const pendingTransactions = filteredTransactions.filter(transaction => transaction.repetition.isPending)
-        pendingTransactions.length > 0 && groups.push(
-            new TransactionGroupModel(
-                translate("pending"),
-                pendingTransactions
-            )
-        )
-
-        setTransactionGroups([...groups, ...groupTransactions(
-            [
-                ...filteredTransactions.filter(transaction => {
-                    return !transaction.repetition.isPending && !transaction.repetition.isPaused
-                })
-            ],
-            (date, transactions) => {
-                return new TransactionGroupModel(date, transactions as TransactionModel[])
-            },
-            (transactions) => {
-                sortTransactions(transactions as TransactionModel[])
-            }
-        ) as TransactionGroupModel[]]);
-    }, [transactions, currentAccount, searchValue, sortValue, filterValue]);
+    }, [transactions, currentAccount, sortValue, filterValue]);
 
     return (
         <div className="list-screen">
@@ -226,7 +149,7 @@ const TransactionsScreen = ({
                             setFutureTransactionsAmount((oldValue) => {
                                 return oldValue + 30
                             })
-                        }}/>}
+                        }} isLoading={isLoadingMore}/>}
                     </> : <span className="no-items">{translate("no-transactions-found")}</span>
                 ) : <Spinner type={SpinnerType.CYCLE}/>}
             </div>

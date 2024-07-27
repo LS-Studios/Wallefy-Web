@@ -3,8 +3,10 @@ import {AccountContext} from "./Contexts";
 import {DatabaseRoutes} from "../Helper/DatabaseRoutes";
 import {AccountModel} from "../Data/DatabaseModels/AccountModel";
 import {useSettings} from "./SettingsProvider";
-import {useDatabaseRoute} from "../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../CustomHooks/Database/useAccountRoute";
 import {getActiveDatabaseHelper} from "../Helper/Database/ActiveDBHelper";
+import {AccountVisibilityType} from "../Data/EnumTypes/AccountVisibilityType";
+import {useAccountsRoute} from "../CustomHooks/Database/useAccountsRoute";
 
 export interface AccountProviderProps {
     currentAccount: AccountModel | null,
@@ -13,7 +15,7 @@ export interface AccountProviderProps {
 
 export const AccountProvider = ({ children }: PropsWithChildren) => {
     const settings = useSettings()
-    const getDatabaseRoute = useDatabaseRoute(false)
+    const getDatabaseRoute = useAccountsRoute()
     const [currentAccount, setCurrentAccount] = useState<AccountModel | null>(null);
 
     useEffect(() => {
@@ -24,18 +26,25 @@ export const AccountProvider = ({ children }: PropsWithChildren) => {
             return;
         }
 
-        getActiveDatabaseHelper().getDBItemOnChange(getDatabaseRoute(DatabaseRoutes.ACCOUNTS), settings.currentAccountUid, (account) => {
-            setCurrentAccount(account as AccountModel)
+        getActiveDatabaseHelper().getDBItemOnChange(getDatabaseRoute(), settings.currentAccountUid, (account) => {
+            setCurrentAccount(account as AccountModel | null)
         })
     }, [settings, getDatabaseRoute])
 
     const updateAccountBalance = (newBalance: number) => {
         if (!getDatabaseRoute || !currentAccount) return
 
-        getActiveDatabaseHelper().setDBObject(
-            getDatabaseRoute(DatabaseRoutes.ACCOUNTS) + "/" + currentAccount.uid + "/balance",
-            newBalance
-        )
+        if (currentAccount.visibility === AccountVisibilityType.PRIVATE) {
+            getActiveDatabaseHelper().setDBObject(
+                getDatabaseRoute() + "/" + currentAccount.uid + "/balance",
+                newBalance
+            )
+        } else {
+            getActiveDatabaseHelper().setDBObject(
+                DatabaseRoutes.PUBLIC_ACCOUNTS + "/" + currentAccount.uid + "/balance",
+                newBalance
+            )
+        }
     }
 
     const value: AccountProviderProps = useMemo(() => ({

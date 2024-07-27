@@ -1,4 +1,4 @@
 export interface DBItem {
     uid: string;
-    name: string;
+    name: string | null;
 }

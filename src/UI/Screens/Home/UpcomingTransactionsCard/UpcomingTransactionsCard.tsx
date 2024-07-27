@@ -1,38 +1,54 @@
-import React, {useEffect} from 'react';
-import {MdBalance, MdPunchClock, MdSchedule} from "react-icons/md";
+import React, {useEffect, useMemo} from 'react';
+import {MdSchedule} from "react-icons/md";
 import Divider from "../../../Components/Divider/Divider";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useTransactions} from "../../../../CustomHooks/Database/useTransactions";
-import useTransactionInDateRange from "../../../../CustomHooks/Database/useTransactionInDateRange";
-import {DateRangeModel} from "../../../../Data/DataModels/DateRangeModel";
-import {formatDateToStandardString} from "../../../../Helper/DateHelper";
-import Transaction from "../../Transactions/Transaction/Transaction";
 import {useTransactionPartners} from "../../../../CustomHooks/Database/useTransactionPartners";
-import {calculateNFutureTransactions, groupTransactions} from "../../../../Helper/TransactionHelper";
+import {groupTransactions} from "../../../../Helper/TransactionHelper";
 import {TransactionGroupModel} from "../../../../Data/DataModels/TransactionGroupModel";
 import {TransactionModel} from "../../../../Data/DatabaseModels/TransactionModel";
 import TransactionGroup from "../../Transactions/TransactionGroup/TransactionGroup";
-import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../../CustomHooks/Database/useAccountRoute";
 import "./UpcomingTransactionsCard.scss";
+import {useWebWorker} from "../../../../CustomHooks/useWebWorker";
+import {CalculateNFutureTransactionsWorkerData} from "../../../../Workers/CalculateNFutureTransactionsWorker";
+import Spinner from "../../../Components/Spinner/Spinner";
+import {SpinnerType} from "../../../../Data/EnumTypes/SpinnerType";
 
 const UpcomingTransactionsCard = () => {
     const translate = useTranslation();
-    const getDatabaseRoute = useDatabaseRoute();
+    const getDatabaseRoute = useAccountRoute();
 
     const transactions = useTransactions();
-    const [next5Transactions, setNext5Transactions] = React.useState<TransactionModel[]>([]);
+    const [next5Transactions, setNext5Transactions] = React.useState<TransactionModel[] | null>(null);
     const transactionPartners = useTransactionPartners()
 
-    const [transactionGroups, setTransactionGroups] = React.useState<any[]>([])
+    const [transactionGroups, setTransactionGroups] = React.useState<TransactionGroupModel[] | null>(null)
+
+    const runTask = useWebWorker<CalculateNFutureTransactionsWorkerData, TransactionModel[]>(() => new Worker(
+        new URL(
+            "../../../../Workers/CalculateNFutureTransactionsWorker.ts",
+            import.meta.url
+        )
+    ), [])
 
     useEffect(() => {
         if (!getDatabaseRoute || !transactions) return
 
-        setNext5Transactions(calculateNFutureTransactions(getDatabaseRoute, transactions, 5))
-    }, [getDatabaseRoute, transactions]);
+        runTask({
+            getDatabaseRoute: getDatabaseRoute,
+            transactions: transactions,
+            amount: 5
+        }).then((futureTransactions) => {
+            setNext5Transactions(futureTransactions)
+        })
+    }, [runTask, getDatabaseRoute, transactions]);
 
     useEffect(() => {
-        if (!next5Transactions || next5Transactions.length === 0) {
+        if (!next5Transactions) {
+            setTransactionGroups(null)
+            return
+        } else if (next5Transactions.length === 0) {
             setTransactionGroups([])
             return
         }
@@ -59,13 +75,17 @@ const UpcomingTransactionsCard = () => {
             </div>
             <Divider useOutlineColor={true} />
             <div className="upcoming-transactions-card-content">
-                { transactionGroups.map((transactionGroup: TransactionGroupModel, index) => {
-                    return <TransactionGroup
-                        key={index}
-                        transactionGroup={transactionGroup}
-                        transactionPartners={transactionPartners}
-                    />
-                })}
+                { transactionGroups ?
+                    transactionGroups.length > 0 ?
+                        transactionGroups.map((transactionGroup: TransactionGroupModel, index) => {
+                            return <TransactionGroup
+                                key={index}
+                                transactionGroup={transactionGroup}
+                                transactionPartners={transactionPartners}
+                            />
+                        }) : <span className="no-items">{translate("no-upcoming-transactions")}</span>
+                    : <Spinner type={SpinnerType.DOTS} center={true} />
+                }
             </div>
         </div>
     );

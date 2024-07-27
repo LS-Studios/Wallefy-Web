@@ -1,6 +1,7 @@
 import {useEffect} from "react";
 import {SpinnerType} from "../../../Data/EnumTypes/SpinnerType";
 import './Spinner.scss';
+import divider from "../Divider/Divider";
 
 const Spinner = ({
      type,
@@ -14,9 +15,14 @@ const Spinner = ({
     function getSpinnerByType() {
         switch (type) {
             case SpinnerType.CYCLE:
-                return (
-                    <div className="cycle-spinner" style={style}></div>
-                )
+                return <div style={{
+                    ...style,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                    <div className="cycle-spinner"></div>
+                </div>
             case SpinnerType.DOTS:
                 return (
                     <div className="dot-spinner" style={style}>

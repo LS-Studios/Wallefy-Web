@@ -19,7 +19,7 @@ import useEffectNotInitial from "../../../../CustomHooks/useEffectNotInitial";
 import {getDisabledWeekDays, RepetitionHelper} from "../../../../Helper/RepetitionHelper";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useSettings} from "../../../../Providers/SettingsProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../../CustomHooks/Database/useAccountRoute";
 import RepetitionRateInput from "./RepetitionRateInput";
 
 ;
@@ -31,7 +31,7 @@ const RepetitionTab = ({
     workTransaction: TransactionModel,
     updateTransaction: (updater: (oldTransaction: TransactionModel) => TransactionModel) => void
 }) => {
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const settings = useSettings()
     const translate = useTranslation()
     const toast = useToast()
@@ -124,7 +124,7 @@ const RepetitionTab = ({
         if (workTransaction.repetition.repetitionRateType === RepetitionRateType.WEEK) {
             updateTransaction((oldTransaction) => {
                 let date = new Date(oldTransaction.date);
-                oldTransaction.date = formatDateToStandardString(adjustDateBasedOnWeekDay(date, workTransaction.repetition.repetitionDaysInWeek[0]));
+                oldTransaction.date = formatDateToStandardString(adjustDateBasedOnWeekDay(date, (workTransaction.repetition.repetitionDaysInWeek || [])[0]));
                 return oldTransaction;
             });
         }
@@ -132,7 +132,7 @@ const RepetitionTab = ({
 
     useEffectNotInitial(() => {
         if (workTransaction.repetition.repetitionRateType === RepetitionRateType.WEEK) {
-            if (workTransaction.repetition.repetitionDaysInWeek.length === 0) {
+            if (workTransaction.repetition.repetitionDaysInWeek?.length === 0) {
                 toast.open(translate("select-at-least-on-day"))
                 updateRepetition((oldRepetition) => {
                     oldRepetition.repetitionDaysInWeek = [DayOfWeekModel.MONDAY];
@@ -142,7 +142,7 @@ const RepetitionTab = ({
 
             updateTransaction((oldTransaction) => {
                 let date = new Date(oldTransaction.date);
-                oldTransaction.date = formatDateToStandardString(adjustDateBasedOnWeekDay(date, workTransaction.repetition.repetitionDaysInWeek[0]));
+                oldTransaction.date = formatDateToStandardString(adjustDateBasedOnWeekDay(date, (workTransaction.repetition.repetitionDaysInWeek || [])[0]));
                 return oldTransaction;
             });
         }

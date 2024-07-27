@@ -120,7 +120,7 @@ const RepetitionRateInput = ({
                 </div>
                 {repetition.repetitionRateType === RepetitionRateType.WEEK &&
                     <RadioInputComponent
-                        value={repetition.repetitionDaysInWeek.map((dayOfWeek) => dayOfWeekOptions.find(option => option.value === dayOfWeek)!)}
+                        value={(repetition.repetitionDaysInWeek || []).map((dayOfWeek) => dayOfWeekOptions.find(option => option.value === dayOfWeek)!)}
                         onValueChange={(value) => {
                             updateRepetition((oldRepetition) => {
                                 oldRepetition.repetitionDaysInWeek = (value as InputOptionModel<DayOfWeekModel>[]).map((option) => option.value);

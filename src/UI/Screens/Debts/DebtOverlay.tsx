@@ -26,7 +26,6 @@ const DebtOverlay = () => {
         new InputOptionModel(translate("price-high-to-low"), SortType.PRICE_HIGH_TO_LOW),
     ];
 
-    const [searchValue, setSearchValue] = useState<string>("")
     const [sortValue, setSortValue] = useState<SortType>(SortType.NEWEST_FIRST);
     const [filterValue, setFilterValue] = useState<FilterModel>(new FilterModel())
 
@@ -51,12 +50,6 @@ const DebtOverlay = () => {
             title={translate("transactions")}
             titleIcon={<MdOutlineMonetizationOn />}
             actions={[
-                new ContentSearchAction(
-                    translate("search-for-transactions"),
-                    (searchText) => {
-                        setSearchValue(searchText);
-                    }
-                ),
                 new ContentAction(
                     translate("sort") + ": " + sortTypeOptions.find((option) => option.value === sortValue)!.name,
                     () => {
@@ -94,7 +87,7 @@ const DebtOverlay = () => {
                     <MdTune />,
                 )
             ]}>
-            <DebtScreen searchValue={searchValue} sortValue={sortValue} filterValue={filterValue}/>
+            <DebtScreen sortValue={sortValue} filterValue={filterValue}/>
         </ContentOverlay>
     );
 };

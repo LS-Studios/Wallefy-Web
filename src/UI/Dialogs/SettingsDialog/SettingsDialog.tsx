@@ -20,7 +20,7 @@ import ExportDialog from "../ExportDialog";
 import ImportDialog from "../ImportDialog";
 import DeleteDialog from "../DeleteDialog";
 import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
-import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import {deleteUserFromPublicAccounts, getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 import {DatabaseType} from "../../../Data/EnumTypes/DatabaseType";
 
 const SettingsDialog = () => {
@@ -53,6 +53,8 @@ const SettingsDialog = () => {
     const accounts = useAccounts()
     const [accountsForSelection, setAccountsForSelection] = useState<InputNameValueModel<AccountModel>[] | null>(null)
 
+    const [isLoadingDelete, setIsLoadingDelete] = useState<boolean>(false)
+
     useEffect(() => {
         if (accounts) {
             setAccountsForSelection(accounts.map(account => new InputNameValueModel(account.name, account)))
@@ -78,6 +80,7 @@ const SettingsDialog = () => {
         const newSettings = new SettingsModel(
             settings.currentUserUid,
             selectedAccount?.value!.uid,
+            selectedAccount?.value!.visibility,
             selectedTheme.value,
             selectedLanguage.value
         )
@@ -85,9 +88,7 @@ const SettingsDialog = () => {
         getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(
             DatabaseRoutes.SETTINGS,
             newSettings
-        ).then((s) => {
-
-        })
+        )
     }, [selectedTheme, selectedLanguage, selectedAccount])
 
     return (
@@ -162,10 +163,16 @@ const SettingsDialog = () => {
                 text={translate("delete-user-account")}
                 onClick={() => {
                     if (!settings) return;
-                    getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, new SettingsModel())
-                    getActiveDatabaseHelper().deleteDBItemByUid(DatabaseRoutes.USERS, settings.currentUserUid)
-                    dialog.closeCurrent()
+                    getActiveDatabaseHelper().deleteDBItemByUid(DatabaseRoutes.USER_DATA, settings.currentUserUid)
+                    getActiveDatabaseHelper().deleteDBItemByUid(DatabaseRoutes.USER_ACCOUNTS, settings.currentUserUid)
+                    setIsLoadingDelete(true)
+                    deleteUserFromPublicAccounts(settings.currentUserUid, settings.currentAccountUid, () => {
+                        setIsLoadingDelete(false)
+                        dialog.closeCurrent()
+                        getActiveDatabaseHelper().dbLogout()
+                    })
                 }}
+                isLoading={isLoadingDelete}
             />
 
         </DialogOverlay>

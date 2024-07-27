@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {MdAdd, MdOutlineAccountCircle, MdOutlineMonetizationOn, MdSort, MdTune} from "react-icons/md";
+import React, {useEffect, useState} from 'react';
+import {MdAdd, MdInbox, MdOutlineAccountCircle, MdOutlineMonetizationOn, MdSort, MdTune} from "react-icons/md";
 import {ContentSearchAction} from "../../../Data/ContentAction/ContentSearchAction";
 import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import AccountsScreen from "./AccountsScreen";
@@ -10,18 +10,54 @@ import CreateAccountDialog from "../../Dialogs/CreateAccountDialog/CreateAccount
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import FilterTransactionsDialog from "../../Dialogs/FilterTransactionsDialog/FilterTransactionsDialog";
 import {FilterModel} from "../../../Data/DataModels/FilterModel";
+import InvasionDialog from "../../Dialogs/InvitationDialog/InvasionDialog";
+import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
+import {InviteModel} from "../../../Data/DataModels/InviteModel";
+import {useCurrentUser} from "../../../CustomHooks/Database/useCurrentUser";
 
 const AccountsOverlay = () => {
     const translate = useTranslation()
     const dialog = useDialog()
+    const currentUser = useCurrentUser()
 
     const [filterValue, setFilterValue] = useState<FilterModel>(new FilterModel())
+
+    const [invitesForUser, setInvitesForUser] = useState<InviteModel[] | null>(null)
+
+    useEffect(() => {
+        if (!currentUser) return
+
+        getActiveDatabaseHelper().getDBObjectsOnChange(DatabaseRoutes.PUBLIC_ACCOUNT_INVITES, (invites) => {
+            if (!invites.length) return setInvitesForUser([])
+
+            setInvitesForUser(
+                (Object.values(Object.values(invites)[0] as {}) as []).filter((invite: InviteModel) => {
+                    return invite.email === currentUser.email
+                })
+            )
+        })
+    }, [currentUser])
 
     return (
         <ContentOverlay
             title={translate("accounts")}
             titleIcon={<MdOutlineAccountCircle />}
             actions={[
+                new ContentAction(
+                    `${translate("invites")}${invitesForUser && invitesForUser.length > 0 ? ` (${invitesForUser.length})` : ""}`,
+                    () => {
+                        dialog.open(
+                            new DialogModel(
+                                translate("invites"),
+                                <InvasionDialog />
+                            )
+                        )
+                    },
+                    false,
+                    false,
+                    <MdInbox />,
+                ),
                 new ContentAction(
                     translate("filter"),
                     () => {

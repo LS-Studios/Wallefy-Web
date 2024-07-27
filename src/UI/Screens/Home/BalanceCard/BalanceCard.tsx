@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import Divider from "../../../Components/Divider/Divider";
 import {MdBalance} from "react-icons/md";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
@@ -14,6 +14,12 @@ import {useCurrentAccount} from "../../../../Providers/AccountProvider";
 import {useSettings} from "../../../../Providers/SettingsProvider";
 import {calculateBalances, roundToNearest} from "../../../../Helper/CalculationHelper";
 import {getTransactionAmount} from "../../../../Helper/CurrencyHelper";
+import Spinner from "../../../Components/Spinner/Spinner";
+import {SpinnerType} from "../../../../Data/EnumTypes/SpinnerType";
+import {useWebWorker} from "../../../../CustomHooks/useWebWorker";
+import {SortFilterGroupWorkerData} from "../../../../Workers/SortFilterGroupWorker";
+import {DebtGroupModel} from "../../../../Data/DataModels/DebtGroupModel";
+import {CalculateBalancesWorkerData} from "../../../../Workers/CalculateBalancesWorker";
 
 const BalanceCard = () => {
     const translate = useTranslation()
@@ -26,10 +32,26 @@ const BalanceCard = () => {
 
     const [balances, setBalances] = React.useState<BalanceModel[] | null>(null);
 
-    useEffect(() => {
-        if (!debts || !payedDebts || !currentAccount) return
+    const runCalculateBalances = useWebWorker<CalculateBalancesWorkerData, BalanceModel[]>(() => new Worker(
+        new URL(
+            "../../../../Workers/CalculateBalancesWorker.ts",
+            import.meta.url
+        )
+    ), [])
 
-        setBalances(calculateBalances(debts, payedDebts, currentAccount.currencyCode))
+    useEffect(() => {
+        if (!debts || !payedDebts || !currentAccount) {
+            setBalances(null)
+            return
+        }
+
+        runCalculateBalances({
+            debts,
+            payedDebts,
+            baseCurrency: currentAccount.currencyCode
+        }).then((balances) => {
+            setBalances(balances)
+        })
     }, [debts, payedDebts, currentAccount]);
 
     return (
@@ -41,14 +63,17 @@ const BalanceCard = () => {
             <Divider useOutlineColor={true} />
             <div className="balance-card-content">
                 {
-                    balances?.map((balance) => {
-                        return <BalanceCardRow
-                            highesBalance={balances.reduce((acc, balance) => Math.max(acc, Math.abs(balance.balance)), 0)}
-                            balance={balance}
-                            transactionPartners={transactionPartners}
-                            settings={settings}
-                            currentAccount={currentAccount} />
-                    })
+                    balances ?
+                        balances.length > 0 ?
+                            balances.map((balance) => {
+                                return <BalanceCardRow
+                                    highesBalance={balances.reduce((acc, balance) => Math.max(acc, Math.abs(balance.balance)), 0)}
+                                    balance={balance}
+                                    transactionPartners={transactionPartners}
+                                    settings={settings}
+                                    currentAccount={currentAccount} />
+                            }) : <span className="no-items">{translate("no-balances")}</span>
+                        : <Spinner type={SpinnerType.CYCLE} />
                 }
             </div>
         </div>

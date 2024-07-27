@@ -43,7 +43,7 @@ const Menu = ({
         setCurrentRoute(location.pathname)
     }, [location]);
 
-    const getMenuItemComponent = (route: string | (() => void), Icon: IconType, name: string) => {
+    const getMenuItemComponent = (id: string, route: string | (() => void), Icon: IconType, name: string) => {
         let onClick = () => {}
 
         if (typeof route === 'string') {
@@ -52,7 +52,7 @@ const Menu = ({
             onClick = route
         }
 
-        return <li onClick={onClick} id={currentRoute === route ? "selected" : ""}><Icon className="menu-nav-icon"/>{name}</li>
+        return <li id={id} onClick={onClick} className={currentRoute === route ? "selected" : ""}><Icon className="menu-nav-icon"/>{name}</li>
     }
 
     return (
@@ -72,20 +72,20 @@ const Menu = ({
             <Divider />
             <nav className="menu-navigation main">
                 <ul>
-                    {getMenuItemComponent(RoutePath.HOME, MdHome, translate("home"))}
-                    {getMenuItemComponent(RoutePath.CREATE_TRANSACTION, MdAddCircleOutline, translate("create-transaction"))}
-                    {currentAccount?.type === AccountType.DEFAULT && getMenuItemComponent(RoutePath.TRANSACTION_OVERVIEW, MdOutlineBarChart, translate("transaction-overview"))}
-                    {currentAccount?.type === AccountType.DEBTS && getMenuItemComponent(RoutePath.EVALUATION, MdOutlineBarChart, translate("evaluation"))}
-                    {getMenuItemComponent(RoutePath.TRANSACTIONS, MdOutlineMonetizationOn, translate("transactions"))}
-                    {getMenuItemComponent(RoutePath.STORAGE, MdInventory, translate("storage"))}
-                    {getMenuItemComponent(RoutePath.ACCOUNTS, MdOutlineAccountCircle, translate("accounts"))}
+                    {getMenuItemComponent("menu-home", RoutePath.HOME, MdHome, translate("home"))}
+                    {getMenuItemComponent("menu-create-transactions", RoutePath.CREATE_TRANSACTION, MdAddCircleOutline, translate("create-transaction"))}
+                    {currentAccount?.type === AccountType.DEFAULT && getMenuItemComponent("menu-overview", RoutePath.TRANSACTION_OVERVIEW, MdOutlineBarChart, translate("transaction-overview"))}
+                    {currentAccount?.type === AccountType.DEBTS && getMenuItemComponent("menu-evaluation", RoutePath.EVALUATION, MdOutlineBarChart, translate("evaluation"))}
+                    {getMenuItemComponent("menu-transactions", RoutePath.TRANSACTIONS, MdOutlineMonetizationOn, translate("transactions"))}
+                    {getMenuItemComponent("menu-storage", RoutePath.STORAGE, MdInventory, translate("storage"))}
+                    {getMenuItemComponent("menu-accounts", RoutePath.ACCOUNTS, MdOutlineAccountCircle, translate("accounts"))}
                 </ul>
             </nav>
             <div className="menu-bottom">
                 <Divider />
                 <nav className="menu-navigation">
                     <ul>
-                        {getMenuItemComponent(() => {
+                        {getMenuItemComponent("menu-settings", () => {
                             dialog.open(
                                 new DialogModel(
                                     translate("settings"),
@@ -93,7 +93,7 @@ const Menu = ({
                                 )
                             )
                         }, MdSettings, translate("settings"))}
-                        {getMenuItemComponent(() => {
+                        {getMenuItemComponent("menu-help", () => {
 
                         }, MdHelpOutline, translate("help"))}
                     </ul>

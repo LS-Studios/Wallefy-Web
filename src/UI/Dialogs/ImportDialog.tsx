@@ -12,14 +12,14 @@ import {useToast} from "../../Providers/Toast/ToastProvider";
 import {useDialog} from "../../Providers/DialogProvider";
 import {ExportDataModel} from "../../Data/DataModels/ExportDataModel";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
-import {useDatabaseRoute} from "../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../CustomHooks/Database/useAccountRoute";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 const ImportDialog = () => {
     const dialog = useDialog();
     const toast = useToast();
     const translate = useTranslation();
-    const getDatabaseRoute = useDatabaseRoute();
+    const getDatabaseRoute = useAccountRoute();
 
     const [selectedFile, setSelectedFile] = React.useState<FileContent<ConfigType> | null>(null);
 

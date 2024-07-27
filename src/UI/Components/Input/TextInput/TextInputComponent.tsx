@@ -1,6 +1,7 @@
 import React, {CSSProperties, useEffect, useState} from 'react';
 import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './TextInputComponent.scss';
+import {Md10K, MdPassword, MdShare, MdVisibility} from "react-icons/md";
 
 const TextInputComponent = ({
     title,
@@ -10,6 +11,8 @@ const TextInputComponent = ({
     onFocus,
     onBlur,
     type = "text",
+    Icon,
+    onIconClick,
     style,
 }: {
     title?: string,
@@ -19,6 +22,8 @@ const TextInputComponent = ({
     onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void,
     onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void,
     type?: string,
+    Icon?: any,
+    onIconClick?: () => void,
     style?: CSSProperties,
 }) => {
     const inputRef = React.createRef<HTMLInputElement>();
@@ -136,6 +141,8 @@ const TextInputComponent = ({
         }}
         onClick={() => changeFocus(true)}
         labelClassName={inputIsExpanded || placeholder ? "input-is-expanded" : ""}
+        Icon={Icon}
+        onIconClick={onIconClick}
     >
         { inputComponent }
     </InputBaseComponent> : inputComponent

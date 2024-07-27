@@ -30,7 +30,7 @@ const EvaluationScreen = () => {
     const categories = useCategories()
     const labels = useLabels()
 
-    const [totalPayments, setTotalPayments] = useState<number>(0)
+    const [totalPayments, setTotalPayments] = useState<number | null>(null)
 
     const [participantData, setParticipantData] = React.useState<ChartDataModel[]>([]);
     const [selectedParticipantData, setSelectedParticipantData] = React.useState<ChartDataModel | null>(null);
@@ -100,7 +100,7 @@ const EvaluationScreen = () => {
                 result.push(
                     new ChartDataModel(
                         item.uid,
-                        item.name,
+                        item.name || "",
                         foundItems.reduce((a, b) => a + getTransactionAmount(b, currentAccount?.currencyCode, true), 0)!,
                     )
                 )
@@ -119,7 +119,7 @@ const EvaluationScreen = () => {
     useEffect(() => {
         if (!debts || !labels) return
         setPieChartData(setLabelData, labels, (label, transaction) => {
-            return transaction.labels?.includes(label.uid)
+            return (transaction.labels || []).includes(label.uid)
         })
     }, [debts, labels]);
 
@@ -132,7 +132,7 @@ const EvaluationScreen = () => {
             <ValueCard
                 icon={<MdPayments/>}
                 title={translate("total-amount-spend")}
-                value={formatCurrency(totalPayments, settings?.language, currentAccount?.currencyCode)}
+                value={totalPayments !== null && formatCurrency(totalPayments, settings?.language, currentAccount?.currencyCode)}
             />
             <BarChartCard
                 icon={<MdStackedBarChart/>}
@@ -216,7 +216,7 @@ const EvaluationScreen = () => {
                         if (!debts) return
 
                         debts.forEach((debt) => {
-                            if (selectedCategory && debt.labels.includes(selectedCategory.valueUid)) {
+                            if (selectedCategory && (debt.labels || []).includes(selectedCategory.valueUid)) {
                                 detailDebts.push(debt)
                             }
                         })

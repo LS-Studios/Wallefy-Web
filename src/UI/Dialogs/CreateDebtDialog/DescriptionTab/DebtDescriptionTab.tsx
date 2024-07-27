@@ -10,7 +10,7 @@ import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../../CustomHooks/Database/useAccountRoute";
 import {DebtModel} from "../../../../Data/DatabaseModels/DebtModel";
 import {CreateDebtInputErrorModel} from "../../../../Data/ErrorModels/CreateDebtInputErrorModel";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
@@ -40,7 +40,7 @@ const DebtDescriptionTab = ({
     const { currentAccount } = useCurrentAccount();
     const translate = useTranslation()
     const dialog = useDialog()
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
 
     const [categoriesForSelection, setCategoriesForSelection] = React.useState<InputNameValueModel<CategoryModel>[]>([])
     const [labelsForSelection, setLabelsForSelection] = React.useState<InputNameValueModel<LabelModel>[]>([])
@@ -137,7 +137,7 @@ const DebtDescriptionTab = ({
             />
             <AutoCompleteInputComponent
                 title={translate("labels-of-transaction")}
-                value={getInputValueUidsByUids(workDebt.labels, labelsForSelection)}
+                value={getInputValueUidsByUids(workDebt.labels || [], labelsForSelection)}
                 onValueChange={(value) => {
                     updateDebt((oldDebt) => {
                         const newLabels = value as InputNameValueModel<LabelModel>[];

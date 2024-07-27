@@ -1,22 +1,10 @@
 import React, {PropsWithChildren, useEffect, useRef} from 'react';
 import './ContentOverlay.scss';
-import {
-    MdAdd,
-    MdAddCircleOutline, MdBarChart,
-    MdCreate, MdHome,
-    MdIcecream,
-    MdMenu,
-    MdOutlineHome,
-    MdPowerSettingsNew,
-    MdSearch
-} from "react-icons/md";
+import {MdBarChart, MdHome, MdIcecream, MdMenu, MdOutlineHome, MdPowerSettingsNew, MdSearch} from "react-icons/md";
 import {ContentAction} from "../../Data/ContentAction/ContentAction";
 import {ContentActionInterface} from "../../Data/ContentAction/ContentActionInterface";
 import {ContentActionType} from "../../Data/EnumTypes/ContentActionType";
 import {ContentSearchAction} from "../../Data/ContentAction/ContentSearchAction";
-import {AccountModel} from "../../Data/DatabaseModels/AccountModel";
-import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
-import {SettingsModel} from "../../Data/DataModels/SettingsModel";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../Providers/AccountProvider";
@@ -24,6 +12,7 @@ import Menu from "../Menu/Menu";
 import {useScreenScaleStep} from "../../CustomHooks/useScreenScaleStep";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 import {RoutePath} from "../../Data/EnumTypes/RoutePath";
+import {AccountType} from "../../Data/EnumTypes/AccountType";
 
 const ContentOverlay = ({
     title,
@@ -121,9 +110,12 @@ const ContentOverlay = ({
                 {children}
                 { screenScaleStep > 1 && getActionButtons(true) }
                 { screenScaleStep > 1 && <div className="content-overlay-bottom-bar">
-                    <div onClick={() => setMenuIsOpen(true)}><MdMenu />Menü</div>
-                    <div onClick={() => navigate(RoutePath.HOME)}><MdHome />Start</div>
-                    <div onClick={() => navigate(RoutePath.TRANSACTION_OVERVIEW)}><MdBarChart />Übersicht</div>
+                    <div onClick={() => setMenuIsOpen(true)}><MdMenu />{translate("menu")}</div>
+                    <div onClick={() => navigate(RoutePath.HOME)}><MdHome />{translate("home")}</div>
+                    { currentAccount?.type === AccountType.DEFAULT ?
+                        <div onClick={() => navigate(RoutePath.TRANSACTION_OVERVIEW)}><MdBarChart />{translate("overview")}</div> :
+                        <div onClick={() => navigate(RoutePath.EVALUATION)}><MdBarChart />{translate("evaluation")}</div>
+                    }
                 </div> }
             </div>
         </div>

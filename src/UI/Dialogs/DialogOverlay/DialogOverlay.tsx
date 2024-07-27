@@ -16,9 +16,9 @@ const DialogOverlay = ({
             {children}
             { actions.length > 0 && <div className="dialog-overlay-action-buttons">
                     { actions.map((action, index) => {
-                        return action.loading ? <Spinner type={SpinnerType.CYCLE} /> : (
+                        return (
                             <button key={index} onClick={action.action} disabled={action.disabled}>
-                                {action.name}
+                                {action.loading ? <Spinner type={SpinnerType.CYCLE} center={true} style={{width:40, height:20}} /> : action.name}
                             </button>
                         )
                     }) }

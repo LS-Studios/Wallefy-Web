@@ -53,7 +53,7 @@ const StorageScreen = ({
     }, [currentTab, transactionPartners, categories, labels]);
 
     useEffect(() => {
-        setFilteredStorageItems(storageItems?.filter(storageItem => storageItem.item.name.toLowerCase().includes(searchValue.toLowerCase())) || null)
+        setFilteredStorageItems(storageItems?.filter(storageItem => storageItem.item.name?.toLowerCase().includes(searchValue.toLowerCase())) || null)
     }, [storageItems, searchValue]);
 
     return (
@@ -86,12 +86,9 @@ const StorageScreen = ({
     );
 };
 
-//TODO [] Firebase dont creade nodes for null => labels undefined
-//TODO [] Add Firebase
-//TODO [] Public account with sync
-//TODO [] Popup dialog at beginning to explain the app
+//TODO [] Implement Caching
 //TODO [] Popup dialog to put the current balance and recent transactions
-//TODO [] Help screen with Chat
-//TODO [] Chatbot which is able to create transactions and read data
+//TODO [] Help screen with Totrial buttons (How to create public account, ...)
+//TODO [] Implement encription
 
 export default StorageScreen;

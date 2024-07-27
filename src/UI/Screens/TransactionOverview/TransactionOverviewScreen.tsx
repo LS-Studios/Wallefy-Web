@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import BarChartCard from "./TransactionOverviewBalancesCard/BarChartCard";
 import {MdAccountBalance, MdLabel, MdPeople, MdPieChart, MdSavings, MdTrendingDown, MdTrendingUp} from "react-icons/md";
 import './TransactionOverviewScreen.scss';
@@ -23,6 +23,10 @@ import {useSettings} from "../../../Providers/SettingsProvider";
 import {useDialog} from "../../../Providers/DialogProvider";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import PieChartDetailDialog from "../../Dialogs/PieChartDetailDialog/PieChartDetailDialog";
+import {useWebWorker} from "../../../CustomHooks/useWebWorker";
+import {SortFilterGroupWorkerData} from "../../../Workers/SortFilterGroupWorker";
+import {DebtGroupModel} from "../../../Data/DataModels/DebtGroupModel";
+import {CalculateBalancesAtDateInDateRangeWorkerData} from "../../../Workers/CalculateBalancesAtDateInDateRangeWorker";
 
 const TransactionOverviewScreen = ({
     dateRange,
@@ -39,18 +43,25 @@ const TransactionOverviewScreen = ({
     const transactionPartners = useTransactionPartners()
     const labels = useLabels()
 
-    const [balancesData, setBalancesData] = React.useState<ChartDataModel[]>([]);
-    const [categoryData, setCategoryData] = React.useState<ChartDataModel[]>([]);
+    const [balancesData, setBalancesData] = React.useState<ChartDataModel[] | null>(null);
+    const [categoryData, setCategoryData] = React.useState<ChartDataModel[] | null>(null);
     const [categoryTransactionType, setCategoryTransactionType] = React.useState<TransactionType>(TransactionType.EXPENSE);
-    const [transactionPartnerData, setTransactionPartnerData] = React.useState<ChartDataModel[]>([]);
+    const [transactionPartnerData, setTransactionPartnerData] = React.useState<ChartDataModel[] | null>(null);
     const [transactionPartnerTransactionType, setTransactionPartnerTransactionType] = React.useState<TransactionType>(TransactionType.EXPENSE);
-    const [labelData, setLabelData] = React.useState<ChartDataModel[]>([]);
+    const [labelData, setLabelData] = React.useState<ChartDataModel[] | null>(null);
     const [labelTransactionType, setLabelTransactionType] = React.useState<TransactionType>(TransactionType.EXPENSE);
 
     const [selectedBalanceData, setSelectedBalanceData] = React.useState<ChartDataModel | null>(null);
     const [selectedCategory, setSelectedCategory] = React.useState<ChartDataModel | null>(null);
     const [selectedTransactionPartner, setSelectedTransactionPartner] = React.useState<ChartDataModel | null>(null);
     const [selectedLabel, setSelectedLabel] = React.useState<ChartDataModel | null>(null);
+
+    const runBalancesAtDateInDateRange = useWebWorker<CalculateBalancesAtDateInDateRangeWorkerData, BalanceAtDateModel[]>(() => new Worker(
+        new URL(
+            "../../../Workers/CalculateBalancesAtDateInDateRangeWorker.ts",
+            import.meta.url
+        )
+    ), [])
 
     useEffect(() => {
         setSelectedBalanceData(null)
@@ -62,26 +73,28 @@ const TransactionOverviewScreen = ({
     useEffect(() => {
         if (!currentAccount) return
 
-        setBalancesData(
-            calculateBalancesAtDateInDateRange(
-                currentAccount.balance!,
-                transactionsUntilDateRange,
-                dateRange,
-                currentAccount?.currencyCode
-            ).map((balanceAtDate) => {
+        setBalancesData(null)
+
+        runBalancesAtDateInDateRange({
+            currentBalance: currentAccount.balance!,
+            transactionsInRage: transactionsUntilDateRange,
+            dateRange: dateRange,
+            baseCurrency: currentAccount.currencyCode
+        }).then((balances) => {
+            setBalancesData(balances.map((balanceAtDate) => {
                 return new ChartDataModel(
                     "",
                     balanceAtDate.date,
                     balanceAtDate.balance,
                     getBarColorForBalanceAtDate(balanceAtDate)
                 )
-            })
-        )
+            }))
+        })
     }, [transactionsUntilDateRange, currentAccount]);
 
     useEffect(() => {
         setBalancesData((current) => {
-            return current.map((barChartData) => {
+            return current?.map((barChartData) => {
                 return {
                     ...barChartData,
                     color: getBarColorForBalanceAtDate(
@@ -91,7 +104,7 @@ const TransactionOverviewScreen = ({
                         )
                     )
                 }
-            })
+            }) || null
         })
     }, [selectedBalanceData]);
 
@@ -136,7 +149,7 @@ const TransactionOverviewScreen = ({
                 result.push(
                     new ChartDataModel(
                         item.uid,
-                        item.name,
+                        item.name || "",
                         foundItems.reduce((a, b) => a + getTransactionAmount(b, currentAccount?.currencyCode, true), 0)!,
                     )
                 )
@@ -162,7 +175,7 @@ const TransactionOverviewScreen = ({
     useEffect(() => {
         if (!labels) return
         setPieChartData(setLabelData, labels, labelTransactionType, (label, transaction) => {
-            return transaction.labels?.includes(label.uid)
+            return (transaction.labels || []).includes(label.uid)
         })
     }, [transactionsInDateRange, labels, labelTransactionType]);
 
@@ -183,10 +196,10 @@ const TransactionOverviewScreen = ({
                 baseCurrency={currentAccount?.currencyCode}
             />
             <div className="value-card-row">
-                <ValueCard icon={<MdTrendingUp />} title={translate("income-this-month")} value={formatCurrency(totalIncome, settings?.language, currentAccount?.currencyCode)} />
-                <ValueCard icon={<MdTrendingDown />} title={translate("expenses-this-month")} value={formatCurrency(totalExpenses, settings?.language, currentAccount?.currencyCode)} />
-                <ValueCard icon={<MdAccountBalance />} title={translate("balance-this-month")} value={formatCurrency(totalBalance, settings?.language, currentAccount?.currencyCode)} />
-                <ValueCard icon={<MdSavings />} title={translate("savings-this-month")} value={formatCurrency(totalSavings, settings?.language, currentAccount?.currencyCode)} />
+                <ValueCard icon={<MdTrendingUp />} title={translate("income-this-month")} value={totalIncome !== null && settings && currentAccount && formatCurrency(totalIncome, settings?.language, currentAccount?.currencyCode)} />
+                <ValueCard icon={<MdTrendingDown />} title={translate("expenses-this-month")} value={totalExpenses !== null && settings && currentAccount && formatCurrency(totalExpenses, settings?.language, currentAccount?.currencyCode)} />
+                <ValueCard icon={<MdAccountBalance />} title={translate("balance-this-month")} value={totalBalance !== null && settings && currentAccount && formatCurrency(totalBalance, settings?.language, currentAccount?.currencyCode)} />
+                <ValueCard icon={<MdSavings />} title={translate("savings-this-month")} value={totalSavings !== null && settings && currentAccount && formatCurrency(totalSavings, settings?.language, currentAccount?.currencyCode)} />
             </div>
             <div className="transaction-overview-screen-row">
                 <TransactionOverviewPieCard
@@ -260,7 +273,7 @@ const TransactionOverviewScreen = ({
                         const detailTransactions: TransactionModel[] = []
 
                         transactionsInDateRange.forEach((transaction) => {
-                            if (selectedTransactionPartner && transaction.labels.includes(selectedTransactionPartner.valueUid)) {
+                            if (selectedTransactionPartner && (transaction.labels || []).includes(selectedTransactionPartner.valueUid)) {
                                 detailTransactions.push(transaction)
                             }
                         })

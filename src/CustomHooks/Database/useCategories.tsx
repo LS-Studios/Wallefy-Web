@@ -1,11 +1,11 @@
 import {useEffect, useState} from "react";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
 import {CategoryModel} from "../../Data/DatabaseModels/CategoryModel";
-import {useDatabaseRoute} from "./useDatabaseRoute";
+import {useAccountRoute} from "./useAccountRoute";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 export const useCategories = () => {
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
 
     const [categories, setCategories] = useState<CategoryModel[] | null>(null);
 

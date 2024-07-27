@@ -22,8 +22,8 @@ export class TransactionModel implements DBItem {
     transactionExecutorFallback: string | null;
     date: string;
     repetition: RepetitionModel;
-    labels: string[];
-    labelsFallback: { [uid: string]: string};
+    labels: string[] | null;
+    labelsFallback: { [uid: string]: string} | null;
     notes: string;
 
     constructor(baseCurrency: string | null | undefined) {

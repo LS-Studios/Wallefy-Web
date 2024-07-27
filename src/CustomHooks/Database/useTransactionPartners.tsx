@@ -1,11 +1,11 @@
 import {useEffect, useState} from "react";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../Data/DatabaseModels/TransactionPartnerModel";
-import {useDatabaseRoute} from "./useDatabaseRoute";
+import {useAccountRoute} from "./useAccountRoute";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 export const useTransactionPartners = (initial: TransactionPartnerModel[] | null = null) => {
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const [transactionPartners, setTransactionPartners] = useState<TransactionPartnerModel[] | null>(initial);
 
     useEffect(() => {

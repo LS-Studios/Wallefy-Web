@@ -21,11 +21,6 @@ import LoadingDialog from "../../LoadingDialog/LoadingDialog";
 
 const BasicsTab = ({
    inputError,
-   isPreset,
-   presetIcon,
-   setPresetIcon,
-   presetName,
-   setPresetName,
    workTransaction,
    updateTransaction,
    transactionPartners,
@@ -34,11 +29,6 @@ const BasicsTab = ({
    getDbItemContextMenuOptions
 }: {
     inputError: CreateTransactionInputErrorModel,
-    isPreset: boolean,
-    presetIcon: InputNameValueModel<string> | null,
-    setPresetIcon: (value: InputNameValueModel<string> | null) => void,
-    presetName: string,
-    setPresetName: (value: string) => void,
     workTransaction: TransactionModel,
     updateTransaction: (updater: (oldTransaction: TransactionModel) => TransactionModel) => void,
     transactionPartners: TransactionPartnerModel[] | null,
@@ -77,35 +67,6 @@ const BasicsTab = ({
 
     return (
         <>
-            { isPreset && <>
-                <AutoCompleteInputComponent<string>
-                    title="Preset icon"
-                    value={presetIcon}
-                    onValueChange={(value) => {
-                        setPresetIcon(value as InputNameValueModel<string> | null);
-                    }}
-                    suggestionUlStyle={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                        gap: "10px"
-                    }}
-                    suggestionElement={(suggestion) => {
-                        const Icon = getIcon(suggestion.value!) as React.FC
-                        return <div className="create-transaction-preset-icon">
-                            <Icon />
-                            <span>{suggestion.name}</span>
-                        </div>
-                    }}
-                    suggestions={icons}
-                />
-                <TextInputComponent
-                    title={translate("preset-name")}
-                    value={presetName}
-                    onValueChange={(value) => {
-                        setPresetName(value as string);
-                    }}
-                />
-            </> }
             <TextInputComponent
                 title={translate("name-of-transaction")}
                 value={workTransaction.name}

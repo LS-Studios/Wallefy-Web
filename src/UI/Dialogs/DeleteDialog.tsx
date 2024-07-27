@@ -5,14 +5,14 @@ import CheckboxInputComponent from "../Components/Input/CheckboxInput/CheckboxIn
 import {useTranslation} from "../../CustomHooks/useTranslation";
 import {useDialog} from "../../Providers/DialogProvider";
 import {DatabaseRoutes} from "../../Helper/DatabaseRoutes";
-import {useDatabaseRoute} from "../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../CustomHooks/Database/useAccountRoute";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
 
 const DeleteDialog = () => {
     const dialog = useDialog();
     const translate = useTranslation();
 
-    const getDatabaseRoute = useDatabaseRoute();
+    const getDatabaseRoute = useAccountRoute();
 
     const [deletePresets, setDeletePresets] = React.useState(false);
     const [deleteHistory, setDeleteHistory] = React.useState(false);

@@ -22,11 +22,16 @@ function AutoCompleteInputComponent<T>({
     suggestionElement,
     placeholder = "",
     type = "text",
+    readonly = false,
     allowCreatingNew = false,
     selectAtLeastOne = false,
+    customNewItemText,
+    customNewItemAction,
     contextMenuOptions,
     enabled,
     setEnabled,
+    headerIcon,
+    onHeaderIconClick,
     style,
 }: {
     title: string,
@@ -41,11 +46,16 @@ function AutoCompleteInputComponent<T>({
     suggestionElement?: (suggestion: InputNameValueModel<T>) => React.ReactElement
     placeholder?: string,
     type?: string,
+    readonly?: boolean,
     allowCreatingNew?: boolean,
     selectAtLeastOne?: boolean,
+    customNewItemText?: string,
+    customNewItemAction?: (newItem: string) => void,
     contextMenuOptions?: (value: InputNameValueModel<T>) => ContentAction[],
     enabled?: boolean,
     setEnabled?: (enabled: boolean) => void,
+    headerIcon?: IconType,
+    onHeaderIconClick?: (e: React.MouseEvent<SVGElement>) => void,
     style?: CSSProperties,
 }) {
     const translate = useTranslation()
@@ -127,8 +137,11 @@ function AutoCompleteInputComponent<T>({
             return;
         }
 
-
-        if (allowCreatingNew && !suggestion.value) {
+        if ((customNewItemAction || allowCreatingNew) && !suggestion.value) {
+            if (customNewItemAction) {
+                customNewItemAction(userInput);
+                return;
+            }
             if (Array.isArray(value)) {
                 onValueChange([...value, new InputNameValueModel<T>(userInput, null)]);
                 setUserInput("");
@@ -187,11 +200,11 @@ function AutoCompleteInputComponent<T>({
                 suggestion.name.toLowerCase().indexOf(userInput.toLowerCase()) > -1
         ) || [];
 
-        const foundSuggestion = suggestionsToWorkWith?.find(suggestion => suggestion.name === userInput) === undefined
+        const foundSuggestion = suggestionsToWorkWith?.find(suggestion => suggestion.name === userInput)
 
         if (userInput) {
             setActiveSuggestion(0)
-            if (allowCreatingNew && foundSuggestion) filteredSuggestions.push(new InputNameValueModel<T>(translate("add-as-new-option"), null))
+            if ((customNewItemText || allowCreatingNew) && !foundSuggestion) filteredSuggestions.push(new InputNameValueModel<T>(customNewItemText || translate("add-as-new-option"), null))
         } else {
             setActiveSuggestion(null)
         }
@@ -345,6 +358,8 @@ function AutoCompleteInputComponent<T>({
                 }}
                 enabled={enabled}
                 setEnabled={setEnabled}
+                Icon={headerIcon}
+                onIconClick={onHeaderIconClick}
             >
                 <div ref={tagsRef} className={"auto-complete-multi-selection-tags " + (inputIsExpanded ? "input-is-expanded" : "")}>
                     { Array.isArray(value) &&
@@ -367,7 +382,7 @@ function AutoCompleteInputComponent<T>({
                     { Icon && (Array.isArray(value) ? value.length > 0 : value) && <Icon onClick={onIconClick ? (e) => {
                         onIconClick(e)
                     } : undefined} className="icon" /> }
-                    <input
+                    { !readonly && <input
                         className="auto-complete-multi-input-component-input"
                         ref={inputRef}
                         type={type}
@@ -384,7 +399,7 @@ function AutoCompleteInputComponent<T>({
                             }
                         }}
                         //TODO make, that blur closes the suggestions but selecting is still possible
-                    />
+                    /> }
                 </div>
             </InputBaseComponent>
         </DropDialog>

@@ -7,7 +7,7 @@ export class RepetitionModel {
     repetitionAmount: number | null;
     repetitionRateType: RepetitionRateType;
     repetitionRate: number | null;
-    repetitionDaysInWeek: DayOfWeekModel[];
+    repetitionDaysInWeek: DayOfWeekModel[] | null
 
     isPending: boolean;
     isPaused: boolean;

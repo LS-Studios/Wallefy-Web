@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import './CreateTransactionDialog.scss';
 import {MdAttachMoney, MdDescription, MdRepeat} from "react-icons/md";
 import BasicsTab from "./BasicsTab/BasicsTab";
@@ -23,23 +23,20 @@ import {useCurrentAccount} from "../../../Providers/AccountProvider";
 import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import {useCategories} from "../../../CustomHooks/Database/useCategories";
 import {useLabels} from "../../../CustomHooks/Database/useLabels";
-import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../CustomHooks/Database/useAccountRoute";
 import {useNewItems} from "../../../CustomHooks/useNewItems";
 import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
 import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import storageItem from "../../Screens/Storage/StorageItem/StorageItem";
 
 const CreateTransactionDialog = ({
-    transaction,
-    isPreset = false,
-    preset
+    transaction
  }: {
-    transaction?: TransactionModel,
-    isPreset?: boolean,
-    preset?: TransactionPresetModel,
+    transaction?: TransactionModel
 }) => {
     const translate = useTranslation()
     const { currentAccount } = useCurrentAccount();
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const dialog = useDialog()
     const toast = useToast()
 
@@ -49,6 +46,8 @@ const CreateTransactionDialog = ({
 
     const [workTransaction, setWorkTransaction] = React.useState<TransactionModel | null>(null)
     const [inputError, setInputError] = React.useState<CreateTransactionInputErrorModel>(new CreateTransactionInputErrorModel())
+
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const {
         newItems,
@@ -104,15 +103,17 @@ const CreateTransactionDialog = ({
                     )
                 )
             }
-            promises.push(
-                checkDBItem(
-                    transaction,
-                    DatabaseRoutes.LABELS,
-                    "labels",
-                    Object.fromEntries(Object.entries(transaction.labelsFallback).map(([uid, value]) => [uid, new LabelModel(account.uid, value)])),
-                    "newLabels"
+            if (transaction.labelsFallback) {
+                promises.push(
+                    checkDBItem(
+                        transaction,
+                        DatabaseRoutes.LABELS,
+                        "labels",
+                        Object.fromEntries(Object.entries(transaction.labelsFallback).map(([uid, value]) => [uid, new LabelModel(account.uid, value)])),
+                        "newLabels"
+                    )
                 )
-            )
+            }
 
             Promise.all(promises).then((result) => {
                 resolve(result[0])
@@ -145,11 +146,6 @@ const CreateTransactionDialog = ({
                 case 0:
                     return <BasicsTab
                         inputError={inputError}
-                        isPreset={isPreset}
-                        presetIcon={presetIcon}
-                        setPresetIcon={setPresetIcon}
-                        presetName={presetName}
-                        setPresetName={setPresetName}
                         workTransaction={workTransaction}
                         updateTransaction={updateTransaction}
                         transactionPartners={transactionPartners}
@@ -245,7 +241,7 @@ const CreateTransactionDialog = ({
             }
 
             if (labels) {
-                workTransaction.labelsFallback = Object.fromEntries(workTransaction.labels.map(labelUid => [labelUid, [...labels, ...newItems.newLabels].find(label => label.uid === labelUid)?.name || ""]))
+                workTransaction.labelsFallback = workTransaction.labels && Object.fromEntries(workTransaction.labels.map(labelUid => [labelUid, [...labels, ...newItems.newLabels].find(label => label.uid === labelUid)?.name || ""]))
 
                 newItems.newLabels.forEach((newLabel) => {
                     promises.push(
@@ -261,73 +257,41 @@ const CreateTransactionDialog = ({
         }
 
         return (
-            <DialogOverlay actions={currentTab === 2 ? (!transaction?.uid || isPreset ? [
-                new ContentAction(translate("back"), () => setCurrentTab(currentTab - 1)),
+            <DialogOverlay actions={currentTab === 2 ? (!transaction?.uid ? [
+                new ContentAction(translate("back"), () => setCurrentTab(currentTab - 1), false, isLoading),
                 new ContentAction(translate("create"), () => {
                     setInputError(new CreateTransactionInputErrorModel())
 
-                    if (!isPreset && !validateInput()) return
+                    if (!validateInput()) return
                     if (!getDatabaseRoute || !currentAccount) return;
 
+                    setIsLoading(true)
+
                     Promise.all(addNewValues()).then(() => {
-                        if (isPreset) {
+                        let transactionPath = DatabaseRoutes.TRANSACTIONS
 
-                            //TODO [] Remove custom preset creation
-
-                            // getActiveDatabaseHelper().addDBItem(
-                            //     getDatabaseRoute(DatabaseRoutes.PRESETS),
-                            //     new TransactionPresetModel(
-                            //         currentAccount.uid,
-                            //         presetIcon?.value!,
-                            //         presetName,
-                            //         workTransaction,
-                            //         currentAccount?.currencyCode
-                            //     )
-                            // ).then(() => {
-                            //     dialog.closeCurrent();
-                            // })
-                        } else {
-                            let transactionPath = DatabaseRoutes.TRANSACTIONS
-
-                            if (workTransaction.repetition.executionType !== ExecutionType.LATER) {
-                                transactionPath = DatabaseRoutes.HISTORY_TRANSACTIONS
-                                workTransaction.history = true
-                            }
-
-                            workTransaction.accountUid = currentAccount.uid
-
-                            getActiveDatabaseHelper().addDBItem(
-                                getDatabaseRoute(transactionPath),
-                                workTransaction
-                            ).then(() => {
-                                if (!preset) {
-                                    dialog.closeCurrent();
-                                    return
-                                }
-
-                                getActiveDatabaseHelper().updateDBItem(
-                                    getDatabaseRoute(DatabaseRoutes.PRESETS),
-                                    {
-                                        ...preset,
-                                        presetTransaction: {
-                                            ...preset!.presetItem,
-                                            transactionExecutorUid: preset!.presetItem.transactionExecutorUid ? workTransaction.transactionExecutorUid : null,
-                                            categoryUid: preset!.presetItem.categoryUid ? workTransaction.categoryUid : null,
-                                            labels: preset!.presetItem.labels.length ? workTransaction.labels : [],
-                                        } as TransactionModel
-                                    } as TransactionPresetModel
-                                ).then(() => {
-                                    dialog.closeCurrent();
-                                })
-                            })
+                        if (workTransaction.repetition.executionType !== ExecutionType.LATER) {
+                            transactionPath = DatabaseRoutes.HISTORY_TRANSACTIONS
+                            workTransaction.history = true
                         }
+
+                        workTransaction.accountUid = currentAccount.uid
+
+                        getActiveDatabaseHelper().addDBItem(
+                            getDatabaseRoute(transactionPath),
+                            workTransaction
+                        ).then(() => {
+                            dialog.closeCurrent();
+                        })
                     })
-                }, false, getDatabaseRoute === null || currentAccount === null),
+                }, false, isLoading || getDatabaseRoute === null || currentAccount === null),
             ] : [
-                new ContentAction(translate("back"), () => setCurrentTab(currentTab - 1)),
+                new ContentAction(translate("back"), () => setCurrentTab(currentTab - 1), false, isLoading),
                 new ContentAction(translate("edit"), () => {
                     if (!validateInput()) return
                     if (!currentAccount) return;
+
+                    setIsLoading(true)
 
                     Promise.all(addNewValues()).then(() => {
                         // workTransaction.newTransactionPartner = transactionPartners?.find(partner => partner.uid === workTransaction.transactionExecutorUid)?.name || workTransaction.newTransactionPartner
@@ -338,10 +302,11 @@ const CreateTransactionDialog = ({
                             getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS),
                             workTransaction
                         ).then(() => {
+                            setIsLoading(false)
                             dialog.closeCurrent();
                         })
                     })
-                }, false, getDatabaseRoute === null || currentAccount === null),
+                }, false, isLoading || getDatabaseRoute === null || currentAccount === null),
             ]) : [
                 new ContentAction(translate("back"), () => setCurrentTab(currentTab - 1), currentTab === 0),
                 new ContentAction(translate("next"), () => setCurrentTab(currentTab + 1)),

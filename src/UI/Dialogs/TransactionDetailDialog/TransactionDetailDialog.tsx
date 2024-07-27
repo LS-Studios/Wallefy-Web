@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import DialogOverlay from "../DialogOverlay/DialogOverlay";
 import {TransactionModel} from "../../../Data/DatabaseModels/TransactionModel";
 import {speakableDate} from "../../../Helper/DateHelper";
@@ -19,7 +19,7 @@ import {useCurrentAccount} from "../../../Providers/AccountProvider";
 import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import {useCategories} from "../../../CustomHooks/Database/useCategories";
 import {useLabels} from "../../../CustomHooks/Database/useLabels";
-import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../CustomHooks/Database/useAccountRoute";
 import {getIcon} from "../../../Helper/IconMapper";
 import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
@@ -33,7 +33,7 @@ const TransactionDetailDialog = ({
     const settings = useSettings()
     const translate = useTranslation()
     const { currentAccount, updateAccountBalance } = useCurrentAccount();
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const dialog = useDialog()
     const toast = useToast()
 
@@ -41,6 +41,8 @@ const TransactionDetailDialog = ({
     const transactionPartners = useTransactionPartners(preFetchedTransactionPartners || [])
     const categories = useCategories()
     const labels = useLabels()
+
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     useEffect(() => {
         if (!getDatabaseRoute) return
@@ -88,7 +90,8 @@ const TransactionDetailDialog = ({
         },
         {
             title: translate("date"),
-            value: !detailTransaction.repetition.isPending && !detailTransaction.repetition.isPaused ? speakableDate(new Date(detailTransaction.date), settings?.language || "de", translate) : null
+            value: !detailTransaction.repetition.isPending && !detailTransaction.repetition.isPaused ? speakableDate(new Date(detailTransaction.date), settings?.language || "de", translate) : null,
+            expandOnRight: true
         },
         {
             title: translate("category"),
@@ -96,7 +99,7 @@ const TransactionDetailDialog = ({
         },
         {
             title: translate("labels"),
-            value: labels ? detailTransaction.labels.reduce((result: string[], labelUid) => {
+            value: labels ? detailTransaction.labels && detailTransaction.labels.reduce((result: string[], labelUid) => {
                 const foundLabel = labels.find(label => label.uid === labelUid)
                 if (foundLabel) {
                     result.push(foundLabel.name)
@@ -124,7 +127,7 @@ const TransactionDetailDialog = ({
             new ContentAction(
                 translate("edit"),
                 () => {
-                     dialog.closeCurrent()
+                    dialog.closeCurrent()
 
                     dialog.open(
                         new DialogModel(
@@ -132,14 +135,18 @@ const TransactionDetailDialog = ({
                             <CreateTransactionDialog transaction={detailTransaction} />
                         )
                     )
-                }
+                },
+                false,
+                isLoading
             ),
             new ContentAction(
                 translate("copy"),
                 () => {
                     navigator.clipboard.writeText(JSON.stringify(detailTransaction))
-                    toast.open(translate("transaction-copied-to-clipboard"))
-                }
+                    toast.open(translate("copied"))
+                },
+                false,
+                isLoading
             ),
             // new ContentAction(
             //     translate("execute"),
@@ -160,14 +167,17 @@ const TransactionDetailDialog = ({
                 () => {
                     if (!currentAccount) return
 
-                    dialog.closeCurrent();
-
                     const transactionPath = detailTransaction.history ? DatabaseRoutes.HISTORY_TRANSACTIONS : DatabaseRoutes.TRANSACTIONS
+
+                    setIsLoading(true)
 
                     getActiveDatabaseHelper().deleteDBItem(
                         getDatabaseRoute!(transactionPath),
                         detailTransaction
-                    )
+                    ).then(() => {
+                        setIsLoading(false)
+                        dialog.closeCurrent();
+                    })
                 },
                 false,
                 getDatabaseRoute === null

@@ -11,6 +11,9 @@ import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import AxisChartCurrencyValueToolTip from "./AxisChartToolTip/AxisChartCurrencyValueToolTip";
 import {useSettings} from "../../../../Providers/SettingsProvider";
 import {useScreenScaleStep} from "../../../../CustomHooks/useScreenScaleStep";
+import Spinner from "../../../Components/Spinner/Spinner";
+import {SpinnerType} from "../../../../Data/EnumTypes/SpinnerType";
+import {heIL} from "@mui/material/locale";
 
 const BarChartCard = ({
     icon,
@@ -25,7 +28,7 @@ const BarChartCard = ({
     icon: React.ReactNode;
     title: string;
     displayLabelAsData?: boolean;
-    chartData: ChartDataModel[];
+    chartData: ChartDataModel[] | null;
     valueFormatter: (value: number | undefined) => string;
     selectedItem: ChartDataModel | null;
     onItemSelected: (item: ChartDataModel | null) => void;
@@ -65,73 +68,75 @@ const BarChartCard = ({
                 width: "100%",
                 overflowX: "auto",
             }}>
-                <BarChart
-                    xAxis={[{
-                        id: "bar",
-                        data: chartData.map((item) => item.label),
-                        scaleType: 'band',
-                        colorMap: {
-                            type: "ordinal",
-                            colors: chartData[0]?.color ? chartData.map((item) => item.color!) : chartData.map((item, index) => {
-                                if (selectedItem && selectedItem !== item) return colors[index % colors.length] + "80"
-                                return colors[index % colors.length]
-                            })
-                        },
-                        valueFormatter: (value) => displayLabelAsData ? formatDate(new Date(value)) : value,
-                    }]}
-                    yAxis={[{
-                        tickNumber: 8,
-                        valueFormatter: valueFormatter,
-                    }]}
-                    series={
-                        [{
-                            data: chartData.map((item) => item.value),
-                            valueFormatter: (value) => formatCurrency(value!, settings?.language, baseCurrency)
-                        }]
-                    }
-                    width={screenScaleStep > 0 ? 800 : undefined}
-                    layout="vertical"
-                    height={350}
-                    sx={{
-                        "& .MuiChartsAxis-left .MuiChartsAxis-tickLabel":{
-                            strokeWidth: 1,
-                            fill:"var(--text)"
-                        },
-                        "& .MuiChartsAxis-tickContainer .MuiChartsAxis-tickLabel":{
-                            fill:"var(--text)"
-                        },
-                        "& .MuiChartsAxis-bottom .MuiChartsAxis-tickLabel":{
-                            strokeWidth: 1,
-                            fill:"var(--text)"
-                        },
-                        "& .MuiChartsAxis-bottom .MuiChartsAxis-line":{
-                            stroke:"var(--text)",
-                            strokeWidth: 1
-                        },
-                        "& .MuiChartsAxis-left .MuiChartsAxis-line":{
-                            stroke:"var(--text)",
-                            strokeWidth: 1
-                        },
-                        "& .MuiChartsAxis-tick":{
-                            stroke:"var(--text)",
-                            strokeWidth: 2
-                        },
-                    }}
-                    margin={{ left: 100, top: 10, right: 30, bottom: 30 }}
-                    slots={{
-                        axisContent: (props) => (
-                            <AxisChartCurrencyValueToolTip {...props} valueFormatter={valueFormatter} settings={settings} />
-                        )
-                    }}
-                    onItemClick={(event, d) => {
-                        if (selectedItem?.label === chartData[d.dataIndex].label) {
-                            onItemSelected(null)
-                        } else {
-                            onItemSelected(chartData[d.dataIndex])
+                { chartData ?
+                    chartData.length > 0 ? <BarChart
+                        xAxis={[{
+                            id: "bar",
+                            data: chartData.map((item) => item.label),
+                            scaleType: 'band',
+                            colorMap: {
+                                type: "ordinal",
+                                colors: chartData[0]?.color ? chartData.map((item) => item.color!) : chartData.map((item, index) => {
+                                    if (selectedItem && selectedItem !== item) return colors[index % colors.length] + "80"
+                                    return colors[index % colors.length]
+                                })
+                            },
+                            valueFormatter: (value) => displayLabelAsData ? formatDate(new Date(value)) : value,
+                        }]}
+                        yAxis={[{
+                            tickNumber: 8,
+                            valueFormatter: valueFormatter,
+                        }]}
+                        series={
+                            [{
+                                data: chartData.map((item) => item.value),
+                                valueFormatter: (value) => formatCurrency(value!, settings?.language, baseCurrency)
+                            }]
                         }
-                    }}
-                    highlightedItem={{ seriesId: 'bar', dataIndex: 0 }}
-                />
+                        width={screenScaleStep > 0 ? 800 : undefined}
+                        layout="vertical"
+                        height={350}
+                        sx={{
+                            "& .MuiChartsAxis-left .MuiChartsAxis-tickLabel":{
+                                strokeWidth: 1,
+                                fill:"var(--text)"
+                            },
+                            "& .MuiChartsAxis-tickContainer .MuiChartsAxis-tickLabel":{
+                                fill:"var(--text)"
+                            },
+                            "& .MuiChartsAxis-bottom .MuiChartsAxis-tickLabel":{
+                                strokeWidth: 1,
+                                fill:"var(--text)"
+                            },
+                            "& .MuiChartsAxis-bottom .MuiChartsAxis-line":{
+                                stroke:"var(--text)",
+                                strokeWidth: 1
+                            },
+                            "& .MuiChartsAxis-left .MuiChartsAxis-line":{
+                                stroke:"var(--text)",
+                                strokeWidth: 1
+                            },
+                            "& .MuiChartsAxis-tick":{
+                                stroke:"var(--text)",
+                                strokeWidth: 2
+                            },
+                        }}
+                        margin={{ left: 100, top: 10, right: 30, bottom: 30 }}
+                        slots={{
+                            axisContent: (props) => (
+                                <AxisChartCurrencyValueToolTip {...props} valueFormatter={valueFormatter} settings={settings} />
+                            )
+                        }}
+                        onItemClick={(event, d) => {
+                            if (selectedItem?.label === chartData[d.dataIndex].label) {
+                                onItemSelected(null)
+                            } else {
+                                onItemSelected(chartData[d.dataIndex])
+                            }
+                        }}
+                        highlightedItem={{ seriesId: 'bar', dataIndex: 0 }}
+                    /> : <span className="no-items" style={{height:340}}>{translate("no-data")}</span> :
+                <Spinner type={SpinnerType.CYCLE} style={{height:340}} />}
             </div>
             <div className="transaction-overview-card-chart-content">
                 <Divider useOutlineColor={true}/>

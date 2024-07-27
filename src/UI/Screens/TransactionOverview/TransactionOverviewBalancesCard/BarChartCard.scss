@@ -5,37 +5,33 @@
 }
 
 @media only screen and (max-width: $mobile-state-2) {
-  .transaction-overview-card-chart-content-row {
+  .transaction-overview-card-chart-content-rows {
     flex-direction: column;
 
-    div {
-      &:first-child {
-        border-bottom: 2px solid var(--outline-color)
-      }
+    #transaction-overview-card-chart-first-row {
+      border-bottom: 2px solid var(--outline-color)
     }
   }
 }
 
 @media only screen and (min-width: $mobile-state-2) {
-  .transaction-overview-card-chart-content-row {
+  .transaction-overview-card-chart-content-rows {
     flex-direction: row;
 
-    div {
-      &:first-child {
-        border-right: 2px solid var(--outline-color)
-      }
+    #transaction-overview-card-chart-first-row {
+      border-right: 2px solid var(--outline-color)
     }
   }
 }
 
-.transaction-overview-card-chart-content-row {
+.transaction-overview-card-chart-content-rows {
   width: 100%;
 
   display: flex;
   justify-content: center;
   align-items: center;
 
-  div {
+  .transaction-overview-card-chart-row {
     display: flex;
     flex-direction: column;
     justify-content: center;

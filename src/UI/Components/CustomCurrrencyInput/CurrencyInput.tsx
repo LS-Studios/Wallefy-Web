@@ -23,6 +23,8 @@ import {
 import {stat} from "fs";
 import usePrevious from "../../../CustomHooks/usePrevious";
 import {escapeRegExp} from "./utils/escapeRegExp";
+import toast from "../../Provider/Toast/Toast";
+import {useToast} from "../../../Providers/Toast/ToastProvider";
 
 // @ts-ignore
 export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
@@ -68,6 +70,8 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
     }: CurrencyInputProps,
     ref
   ) => {
+    const toast = useToast()
+
     if (_decimalSeparator && isNumber(_decimalSeparator)) {
       throw new Error('decimalSeparator cannot be a number');
     }
@@ -247,7 +251,11 @@ export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
         target: { value, selectionStart },
       } = event;
 
-      processChange(value, selectionStart);
+      if (cursor === selectionStart) {
+        processChange(value.substring(0, cursor - 1) + value.charAt(cursor) + value.charAt(cursor - 1) + value.substring(cursor + 1), cursor + 1);
+      } else {
+        processChange(value, selectionStart);
+      }
 
       onChange && onChange(event);
     };

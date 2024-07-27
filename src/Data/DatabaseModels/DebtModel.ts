@@ -26,8 +26,8 @@ export class DebtModel implements DBItem {
     whoWasPaiForFallback: { [uid: string]: string};
     distributions: DistributionModel[];
     date: string;
-    labels: string[];
-    labelsFallback: { [uid: string]: string};
+    labels: string[] | null;
+    labelsFallback: { [uid: string]: string} | null;
     notes: string;
 
     constructor(baseCurrency: string | null | undefined) {

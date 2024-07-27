@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import "./AuthenticationScreen.scss";
 import TextInputComponent from "../../Components/Input/TextInput/TextInputComponent";
 import ButtonInputComponent from "../../Components/Input/ButtonInput/ButtonInputComponent";
@@ -7,7 +7,7 @@ import {AuthType} from "../../../Data/EnumTypes/AuthType";
 import {login, signup} from "../../../Helper/AuthHelper";
 import {AuthenticationErrorModel} from "../../../Data/ErrorModels/AuthenticationErrorModel";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
-import {MdDarkMode, MdLanguage, MdLightMode} from "react-icons/md";
+import {MdDarkMode, MdLanguage, MdLightMode, MdVisibility, MdVisibilityOff} from "react-icons/md";
 import {useSettings} from "../../../Providers/SettingsProvider";
 import {LanguageType} from "../../../Data/EnumTypes/LanguageType";
 import {ThemeType} from "../../../Data/EnumTypes/ThemeType";
@@ -17,7 +17,6 @@ import {useDialog} from "../../../Providers/DialogProvider";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import OptionDialog from "../../Dialogs/OptionDialog/OptionDialog";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {UserModel} from "../../../Data/DatabaseModels/UserModel";
 import {useNavigate} from "react-router-dom";
 import {useThemeDetector} from "../../../CustomHooks/useThemeDetector";
 import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
@@ -26,6 +25,8 @@ import {CurrencyModel} from "../../../Data/DataModels/CurrencyModel";
 import {getDefaultCurrency} from "../../../Helper/CurrencyHelper";
 import {AccountModel} from "../../../Data/DatabaseModels/AccountModel";
 import {DatabaseType} from "../../../Data/EnumTypes/DatabaseType";
+import {UserDataModel} from "../../../Data/DatabaseModels/UserDataModel";
+import uuid from "react-uuid";
 
 const AuthenticationScreen = () => {
     const navigate = useNavigate()
@@ -50,6 +51,10 @@ const AuthenticationScreen = () => {
 
     const [language, setLanguage] = React.useState<LanguageType>(navigator.language === "de" ? LanguageType.GERMAN : LanguageType.ENGLISH)
     const [theme, setTheme] = React.useState<ThemeType>(ThemeType.SYSTEM)
+
+    const [showPassword, setShowPassword] = React.useState<boolean>(false)
+
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const languageOptions = [
         {name: translate("english"), value: LanguageType.ENGLISH},
@@ -99,11 +104,13 @@ const AuthenticationScreen = () => {
             title={translate("password")}
             value={password}
             placeholder=" "
-            type="password"
+            type={showPassword ? "text" : "password"}
             onValueChange={(value) => setPassword(value as string)}
             style={{
                 borderColor: error.passwordError ? "var(--error-color)" : ""
             }}
+            Icon={showPassword ? MdVisibility : MdVisibilityOff}
+            onIconClick={() => setShowPassword(!showPassword)}
         />
         <ButtonInputComponent
             text={translate("login")}
@@ -120,15 +127,36 @@ const AuthenticationScreen = () => {
                     return
                 }
 
-                login(email, password).then((user) => {
-                    getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
-                        ...settings,
-                        currentUserUid: user.uid,
-                        currentAccountUid: user.currentAccountUid
-                    }).then(() => {
-                        navigate("/home")
+                const newAccount = new AccountModel(
+                    translate("private-account"),
+                    startingBalance || 0,
+                )
+
+                newAccount.currencyCode = selectedCurrency?.currencyCode || getDefaultCurrency(null).currencyCode
+                newAccount.uid = uuid();
+
+                setIsLoading(true)
+
+                login(email, password, newAccount).then((user) => {
+                    getActiveDatabaseHelper().getDBItems(`${DatabaseRoutes.USER_ACCOUNTS}/${user.uid}/${DatabaseRoutes.PRIVATE_ACCOUNTS}`).then((accounts) => {
+                        const account = accounts[0] as AccountModel | null | undefined
+
+                        if (account) {
+                            console.log(settings)
+                            getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
+                                ...settings,
+                                currentUserUid: user.uid,
+                                currentAccountUid: account.uid,
+                                currentAccountVisibility: account.visibility
+                            } as SettingsModel).then((s) => {
+                                setIsLoading(false)
+                                navigate("/home")
+                            })
+                        }
                     })
                 }).catch((error: AuthenticationErrorModel) => {
+                    setIsLoading(false)
+
                     setError(error)
 
                     if (error.userNotFound) {
@@ -140,6 +168,7 @@ const AuthenticationScreen = () => {
                     }
                 })
             }}
+            isLoading={isLoading}
         />
     </>
 
@@ -177,21 +206,25 @@ const AuthenticationScreen = () => {
             title={translate("password")}
             value={password}
             placeholder=" "
-            type="password"
+            type={showPassword ? "text" : "password"}
             onValueChange={(value) => setPassword(value as string)}
             style={{
                 borderColor: error.passwordError ? "var(--error-color)" : ""
             }}
+            Icon={showPassword ? MdVisibility : MdVisibilityOff}
+            onIconClick={() => setShowPassword(!showPassword)}
         />
         <TextInputComponent
             title={translate("repeat-password")}
             value={repeatPassword}
             placeholder=" "
-            type="password"
+            type={showPassword ? "text" : "password"}
             onValueChange={(value) => setRepeatPassword(value as string)}
             style={{
                 borderColor: error.repeatPasswordError ? "var(--error-color)" : ""
             }}
+            Icon={showPassword ? MdVisibility : MdVisibilityOff}
+            onIconClick={() => setShowPassword(!showPassword)}
         />
         <CurrencyInputComponent
             title={translate("starting-balance")}
@@ -231,25 +264,37 @@ const AuthenticationScreen = () => {
                 )
 
                 newAccount.currencyCode = selectedCurrency?.currencyCode || getDefaultCurrency(null).currencyCode
+                newAccount.uid = uuid();
+
+                setIsLoading(true)
 
                 signup(
                     translate,
-                    new UserModel(
+                    new UserDataModel(
                         name,
-                        email,
-                        password
+                        email
                     ),
+                    password,
                     newAccount
                 ).then((newUser) => {
-                    console.log(newUser)
-                    getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
-                        ...settings,
-                        currentUserUid: newUser.uid,
-                        currentAccountUid: newUser.currentAccountUid
-                    }).then(() => {
-                        navigate("/home")
+                    getActiveDatabaseHelper().getDBItems(`${DatabaseRoutes.USER_ACCOUNTS}/${newUser.uid}/${DatabaseRoutes.PRIVATE_ACCOUNTS}`).then((accounts) => {
+                        const account = accounts[0] as AccountModel | null | undefined
+
+                        if (account) {
+                            getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
+                                ...settings,
+                                currentUserUid: newUser.uid,
+                                currentAccountUid: account.uid,
+                                currentAccountVisibility: account.visibility
+                            }).then(() => {
+                                setIsLoading(false)
+                                navigate("/home")
+                            })
+                        }
                     })
                 }).catch((error: AuthenticationErrorModel | [AuthenticationErrorModel, React.ReactNode]) => {
+                    setIsLoading(false)
+
                     const errorModel = Array.isArray(error) ? error[0] : error
                     const errorMessage = Array.isArray(error) ? error[1] : null
 
@@ -272,6 +317,7 @@ const AuthenticationScreen = () => {
                     }
                 })
             }}
+            isLoading={isLoading}
         />
     </>
 

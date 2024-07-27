@@ -42,7 +42,7 @@ const BalanceCardRow = ({
             setWidth(`calc(${50 / (highesBalance / Math.abs(balance.balance))}% + 10px )`)
             setBackgroundColor(balance.balance < 0 ? "var(--expenses-bar-color)" : "var(--income-bar-color)")
         }
-    }, []);
+    }, [highesBalance, balance]);
 
     useEffect(() => {
         if (!transactionPartners) return

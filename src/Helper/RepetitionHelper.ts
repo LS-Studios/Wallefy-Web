@@ -40,7 +40,7 @@ export class RepetitionHelper {
 
         const typeSpan = this.getRepetitionTypePluralText(1)
 
-        let weekDays = ` (${this.repetition.repetitionDaysInWeek.map(day => this.dayShorts[day]).join(', ')})`;
+        let weekDays = ` (${this.repetition.repetitionDaysInWeek?.map(day => this.dayShorts[day]).join(', ')})`;
 
         if (this.repetition.repetitionRateType !== RepetitionRateType.WEEK) weekDays = '';
 
@@ -75,7 +75,7 @@ export class RepetitionHelper {
                     addDays(new Date(this.transactionDate), 1)
                 )
 
-                while (!this.repetition.repetitionDaysInWeek.includes((new Date(nextDay).getDay()) as DayOfWeekModel)) {
+                while (!this.repetition.repetitionDaysInWeek?.includes((new Date(nextDay).getDay()) as DayOfWeekModel)) {
                     nextDay = formatDateToStandardString(
                         addDays(new Date(nextDay), 1)
                     )
@@ -166,5 +166,5 @@ export const getDisabledWeekDays = (repetition: RepetitionModel) => {
         DayOfWeekModel.FRIDAY,
         DayOfWeekModel.SATURDAY,
         DayOfWeekModel.SUNDAY
-    ].filter((day) => !repetition.repetitionDaysInWeek.includes(day));
+    ].filter((day) => !repetition.repetitionDaysInWeek?.includes(day));
 }

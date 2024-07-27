@@ -12,7 +12,7 @@ import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../../CustomHooks/Database/useAccountRoute";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
 import {DBItem} from "../../../../Data/DatabaseModels/DBItem";
 import {getIcon, getIcons} from "../../../../Helper/IconMapper";
@@ -40,7 +40,7 @@ const DescriptionTab = ({
     const { currentAccount } = useCurrentAccount();
     const translate = useTranslation()
     const dialog = useDialog()
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
 
     const [categoriesForSelection, setCategoriesForSelection] = React.useState<InputNameValueModel<CategoryModel>[]>([])
     const [labelsForSelection, setLabelsForSelection] = React.useState<InputNameValueModel<LabelModel>[]>([])
@@ -137,7 +137,7 @@ const DescriptionTab = ({
             />
             <AutoCompleteInputComponent
                 title={translate("labels-of-transaction")}
-                value={getInputValueUidsByUids(workTransaction.labels, labelsForSelection)}
+                value={getInputValueUidsByUids(workTransaction.labels || [], labelsForSelection)}
                 onValueChange={(value) => {
                     updateTransaction((oldTransaction) => {
                         const newLabels = value as InputNameValueModel<LabelModel>[];

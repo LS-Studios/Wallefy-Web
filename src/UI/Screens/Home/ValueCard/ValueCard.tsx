@@ -1,7 +1,8 @@
 import React, {ReactNode} from 'react';
 import Divider from "../../../Components/Divider/Divider";
 import './ValueCard.scss';
-import {isStringObject} from "node:util/types";
+import Spinner from "../../../Components/Spinner/Spinner";
+import {SpinnerType} from "../../../../Data/EnumTypes/SpinnerType";
 
 const ValueCard = ({
     icon,
@@ -10,7 +11,7 @@ const ValueCard = ({
 }: {
     icon?: React.ReactNode;
     title: string;
-    value: string | ReactNode;
+    value: string | ReactNode | null;
 }) => {
     return (
         <div className="card">
@@ -19,7 +20,7 @@ const ValueCard = ({
                 <span>{title}</span>
             </div>
             <Divider useOutlineColor={true}/>
-            { typeof value === 'string' ? <span className="value-card-value">{value}</span> : value }
+            { value ? (typeof value === 'string' ? <span className="value-card-value">{value}</span> : value) : <Spinner type={SpinnerType.DOTS} style={{padding:8}} /> }
         </div>
     );
 };

@@ -76,6 +76,7 @@ const DebtDistributionTab = ({
             {distributions.map((distribution, index) => {
                 return (
                     <DistributionInputComponent
+                        key={index}
                         distribution={distribution}
                         onDistributionChange={(newDistribution) => {
                             setDistribution(newDistribution);

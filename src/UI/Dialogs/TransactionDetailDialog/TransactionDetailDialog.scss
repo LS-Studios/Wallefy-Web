@@ -3,6 +3,7 @@
 .transaction-detail-dialog {
   border: 2px solid var(--stroke-color);
   border-radius: 12px;
+  font-size: 14px;
 
   .transaction-detail-dialog-icon-row {
     display: flex;
@@ -70,7 +71,7 @@
 
       #transaction-detail-dialog-row-value {
         border-left: 2px solid var(--stroke-color);
-        margin-left: -6px;
+        margin-left: -7px;
       }
     }
   }

@@ -6,5 +6,6 @@ export enum RoutePath {
     EVALUATION = "/evaluation",
     TRANSACTIONS = "/transactions",
     STORAGE = "/storage",
-    ACCOUNTS = "/accounts"
+    ACCOUNTS = "/accounts",
+    INVITATIONS = "/invitations",
 }

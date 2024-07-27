@@ -7,11 +7,15 @@ import {addMonths, formatDateToStandardString, getEndOfMonth} from "../../Helper
 import {getTransactionAmount} from "../../Helper/CurrencyHelper";
 import {useCurrentAccount} from "../../Providers/AccountProvider";
 import {useTransactions} from "./useTransactions";
-import {useDatabaseRoute} from "./useDatabaseRoute";
+import {useAccountRoute} from "./useAccountRoute";
 import {useHistoryTransactions} from "./useHistoryTransactions";
+import {useWebWorker} from "../useWebWorker";
+import {CalculateBalancesAtDateInDateRangeWorkerData} from "../../Workers/CalculateBalancesAtDateInDateRangeWorker";
+import {BalanceAtDateModel} from "../../Data/DataModels/Chart/BalanceAtDateModel";
+import {CalculateFutureTransactionsUntilDateWorkerData} from "../../Workers/CalculateFutureTransactionsUntilDateWorker";
 
 const useTransactionInDateRange = (dateRange: DateRangeModel) => {
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const { currentAccount } = useCurrentAccount();
 
     const historyTransactions = useHistoryTransactions()
@@ -19,23 +23,47 @@ const useTransactionInDateRange = (dateRange: DateRangeModel) => {
     const [transactionsUntilDateRange, setTransactionsUntilDateRange] = React.useState<TransactionModel[]>([]);
     const [transactionsInDateRange, setTransactionsInDateRange] = React.useState<TransactionModel[]>([]);
 
-    const [totalIncome, setTotalIncome] = useState<number>(0)
-    const [totalExpenses, setTotalExpenses] = useState<number>(0)
-    const [totalBalance, setTotalBalance] = useState<number>(0)
-    const [totalSavings, setTotalSavings] = useState<number>(0)
+    const [totalIncome, setTotalIncome] = useState<number | null>(null)
+    const [totalExpenses, setTotalExpenses] = useState<number | null>(null)
+    const [totalBalance, setTotalBalance] = useState<number | null>(null)
+    const [totalSavings, setTotalSavings] = useState<number | null>(null)
+
+    const runBalancesAtDateInDateRange = useWebWorker<CalculateBalancesAtDateInDateRangeWorkerData, BalanceAtDateModel[]>(() => new Worker(
+        new URL(
+            "../../Workers/CalculateBalancesAtDateInDateRangeWorker.ts",
+            import.meta.url
+        )
+    ), [])
+
+    const runCalculateFutureTransactionsUntilDate = useWebWorker<CalculateFutureTransactionsUntilDateWorkerData, TransactionModel[]>(() => new Worker(
+        new URL(
+            "../../Workers/CalculateFutureTransactionsUntilDateWorker.ts",
+            import.meta.url
+        )
+    ), [])
+
 
     useEffect(() => {
         if (!presetTransactions || !getDatabaseRoute) return
 
-        const futureTransactions = calculateFutureTransactionsUntilDate(getDatabaseRoute, presetTransactions, dateRange.endDate)
+        setTotalIncome(null)
+        setTotalExpenses(null)
+        setTotalBalance(null)
+        setTotalSavings(null)
 
-        setTransactionsInDateRange((current: TransactionModel[]) => {
-            return [...current.filter((transaction) => transaction.history), ...futureTransactions.filter((transaction) => {
-                return new Date(transaction.date) >= new Date(dateRange.startDate)
-            })];
-        })
-        setTransactionsUntilDateRange((current: TransactionModel[]) => {
-            return [...current.filter((transaction) => transaction.history), ...futureTransactions];
+        runCalculateFutureTransactionsUntilDate({
+            getDatabaseRoute,
+            transactions: presetTransactions,
+            date: dateRange.endDate
+        }).then((futureTransactions) => {
+            setTransactionsInDateRange((current: TransactionModel[]) => {
+                return [...current.filter((transaction) => transaction.history), ...futureTransactions.filter((transaction) => {
+                    return new Date(transaction.date) >= new Date(dateRange.startDate)
+                })];
+            })
+            setTransactionsUntilDateRange((current: TransactionModel[]) => {
+                return [...current.filter((transaction) => transaction.history), ...futureTransactions];
+            })
         })
     }, [getDatabaseRoute, presetTransactions, dateRange]);
 
@@ -66,19 +94,23 @@ const useTransactionInDateRange = (dateRange: DateRangeModel) => {
 
         if (!getDatabaseRoute || !currentAccount || !presetTransactions) return
 
-        const transactionsInNext4Months = calculateBalancesAtDateInDateRange(
-            currentAccount.balance!,
-            calculateFutureTransactionsUntilDate(getDatabaseRoute, presetTransactions, formatDateToStandardString(dateThreshold)),
-            new DateRangeModel(
-                dateRange.startDate,
-                formatDateToStandardString(dateThreshold)
-            ),
-            currentAccount.currencyCode
-        ).map(balanceAtDate => balanceAtDate.balance)
-
-        setTotalSavings(
-            transactionsInNext4Months.length > 0 ? Math.min(...transactionsInNext4Months) : 0
-        )
+        runCalculateFutureTransactionsUntilDate({
+            getDatabaseRoute,
+            transactions: presetTransactions,
+            date: dateRange.endDate
+        }).then((futureTransactions) => {
+            runBalancesAtDateInDateRange({
+                currentBalance: currentAccount.balance!,
+                transactionsInRage: futureTransactions,
+                dateRange: new DateRangeModel(
+                    dateRange.startDate,
+                    formatDateToStandardString(dateThreshold)
+                ),
+                baseCurrency: currentAccount.currencyCode
+            }).then((balances) => {
+                setTotalSavings(balances.length > 0 ? Math.min(...balances.map((balance) => balance.balance)) : 0)
+            })
+        })
     }, [presetTransactions, transactionsInDateRange, getDatabaseRoute, currentAccount]);
 
     return {

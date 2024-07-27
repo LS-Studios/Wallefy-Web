@@ -5,7 +5,7 @@ import {ContentAction} from "../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../Providers/DialogProvider";
 import TextInputComponent from "../../Components/Input/TextInput/TextInputComponent";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
-import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../CustomHooks/Database/useAccountRoute";
 import {getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
 
 const EditStorageItemDialog = ({
@@ -19,11 +19,11 @@ const EditStorageItemDialog = ({
     onEdit?: (newStorageItem: StorageItemModel) => void,
     onDelete?: () => void
 }) => {
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const translate = useTranslation()
     const dialog = useDialog();
 
-    const [newName, setNewName] = React.useState<string>(storageItem.item.name);
+    const [newName, setNewName] = React.useState<string>(storageItem.item.name || "");
 
     return <DialogOverlay
         actions={[

@@ -12,7 +12,7 @@ import {ContentAction} from "../../../../Data/ContentAction/ContentAction";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import {useTranslation} from "../../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../../Providers/AccountProvider";
-import {useDatabaseRoute} from "../../../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../../../CustomHooks/Database/useAccountRoute";
 import {CreateDebtInputErrorModel} from "../../../../Data/ErrorModels/CreateDebtInputErrorModel";
 import {DebtModel} from "../../../../Data/DatabaseModels/DebtModel";
 import {CreateDialogNewItems} from "../../../../Data/DataModels/CreateDialogNewItems";
@@ -25,11 +25,6 @@ import LoadingDialog from "../../LoadingDialog/LoadingDialog";
 
 const DebtBasicsTab = ({
    inputError,
-   isPreset,
-   presetIcon,
-   setPresetIcon,
-   presetName,
-   setPresetName,
    workDebt,
    updateDebt,
    transactionPartners,
@@ -38,11 +33,6 @@ const DebtBasicsTab = ({
    getDbItemContextMenuOptions
 }: {
     inputError: CreateDebtInputErrorModel,
-    isPreset: boolean,
-    presetIcon: InputNameValueModel<string> | null,
-    setPresetIcon: (value: InputNameValueModel<string> | null) => void,
-    presetName: string,
-    setPresetName: (value: string) => void,
     workDebt: DebtModel,
     updateDebt: (updater: (oldDebt: DebtModel) => DebtModel) => void,
     transactionPartners: TransactionPartnerModel[] | null,
@@ -52,7 +42,7 @@ const DebtBasicsTab = ({
 }) => {
     const dialog = useDialog()
     const translate = useTranslation()
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const { currentAccount } = useCurrentAccount();
 
     const [transactionPartnersForSelection, setTransactionPartnersForSelection] = React.useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
@@ -91,35 +81,6 @@ const DebtBasicsTab = ({
 
     return (
         <>
-            { isPreset && <>
-                <AutoCompleteInputComponent<string>
-                    title="Preset icon"
-                    value={presetIcon}
-                    onValueChange={(value) => {
-                        setPresetIcon(value as InputNameValueModel<string> | null);
-                    }}
-                    suggestionUlStyle={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                        gap: "10px"
-                    }}
-                    suggestionElement={(suggestion) => {
-                        const Icon = getIcon(suggestion.value!) as React.FC
-                        return <div className="create-transaction-preset-icon">
-                            <Icon />
-                            <span>{suggestion.name}</span>
-                        </div>
-                    }}
-                    suggestions={icons}
-                />
-                <TextInputComponent
-                    title={translate("preset-name")}
-                    value={presetName}
-                    onValueChange={(value) => {
-                        setPresetName(value as string);
-                    }}
-                />
-            </> }
             <RadioInputComponent
                 title={translate("payment-type")}
                 value={debtTypeInputOptions.find(option => option.value === workDebt.debtType)!}

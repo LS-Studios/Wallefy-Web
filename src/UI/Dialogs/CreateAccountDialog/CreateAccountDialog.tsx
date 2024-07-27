@@ -13,21 +13,37 @@ import {useDialog} from "../../../Providers/DialogProvider";
 import {DatabaseRoutes} from "../../../Helper/DatabaseRoutes";
 import {TransactionPartnerModel} from "../../../Data/DatabaseModels/TransactionPartnerModel";
 import {InputNameValueModel} from "../../../Data/DataModels/Input/InputNameValueModel";
-import {getInputValueUidsByUids} from "../../../Helper/HandyFunctionHelper";
+import {getListDiff, toHash} from "../../../Helper/HandyFunctionHelper";
 import {CreateAccountInputErrorModel} from "../../../Data/ErrorModels/CreateAccountInputErrorModel";
 import {useToast} from "../../../Providers/Toast/ToastProvider";
 import {CurrencyModel} from "../../../Data/DataModels/CurrencyModel";
 import {getDefaultCurrency} from "../../../Helper/CurrencyHelper";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
 import {useCurrentAccount} from "../../../Providers/AccountProvider";
-import {useTransactionPartners} from "../../../CustomHooks/Database/useTransactionPartners";
 import {useSettings} from "../../../Providers/SettingsProvider";
-import {useDatabaseRoute} from "../../../CustomHooks/Database/useDatabaseRoute";
 import {useAccounts} from "../../../CustomHooks/Database/useAccounts";
 import {AccountType} from "../../../Data/EnumTypes/AccountType";
-import {getDefaultDebtPresets, getDefaultPresets} from "../../../Helper/DefaultPresetHelper";
-import {addPresetsForAccount, getActiveDatabaseHelper} from "../../../Helper/Database/ActiveDBHelper";
+import {
+    addPresetsForAccount,
+    deleteUserFromPublicAccounts,
+    getActiveDatabaseHelper
+} from "../../../Helper/Database/ActiveDBHelper";
 import {DatabaseType} from "../../../Data/EnumTypes/DatabaseType";
+import {useInvites} from "../../../CustomHooks/Database/useInvites";
+import {useParticipants} from "../../../CustomHooks/Database/useParticipants";
+import {checkIfEmailIsValid} from "../../../Helper/AuthHelper";
+import {useCurrentUser} from "../../../CustomHooks/Database/useCurrentUser";
+import {useAccountsRoute} from "../../../CustomHooks/Database/useAccountsRoute";
+import {SettingsModel} from "../../../Data/DataModels/SettingsModel";
+import {ListDiffType} from "../../../Data/EnumTypes/ListDiffType";
+import {InviteModel} from "../../../Data/DataModels/InviteModel";
+import {DialogModel} from "../../../Data/DataModels/DialogModel";
+import InfoDialog from "../InfoDialog/InfoDialog";
+import DecisionDialog from "../DecisionDialog/DecisionDialog";
+import {MdShare} from "react-icons/md";
+import ShareAccountDialog from "../ShareAccountDialog/ShareAccountDialog";
+import {LinkInvite} from "../../../Data/DataModels/LinkInvite";
+import uuid from "react-uuid";
 
 const CreateAccountDialog = ({
     account
@@ -38,8 +54,6 @@ const CreateAccountDialog = ({
     const { currentAccount } = useCurrentAccount();
     const dialog = useDialog()
     const toast = useToast()
-
-    const getDatabaseRoute = useDatabaseRoute(false)
 
     const settings = useSettings()
 
@@ -56,20 +70,47 @@ const CreateAccountDialog = ({
     const [workAccount, setWorkAccount] = React.useState<AccountModel>( structuredClone(account) || new AccountModel())
     const [inputError, setInputError] = React.useState<CreateAccountInputErrorModel>(new CreateAccountInputErrorModel())
 
+    const getDatabaseRoute = useAccountsRoute(workAccount.visibility)
+
     const accounts = useAccounts()
+    const currentUser = useCurrentUser()
 
-    const transactionPartners = useTransactionPartners()
-    const [transactionPartnerInputOptions, setTransactionPartnerInputOptions] = useState<InputNameValueModel<TransactionPartnerModel>[]>([])
-
-    useEffect(() => {
-        if (transactionPartners) {
-            setTransactionPartnerInputOptions(
-                transactionPartners.map(partner => new InputNameValueModel<TransactionPartnerModel>(partner.name, partner))
-            )
-        }
-    }, [transactionPartners])
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const [selectedCurrency, setSelectedCurrency] = React.useState<CurrencyModel | null>(null)
+
+    const invites = useInvites(workAccount.uid)
+    const [invitedUsersInputOptions, setInvitedUsersInputOptions] = useState<InputNameValueModel<string>[]>([])
+
+    const participants = useParticipants(workAccount.uid)
+    const [participantsInputOptions, setParticipantsInputOptions] = useState<InputNameValueModel<TransactionPartnerModel>[]>([])
+
+    const [tempInvites, setTempInvites] = useState<string[]>([])
+
+    const [linkInvite, setLinkInvite] = useState<LinkInvite | null>(null)
+
+    useEffect(() => {
+        if (account) {
+            getActiveDatabaseHelper().getDBLinkInvite(undefined, account.uid).then((linkInvite) => {
+                setLinkInvite(linkInvite)
+            })
+        } else {
+            setLinkInvite(new LinkInvite(uuid(), "", ""))
+        }
+    }, []);
+
+    useEffect(() => {
+        if (account && invites) {
+            setInvitedUsersInputOptions(invites.map(user => new InputNameValueModel(user, user)))
+        } else if (!account && tempInvites) {
+            setInvitedUsersInputOptions(tempInvites.map(user => new InputNameValueModel(user, user)))
+        }
+    }, [tempInvites, invites]);
+
+    useEffect(() => {
+        if (!participants) return
+        setParticipantsInputOptions(participants.map(participant => new InputNameValueModel(participant.name, participant)))
+    }, [participants]);
 
     useEffect(() => {
         setSelectedCurrency(
@@ -95,6 +136,33 @@ const CreateAccountDialog = ({
         })
     }
 
+    const leaveOrDeleteAccount = () => {
+        if (accounts!.length === 1) {
+            toast.open(translate("there-must-be-at-least-one-account"))
+            return;
+        } else if (workAccount.uid === currentAccount?.uid) {
+            getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
+                ...settings,
+                currentAccountUid: accounts!.filter(account => account.uid !== workAccount.uid)[0].uid,
+                currentAccountVisibility: accounts!.filter(account => account.uid !== workAccount.uid)[0].visibility
+            } as SettingsModel)
+        }
+
+        setIsLoading(true)
+
+        if (workAccount.visibility === AccountVisibilityType.PRIVATE) {
+            getActiveDatabaseHelper().deleteDBItem(getDatabaseRoute!(), workAccount).then(() => {
+                setIsLoading(false)
+                dialog.closeCurrent();
+            })
+        } else {
+            deleteUserFromPublicAccounts(currentUser!.uid, workAccount.uid, () => {
+                setIsLoading(false)
+                dialog.closeCurrent();
+            })
+        }
+    }
+
     return (
         <DialogOverlay actions={account ? [
             ...(workAccount.uid !== currentAccount?.uid) ? [
@@ -102,14 +170,17 @@ const CreateAccountDialog = ({
                     translate("switch"),
                     () => {
                         dialog.closeCurrent();
-                        getActiveDatabaseHelper().setDBObject(
+                        getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(
                             DatabaseRoutes.SETTINGS,
                             {
                                 ...settings,
-                                currentAccountUid: workAccount.uid
-                            }
+                                currentAccountUid: workAccount.uid,
+                                currentAccountVisibility: workAccount.visibility
+                            } as SettingsModel
                         )
                     },
+                    false,
+                    isLoading
                 ),
             ] : [],
             new ContentAction(
@@ -117,29 +188,19 @@ const CreateAccountDialog = ({
                 () => {
                     dialog.closeCurrent();
                     if (workAccount.balance === null) workAccount.balance = 0;
-                    getActiveDatabaseHelper().updateDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount)
+
+                    getActiveDatabaseHelper().updateDBItem(getDatabaseRoute!(), workAccount)
                 },
                 false,
-                !getDatabaseRoute
+                isLoading || !getDatabaseRoute
             ),
             new ContentAction(
-                translate("delete"),
+                translate(workAccount.visibility === AccountVisibilityType.PRIVATE ? "delete" : "leave"),
                 () => {
-                    if (accounts!.length === 1) {
-                        toast.open(translate("there-must-be-at-least-one-account"))
-                        return;
-                    } else if (workAccount.uid === currentAccount?.uid) {
-                        getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
-                            ...settings,
-                            currentAccountUid: accounts!.filter(account => account.uid !== workAccount.uid)[0].uid
-                        })
-                    }
-
-                    getActiveDatabaseHelper().deleteDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount)
-                    dialog.closeCurrent();
+                    leaveOrDeleteAccount()
                 },
                 false,
-                !getDatabaseRoute || !accounts || !currentAccount
+                isLoading || !getDatabaseRoute || !accounts || !currentAccount
             ),
         ] : [
             new ContentAction(
@@ -155,13 +216,38 @@ const CreateAccountDialog = ({
                         return;
                     }
                     if (workAccount.balance === null) workAccount.balance = 0;
-                    getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(DatabaseRoutes.ACCOUNTS), workAccount).then((newAccount) => {
+
+                    setIsLoading(true)
+
+                    getActiveDatabaseHelper().addDBItem(getDatabaseRoute!(), workAccount).then((newAccount) => {
                         const castedAccount = newAccount as AccountModel;
-                        addPresetsForAccount(currentAccount!.uid, castedAccount);
+
+                        if (workAccount.visibility === AccountVisibilityType.PUBLIC) {
+                            getActiveDatabaseHelper().setDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_USERS}/${castedAccount.uid}/${currentUser!.uid}`, castedAccount.uid)
+
+                            getActiveDatabaseHelper().setDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_LINK_INVITES}/${castedAccount.uid}`, {
+                                ...linkInvite,
+                                accountUid: castedAccount.uid,
+                                accountName: castedAccount.name
+                            } as LinkInvite)
+
+                            tempInvites.map(invite => {
+                                getActiveDatabaseHelper().setDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_INVITES}/${workAccount.uid}/${toHash(invite)}`, new InviteModel(
+                                    invite,
+                                    castedAccount.uid,
+                                    castedAccount.name
+                                ))
+                            })
+                        }
+
+                        addPresetsForAccount(`${getDatabaseRoute!()}/${castedAccount.uid}`, castedAccount).then(() => {
+                            setIsLoading(false)
+                            dialog.closeCurrent()
+                        })
                     })
                 },
                 false,
-                !getDatabaseRoute || !currentAccount
+                isLoading || !settings || !getDatabaseRoute || !currentAccount || !currentUser
             )
         ]}>
             <TextInputComponent
@@ -211,21 +297,109 @@ const CreateAccountDialog = ({
                     });
                 }}
                 options={accountVisibilityOptions}
+                disabled={account !== undefined}
             />
-            { workAccount.visibility === AccountVisibilityType.PUBLIC &&
+            { workAccount.visibility === AccountVisibilityType.PUBLIC && <>
                 <AutoCompleteInputComponent
                     title={translate("participants")}
-                    value={getInputValueUidsByUids(workAccount.userIds || [], transactionPartnerInputOptions || []) || []}
+                    value={participantsInputOptions}
                     onValueChange={(value) => {
-                        updateAccount((oldAccount) => {
-                            oldAccount.userIds = (value as InputNameValueModel<TransactionPartnerModel>[]).map(option => option.value?.uid!);
-                            return oldAccount;
-                        });
+                        const newParticipants = value as InputNameValueModel<TransactionPartnerModel>[] | null || []
+
+                        getListDiff(participantsInputOptions, newParticipants, (type, items) => {
+                            switch (type) {
+                                case ListDiffType.Deleted:
+                                    items.forEach((participant) => {
+                                        if (participant.value?.uid === settings?.currentUserUid) {
+                                            dialog.open(
+                                                new DialogModel(
+                                                    null,
+                                                    <DecisionDialog
+                                                        text={translate("do-you-want-to-leave-the-account")}
+                                                        onYesClick={() => {
+                                                            leaveOrDeleteAccount()
+                                                        }}
+                                                    />
+                                                )
+                                            )
+                                        } else {
+                                            getActiveDatabaseHelper().deleteDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_USERS}/${workAccount.uid}/${participant.value?.uid}`)
+                                        }
+                                    })
+                                    break;
+                            }
+                        })
                     }}
-                    placeholder={translate("add-participant")}
-                    suggestions={transactionPartnerInputOptions}
+                    placeholder={translate("email-to-invite")}
+                    suggestions={participantsInputOptions}
+                    readonly={true}
                 />
-            }
+                <AutoCompleteInputComponent<string>
+                    title={translate("invited-participants")}
+                    value={invitedUsersInputOptions}
+                    onValueChange={(value) => {
+                        const newInvites = value as InputNameValueModel<string>[] | null || []
+
+                        if (account) {
+                            getListDiff(invitedUsersInputOptions, newInvites, (type, items) => {
+                                switch (type) {
+                                    case ListDiffType.Deleted:
+                                        toast.open(translate("invite-have-been-removed"))
+
+                                        items.forEach((invite) => {
+                                            getActiveDatabaseHelper().deleteDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_INVITES}/${workAccount.uid}/${toHash(invite.value)}`)
+                                        })
+                                        break;
+                                }
+                            })
+                        } else {
+                            setTempInvites(newInvites.map(invite => invite.value || ""))
+                        }
+                    }}
+                    placeholder={translate("email-to-invite")}
+                    suggestions={invitedUsersInputOptions}
+                    customNewItemText={translate("invite-new-participant")}
+                    customNewItemAction={(input) => {
+                        if (!checkIfEmailIsValid(input)) {
+                            toast.open(translate("invalid-email"))
+                            return;
+                        }
+
+                        if (participants?.find(participant => participant.name === input)) {
+                            toast.open(translate("participant-already-in-account"))
+                            return;
+                        }
+
+                        if (account) {
+                            toast.open(translate("participant-invited", input))
+                            getActiveDatabaseHelper().setDBObject(`${DatabaseRoutes.PUBLIC_ACCOUNT_INVITES}/${workAccount.uid}/${toHash(input)}`, new InviteModel(
+                                input,
+                                workAccount.uid,
+                                workAccount.name
+                            ))
+                        } else {
+                            toast.open(translate("participant-invited-when-account-created", input))
+                            setTempInvites((oldInvites) => [...oldInvites, input])
+                        }
+                        //TODO implement invasion with email
+                    }}
+                    headerIcon={MdShare}
+                    onHeaderIconClick={(e) => {
+                        e.stopPropagation()
+
+                        dialog.open(
+                            new DialogModel(
+                                translate("invite-participants"),
+                                <ShareAccountDialog
+                                    linkInviteUid={linkInvite?.linkUid || ""}
+                                />,
+                                280
+                            )
+                        )
+
+                    }}
+                />
+            </> }
         </DialogOverlay>
     );
 };

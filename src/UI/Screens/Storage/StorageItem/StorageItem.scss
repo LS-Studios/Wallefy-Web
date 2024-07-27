@@ -7,13 +7,14 @@
   padding: 16px;
 
   &:hover {
-    #storage-item-name {
-      scale: 1.03;
-    }
+    scale: 1.01;
   }
 
   #storage-item-name {
     font-weight: bold;
+    width: 100%;
+
+    text-align: center;
 
     transition: 0.2s ease-in-out;
   }

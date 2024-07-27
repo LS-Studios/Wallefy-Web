@@ -23,7 +23,7 @@ import {useNewItems} from "../../CustomHooks/useNewItems";
 import CurrencyInputComponent from "../Components/Input/CurrencyInput/CurrencyInputComponent";
 import {CurrencyValueModel} from "../../Data/DataModels/CurrencyValueModel";
 import {CurrencyModel} from "../../Data/DataModels/CurrencyModel";
-import {useDatabaseRoute} from "../../CustomHooks/Database/useDatabaseRoute";
+import {useAccountRoute} from "../../CustomHooks/Database/useAccountRoute";
 import {useDialog} from "../../Providers/DialogProvider";
 import {useToast} from "../../Providers/Toast/ToastProvider";
 import {DebtPresetModel} from "../../Data/DatabaseModels/DebtPresetModel";
@@ -33,6 +33,8 @@ import {DistributionModel} from "../../Data/DataModels/DistributionModel";
 import DistributionDialog from "./DistributionDialog/DistributionDialog";
 import {DebtModel} from "../../Data/DatabaseModels/DebtModel";
 import {getActiveDatabaseHelper} from "../../Helper/Database/ActiveDBHelper";
+import {ExecutionType} from "../../Data/EnumTypes/ExecutionType";
+import {TransactionModel} from "../../Data/DatabaseModels/TransactionModel";
 
 interface AnswersType {
     [key: string]: string | string[] | CurrencyModel | boolean | number | RepetitionModel | CurrencyValueModel | null;
@@ -48,7 +50,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
     const toast = useToast()
     const dialog = useDialog()
     const translate = useTranslation()
-    const getDatabaseRoute = useDatabaseRoute()
+    const getDatabaseRoute = useAccountRoute()
     const { currentAccount } = useCurrentAccount();
 
     const [answers, setAnswers] = useState<AnswersType | null>(null)
@@ -63,6 +65,8 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
     const [nonUserTransactionPartnersForSelection, setNonUserTransactionPartnersForSelection] = useState<InputNameValueModel<TransactionPartnerModel>[] | null>(null)
 
     const [distributions, setDistributions] = useState<DistributionModel[]>([])
+
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const {
         newItems,
@@ -96,6 +100,14 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                     // @ts-ignore
                     acc[question.answerKey] = preset.presetItem[question.answerKey] || formatDateToStandardString(new Date())
                     break
+                case PresetQuestionType.TRANSACTION_PARTNER_USERS:
+                    // @ts-ignore
+                    acc[question.answerKey] = preset.presetItem[question.answerKey] || []
+                    break
+                case PresetQuestionType.REPETITION:
+                    // @ts-ignore
+                    acc[question.answerKey] = preset.presetItem[question.answerKey] || new RepetitionModel()
+                    break
                 default:
                     // @ts-ignore
                     acc[question.answerKey] = preset.presetItem[question.answerKey]
@@ -126,13 +138,17 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
     useEffect(() => {
         if (!answers || !currencyValueKey || !transactionPartnersValueKey) return
 
-        const newDistributions: DistributionModel[] = [];
+        let newDistributions: DistributionModel[] = [];
 
-        const selectedTransactionPartners = answers[transactionPartnersValueKey] as string[]
+        const selectedTransactionPartners = answers[transactionPartnersValueKey] as string[] | undefined
 
-        selectedTransactionPartners.forEach((whoWasPaidFor) => {
-            newDistributions.push(new DistributionModel(whoWasPaidFor, 100 / selectedTransactionPartners.length));
-        })
+        if (selectedTransactionPartners) {
+            selectedTransactionPartners?.forEach((whoWasPaidFor) => {
+                newDistributions.push(new DistributionModel(whoWasPaidFor, 100 / selectedTransactionPartners.length));
+            })
+        } else {
+            newDistributions = []
+        }
 
         setDistributions(newDistributions)
     }, [
@@ -187,9 +203,17 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                             return
                         }
 
+                        let transactionPath: DatabaseRoutes = DatabaseRoutes.TRANSACTIONS
+
                         if (isDebt) {
                             (newPresetItem as DebtModel).distributions = distributions
+                        } else if ((newPresetItem as TransactionModel).repetition.executionType !== ExecutionType.LATER) {
+                            const castedTransaction = newPresetItem as TransactionModel
+                            transactionPath = DatabaseRoutes.HISTORY_TRANSACTIONS
+                            castedTransaction.history = true
                         }
+
+                        setIsLoading(true)
 
                         const promises: Promise<any>[] = []
 
@@ -219,13 +243,15 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                                     getDatabaseRoute!(DatabaseRoutes.DEBTS),
                                     newPresetItem
                                 ).then(() => {
+                                    setIsLoading(false)
                                     dialog.closeCurrent()
                                 })
                             } else {
                                 getActiveDatabaseHelper().addDBItem(
-                                    getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS),
+                                    getDatabaseRoute!(transactionPath),
                                     newPresetItem
                                 ).then(() => {
+                                    setIsLoading(false)
                                     dialog.closeCurrent()
                                 })
                             }
@@ -237,11 +263,12 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
             ]}
         >
             {
-                preset.presetQuestions.map((question) => {
+                preset.presetQuestions.map((question, index) => {
                     switch (question.questionType) {
                         case PresetQuestionType.TEXT:
                             return (
                                 <TextInputComponent
+                                    key={index}
                                     title={question.question}
                                     value={answers[question.answerKey] as string}
                                     onValueChange={(value) => {
@@ -258,6 +285,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                         case PresetQuestionType.CURRENCY:
                             return (
                                 <CurrencyInputComponent
+                                    key={index}
                                     title={question.question}
                                     value={(answers[question.answerKey] as CurrencyValueModel).transactionAmount}
                                     onValueChange={(value) => {
@@ -287,6 +315,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                         case PresetQuestionType.TRANSACTION_PARTNER_NO_USER:
                             return (
                                 <AutoCompleteInputComponent
+                                    key={index}
                                     title={question.question}
                                     value={getInputValueUidByUid(answers[question.answerKey] as string, nonUserTransactionPartnersForSelection)}
                                     onValueChange={(value) => {
@@ -327,6 +356,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                         case PresetQuestionType.TRANSACTION_PARTNER_USER:
                             return (
                                 <AutoCompleteInputComponent
+                                    key={index}
                                     title={question.question}
                                     value={getInputValueUidByUid(answers[question.answerKey] as string, userTransactionPartnersForSelection)}
                                     onValueChange={(value) => {
@@ -367,6 +397,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                         case PresetQuestionType.TRANSACTION_PARTNER_USERS:
                             return (
                                 <AutoCompleteInputComponent
+                                    key={index}
                                     title={question.question}
                                     Icon={MdTune}
                                     onIconClick={(e) => {
@@ -424,6 +455,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                         case PresetQuestionType.REPETITION:
                             return (
                                 <RepetitionRateInput
+                                    key={index}
                                     title={question.question}
                                     repetition={answers[question.answerKey] as RepetitionModel}
                                     updateRepetition={(updater) => {
@@ -437,6 +469,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                         case PresetQuestionType.PAST_DATE:
                             return (
                                 <DateInputComponent
+                                    key={index}
                                     title={question.question}
                                     value={new Date(answers[question.answerKey] as string)}
                                     onValueChange={(value) => {
@@ -452,6 +485,7 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                         case PresetQuestionType.FUTURE_DATE:
                             return (
                                 <DateInputComponent
+                                    key={index}
                                     title={question.question}
                                     value={new Date(answers[question.answerKey] as string)}
                                     onValueChange={(value) => {

@@ -2,6 +2,7 @@ import React, {CSSProperties, PropsWithChildren, useEffect, useState} from 'reac
 import './InputBaseComponent.scss';
 import {MdCheckBox, MdCheckBoxOutlineBlank, MdOutlineCheckBox} from "react-icons/md";
 import Divider from "../../Divider/Divider";
+import {IconType} from "react-icons";
 
 const InputBaseComponent = ({
     title,
@@ -10,6 +11,8 @@ const InputBaseComponent = ({
     onClick,
     onDrop,
     onDrag,
+    Icon,
+    onIconClick,
     enabled,
     setEnabled,
     children
@@ -20,6 +23,8 @@ const InputBaseComponent = ({
     onClick?: (e: React.MouseEvent<HTMLDivElement>) => void,
     onDrop?: (e: React.DragEvent<HTMLDivElement>) => void,
     onDrag?: (e: React.DragEvent<HTMLDivElement>) => void,
+    Icon?: IconType,
+    onIconClick?: (e: React.MouseEvent<SVGElement>) => void,
     enabled?: boolean,
     setEnabled?: (enabled: boolean) => void
 }>) => {
@@ -40,6 +45,7 @@ const InputBaseComponent = ({
         <div className="input-base-component-header">
             <label className={labelClassName}>{title}</label>
             { enabled === undefined ? null : (!enabled ? <MdCheckBoxOutlineBlank id="input-base-component-header-icon" /> : <MdOutlineCheckBox id="input-base-component-header-icon" />) }
+            { Icon && <Icon id="input-base-component-header-icon" onClick={onIconClick} />}
         </div>
         { enabled === undefined ? children : enabled && <div
             onClick={(event) => {
