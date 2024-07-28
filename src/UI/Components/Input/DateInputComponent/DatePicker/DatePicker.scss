@@ -10,12 +10,14 @@
 }
 
 @media only screen and (max-width: $mobile-state-1) {
-  .date-picker.rmdp-wrapper,
+  .date-picker.rmdp-wrapper {
+    width: 300px;
+  }
+
   .date-picker .rmdp-month-picker,
   .date-picker .rmdp-year-picker,
-  .date-picker .rmdp-time-picker div input,
-  .rmdp-container .date-picker.ep-arrow::after {
-    width: 350px;
+  .date-picker .rmdp-time-picker {
+    width: 100%;
   }
 
   .date-picker .rmdp-calendar {
@@ -31,12 +33,12 @@
   }
 
   .date-picker .rmdp-week-day {
-    height: 45px;
+    height: 40px;
     font-size: 14px;
   }
 
   .date-picker .rmdp-day {
-    height: 45px;
+    height: 40px;
     width: 20px;
 
     span {

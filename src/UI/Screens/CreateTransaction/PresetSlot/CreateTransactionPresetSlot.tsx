@@ -47,10 +47,10 @@ const CreateTransactionPresetSlot = ({
         <div
             className="create-transaction-preset-slot" onClick={openCreateTransactionDialog}
             onContextMenu={(e) => contextMenu.handleOnContextMenu(e, [
-                new ContentAction("Edit", () => {
+                new ContentAction(translate("edit"), () => {
 
                 }, isBasic),
-                new ContentAction("Delete", () => {
+                new ContentAction(translate("delete"), () => {
                     if (!getDatabaseRoute) return
 
                     getActiveDatabaseHelper().deleteDBItem(getDatabaseRoute(DatabaseRoutes.PRESETS), preset)

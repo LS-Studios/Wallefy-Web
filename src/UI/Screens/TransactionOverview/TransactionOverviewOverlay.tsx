@@ -15,10 +15,12 @@ import {
 } from "../../../Helper/DateHelper";
 import {DialogModel} from "../../../Data/DataModels/DialogModel";
 import {useTranslation} from "../../../CustomHooks/useTranslation";
+import {useSettings} from "../../../Providers/SettingsProvider";
 
 const TransactionOverviewOverlay = () => {
     const translate = useTranslation();
     const dialog = useDialog();
+    const settings = useSettings()
 
     const [dateRange, setDateRange] = React.useState<DateRangeModel>(new DateRangeModel(
         formatDateToStandardString(getStartOfMonth(new Date())),
@@ -31,7 +33,7 @@ const TransactionOverviewOverlay = () => {
             titleIcon={<MdOutlineBarChart />}
             actions={[
                 new ContentAction(
-                    translate("date-range") + " ( " + speakableDateRange(dateRange) + " )",
+                    translate("date-range") + " ( " + speakableDateRange(dateRange, settings?.language || "DE") + " )",
                     () => {
                         dialog.open(
                             new DialogModel(

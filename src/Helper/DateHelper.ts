@@ -5,7 +5,7 @@ export function padTo2Digits(num: number) {
     return num.toString().padStart(2, '0');
 }
 
-export function formatDate(date: Date, locale: string = "de-DE") {
+export function formatDate(date: Date, locale: string) {
     return date.toLocaleDateString(locale, {
         year: "numeric",
         month: "2-digit",
@@ -13,7 +13,7 @@ export function formatDate(date: Date, locale: string = "de-DE") {
     })
 }
 
-export function formatTime(date: Date, locale: string = "de-DE") {
+export function formatTime(date: Date, locale: string) {
     return date.toLocaleTimeString(locale, {
         hour: "2-digit",
         minute: "2-digit",
@@ -96,6 +96,6 @@ export function addYears(transactionDate: Date, years: number) {
     return result
 }
 
-export function speakableDateRange(dateRange: DateRangeModel) {
-    return dateRangeIsMonth(dateRange) ? getMonthAndYear(new Date(dateRange.startDate), "DE") : `${formatDate(new Date(dateRange.startDate))} - ${formatDate(new Date(dateRange.endDate))}`
+export function speakableDateRange(dateRange: DateRangeModel, langKey: string) {
+    return dateRangeIsMonth(dateRange) ? getMonthAndYear(new Date(dateRange.startDate), "DE") : `${formatDate(new Date(dateRange.startDate), langKey)} - ${formatDate(new Date(dateRange.endDate), langKey)}`
 }

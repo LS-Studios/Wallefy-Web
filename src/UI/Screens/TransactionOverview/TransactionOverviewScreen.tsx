@@ -211,7 +211,7 @@ const TransactionOverviewScreen = ({
                     onTransactionTypeChange={setCategoryTransactionType}
                     selectedItem={selectedCategory}
                     onItemSelected={setSelectedCategory}
-                    noItemSelectedLabel={speakableDateRange(dateRange)}
+                    noItemSelectedLabel={speakableDateRange(dateRange, settings?.language || "DE")}
                     baseCurrency={currentAccount?.currencyCode}
                     onDetailOpen={() => {
                         const detailTransactions: TransactionModel[] = []
@@ -239,7 +239,7 @@ const TransactionOverviewScreen = ({
                     onTransactionTypeChange={setTransactionPartnerTransactionType}
                     selectedItem={selectedTransactionPartner}
                     onItemSelected={setSelectedTransactionPartner}
-                    noItemSelectedLabel={speakableDateRange(dateRange)}
+                    noItemSelectedLabel={speakableDateRange(dateRange, settings?.language || "DE")}
                     baseCurrency={currentAccount?.currencyCode}
                     onDetailOpen={() => {
                         const detailTransactions: TransactionModel[] = []
@@ -267,7 +267,7 @@ const TransactionOverviewScreen = ({
                     onTransactionTypeChange={setLabelTransactionType}
                     selectedItem={selectedLabel}
                     onItemSelected={setSelectedLabel}
-                    noItemSelectedLabel={speakableDateRange(dateRange)}
+                    noItemSelectedLabel={speakableDateRange(dateRange, settings?.language || "DE")}
                     baseCurrency={currentAccount?.currencyCode}
                     onDetailOpen={() => {
                         const detailTransactions: TransactionModel[] = []

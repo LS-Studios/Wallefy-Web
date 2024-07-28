@@ -47,9 +47,15 @@ const Menu = ({
         let onClick = () => {}
 
         if (typeof route === 'string') {
-            onClick = () => navigate(route)
+            onClick = () => {
+                navigate(route)
+                setMenuIsOpen(false)
+            }
         } else {
-            onClick = route
+            onClick = () => {
+                route()
+                setMenuIsOpen(false)
+            }
         }
 
         return <li id={id} onClick={onClick} className={currentRoute === route ? "selected" : ""}><Icon className="menu-nav-icon"/>{name}</li>

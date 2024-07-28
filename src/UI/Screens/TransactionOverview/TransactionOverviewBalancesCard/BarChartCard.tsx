@@ -3,7 +3,7 @@ import Divider from "../../../Components/Divider/Divider";
 import '../TransactionOverviewCard.scss';
 import {BarChart} from "@mui/x-charts"
 import {formatCurrency} from "../../../../Helper/CurrencyHelper";
-import {formatDate} from "../../../../Helper/DateHelper";
+import {formatDate, speakableDate} from "../../../../Helper/DateHelper";
 import {ChartDataModel} from "../../../../Data/DataModels/Chart/ChartDataModel";
 import "./BarChartCard.scss"
 import CardContentRow from "./CardContentRow";
@@ -81,7 +81,7 @@ const BarChartCard = ({
                                     return colors[index % colors.length]
                                 })
                             },
-                            valueFormatter: (value) => displayLabelAsData ? formatDate(new Date(value)) : value,
+                            valueFormatter: (value) => displayLabelAsData ? formatDate(new Date(value), settings?.language || "DE") : value,
                         }]}
                         yAxis={[{
                             tickNumber: 8,
@@ -142,7 +142,7 @@ const BarChartCard = ({
                 <Divider useOutlineColor={true}/>
                 <CardContentRow
                     firstLabel={translate("selected-value-name")}
-                    firstValue={selectedItem ? (displayLabelAsData ? formatDate(new Date(selectedItem?.label)) : selectedItem?.label) : translate("no-date-selected")}
+                    firstValue={selectedItem ? (displayLabelAsData ? speakableDate(new Date(selectedItem?.label), settings?.language || "DE", translate) : selectedItem?.label) : translate("no-date-selected")}
                     secondLabel={translate("selected-value")}
                     secondValue={selectedItem ? formatCurrency(selectedItem?.value!, settings?.language, baseCurrency) : translate("no-date-selected")}
                 />

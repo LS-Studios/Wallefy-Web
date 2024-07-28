@@ -97,7 +97,7 @@ const useTransactionInDateRange = (dateRange: DateRangeModel) => {
         runCalculateFutureTransactionsUntilDate({
             getDatabaseRoute,
             transactions: presetTransactions,
-            date: dateRange.endDate
+            date: formatDateToStandardString(dateThreshold)
         }).then((futureTransactions) => {
             runBalancesAtDateInDateRange({
                 currentBalance: currentAccount.balance!,

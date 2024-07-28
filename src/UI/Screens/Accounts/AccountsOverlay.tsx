@@ -45,20 +45,6 @@ const AccountsOverlay = () => {
             titleIcon={<MdOutlineAccountCircle />}
             actions={[
                 new ContentAction(
-                    `${translate("invites")}${invitesForUser && invitesForUser.length > 0 ? ` (${invitesForUser.length})` : ""}`,
-                    () => {
-                        dialog.open(
-                            new DialogModel(
-                                translate("invites"),
-                                <InvasionDialog />
-                            )
-                        )
-                    },
-                    false,
-                    false,
-                    <MdInbox />,
-                ),
-                new ContentAction(
                     translate("filter"),
                     () => {
                         dialog.open(
@@ -90,7 +76,24 @@ const AccountsOverlay = () => {
                     false,
                     <MdAdd />,
                 )
-            ]}>
+            ]}
+            stickyActions={[
+                new ContentAction(
+                    `${translate("invites")}${invitesForUser && invitesForUser.length > 0 ? ` (${invitesForUser.length})` : ""}`,
+                    () => {
+                        dialog.open(
+                            new DialogModel(
+                                translate("invites"),
+                                <InvasionDialog />
+                            )
+                        )
+                    },
+                    false,
+                    false,
+                    <MdInbox />,
+                ),
+            ]}
+        >
             <AccountsScreen searchValue={filterValue.searchName || ""} />
         </ContentOverlay>
     );

@@ -17,11 +17,13 @@ import {usePresets} from "../../CustomHooks/Database/usePresets";
 import {useHistoryTransactions} from "../../CustomHooks/Database/useHistoryTransactions";
 import {useDebts} from "../../CustomHooks/Database/useDebts";
 import {usePayedDebts} from "../../CustomHooks/Database/usePayedDebts";
+import {useSettings} from "../../Providers/SettingsProvider";
 
 const ExportDialog = () => {
     const dialog = useDialog()
     const translate = useTranslation()
     const toast = useToast()
+    const settings = useSettings()
 
     const [fileName, setFileName] = React.useState<string>("");
     const [useTimestamp, setUseTimestamp] = React.useState<boolean>(false);
@@ -39,12 +41,12 @@ const ExportDialog = () => {
     const getFileName = () => {
         if (fileName) {
             if (useTimestamp) {
-                return fileName + " - " + formatDateToStandardString(new Date()) + " " + formatTime(new Date());
+                return fileName + " - " + formatDateToStandardString(new Date()) + " " + formatTime(new Date(), settings?.language || "DE");
             } else {
                 return fileName;
             }
         } else if (useTimestamp) {
-            return formatDateToStandardString(new Date()) + " " + formatTime(new Date());
+            return formatDateToStandardString(new Date()) + " " + formatTime(new Date(), settings?.language || "DE");
         } else {
             return "";
         }

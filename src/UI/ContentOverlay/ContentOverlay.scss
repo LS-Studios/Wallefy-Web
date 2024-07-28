@@ -5,6 +5,10 @@
     margin-left: 60px;
     margin-right: 60px;
   }
+
+  .content-overlay-header-content {
+    margin: 24px 42px;
+  }
 }
 
 @media only screen and (max-width: $mobile-state-2) {
@@ -12,12 +16,18 @@
     margin-left: 0;
     margin-right: 0;
   }
+  .content-overlay-header-content {
+    margin: 24px;
+  }
 }
 
 @media only screen and (min-width: $mobile-state-1) {
   .content-overlay {
     margin-left: 360px;
     margin-right: 60px;
+  }
+  .content-overlay-header-content {
+    margin: 24px 42px;
   }
 }
 
@@ -119,8 +129,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  margin: 24px 42px;
 }
 
 .content-overlay-header-content-actions {

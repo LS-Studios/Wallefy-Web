@@ -18,11 +18,13 @@ const ContentOverlay = ({
     title,
     titleIcon,
     actions,
+    stickyActions,
     children
 }: PropsWithChildren<{
     title: string;
     titleIcon: React.ReactNode;
     actions: ContentActionInterface[];
+    stickyActions?: ContentActionInterface[];
 }>) => {
     const translate = useTranslation()
     const navigate = useNavigate()
@@ -34,7 +36,7 @@ const ContentOverlay = ({
 
     const [menuIsOpen, setMenuIsOpen] = React.useState(false);
 
-    const getActionButtons = (absolute: boolean) => <div className={"content-overlay-header-content-actions" + (absolute ? " absolute" : "")}>
+    const getActionButtons = (actions: ContentActionInterface[], absolute: boolean) => <div className={"content-overlay-header-content-actions" + (absolute ? " absolute" : "")}>
         {actions.map((action, index) => {
             if (action.type === ContentActionType.BUTTON) {
                 const buttonAction = action as ContentAction;
@@ -102,13 +104,13 @@ const ContentOverlay = ({
                         {titleIcon}
                         {title}
                     </div>
-                    { screenScaleStep < 2 && getActionButtons(false) }
+                    { screenScaleStep < 2 ? getActionButtons([...(stickyActions || []), ...actions], false) : getActionButtons(stickyActions || [], false) }
                 </div>
                 <hr className="content-overlay-divider"/>
             </div>
             <div className="content-overlay-body">
                 {children}
-                { screenScaleStep > 1 && getActionButtons(true) }
+                { screenScaleStep > 1 && getActionButtons(actions, true) }
                 { screenScaleStep > 1 && <div className="content-overlay-bottom-bar">
                     <div onClick={() => setMenuIsOpen(true)}><MdMenu />{translate("menu")}</div>
                     <div onClick={() => navigate(RoutePath.HOME)}><MdHome />{translate("home")}</div>

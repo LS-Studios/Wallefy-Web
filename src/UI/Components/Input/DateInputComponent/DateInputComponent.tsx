@@ -1,7 +1,7 @@
 import React, {CSSProperties, useEffect, useState} from 'react';
 import InputBaseComponent from "../InputBase/InputBaseComponent";
 import './DateInputComponent.scss';
-import {MdCalendarMonth, MdDateRange} from "react-icons/md";
+import {MdCalendarMonth, MdCalendarToday, MdDateRange} from "react-icons/md";
 
 import {formatDate, formatDateToStandardString, getMonthAndYear} from "../../../../Helper/DateHelper";
 import DropDialog from "../../Dropdialog/DropDialog";
@@ -12,6 +12,7 @@ import DateCalendar from "./DatePicker/DateCalendar";
 import {useDialog} from "../../../../Providers/DialogProvider";
 import {DialogModel} from "../../../../Data/DataModels/DialogModel";
 import DatePickerDialog from "../../../Dialogs/DatePickerDialog/DatePickerDialog";
+import {useSettings} from "../../../../Providers/SettingsProvider";
 
 const DateInputComponent = ({
     title,
@@ -32,6 +33,7 @@ const DateInputComponent = ({
 }) => {
     const dialog = useDialog()
     const screenScaleStep = useScreenScaleStep()
+    const settings = useSettings()
 
     const inputRef = React.createRef<HTMLInputElement>();
 
@@ -53,7 +55,8 @@ const DateInputComponent = ({
                         maxDate={maxDate}
                         disabledWeekDays={disabledWeekDays}
                         onlyMonthPicker={onlyMonthPicker}
-                    />
+                    />,
+                    325
                 )
             )
         } else {
@@ -89,19 +92,19 @@ const DateInputComponent = ({
     const dateInput = <input
         ref={inputRef}
         className={"date-input-component-input " + (title ? "text" : "box")}
-        type={onlyMonthPicker ? "text" : "date"}
-        spellCheck="false"
-        autoComplete="false"
-        value={onlyMonthPicker ? getMonthAndYear(new Date(pickerDate), "DE") : pickerDate}
+        type="text"
+        value={onlyMonthPicker ? getMonthAndYear(new Date(pickerDate), settings?.language || "DE") : formatDate(new Date(pickerDate), settings?.language || "DE")}
         onChange={onInputDateChange}
+        readOnly
+        onClick={(e) => !title && openDatePicker(e)}
         onBlur={() => inputRef.current?.blur()}
         onKeyDown={onKeyDown}
     />
 
-    const dateInputContainer = onlyMonthPicker ? <div className={"date-input-component-input-container " + (title ? "text" : "box")}>
-        {dateInput}
-        <MdCalendarMonth onClick={openDatePicker}/>
-    </div> : dateInput
+    const dateInputContainer = title ? <div className="date-input-component-input-container text">
+        { dateInput }
+        { onlyMonthPicker ? <MdCalendarMonth/> : <MdCalendarToday/> }
+    </div> : dateInput;
 
     return screenScaleStep > 0 ? <>
         {title ? <InputBaseComponent title={title} onClick={openDatePicker}>

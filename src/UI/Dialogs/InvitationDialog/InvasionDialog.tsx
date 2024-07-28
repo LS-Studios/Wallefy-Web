@@ -19,6 +19,8 @@ const InvasionDialog = () => {
         if (!currentUser) return
 
         getActiveDatabaseHelper().getDBObjectsOnChange(DatabaseRoutes.PUBLIC_ACCOUNT_INVITES, (invites) => {
+            if (!invites.length) return setInvitesForUser([])
+
             setInvitesForUser(
                 (Object.values(Object.values(invites)[0] as {}) as []).filter((invite: InviteModel) => {
                     return invite.email === currentUser.email
