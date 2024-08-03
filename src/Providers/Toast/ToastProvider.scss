@@ -1,5 +1,19 @@
-.toastsWrapper {
-  position: absolute;
-  bottom: 50px;
-  left: 20px
+.toast-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 110;
+
+  display: flex;
+  justify-content: start;
+  align-items: end;
+
+  pointer-events: none;
+}
+
+.toast-wrapper {
+  margin-left: 50px;
+  margin-bottom: 20px
 }

@@ -41,8 +41,6 @@ const CreateTransactionDialog = ({
     const toast = useToast()
 
     const [currentTab, setCurrentTab] = React.useState<number>(0);
-    const [presetIcon, setPresetIcon] = React.useState<InputNameValueModel<string> | null>(null)
-    const [presetName, setPresetName] = React.useState<string>("")
 
     const [workTransaction, setWorkTransaction] = React.useState<TransactionModel | null>(null)
     const [inputError, setInputError] = React.useState<CreateTransactionInputErrorModel>(new CreateTransactionInputErrorModel())
@@ -263,7 +261,6 @@ const CreateTransactionDialog = ({
                     setInputError(new CreateTransactionInputErrorModel())
 
                     if (!validateInput()) return
-                    if (!getDatabaseRoute || !currentAccount) return;
 
                     setIsLoading(true)
 
@@ -273,12 +270,14 @@ const CreateTransactionDialog = ({
                         if (workTransaction.repetition.executionType !== ExecutionType.LATER) {
                             transactionPath = DatabaseRoutes.HISTORY_TRANSACTIONS
                             workTransaction.history = true
+                        } else {
+                            workTransaction.history = false
                         }
 
-                        workTransaction.accountUid = currentAccount.uid
+                        workTransaction.accountUid = currentAccount!.uid
 
                         getActiveDatabaseHelper().addDBItem(
-                            getDatabaseRoute(transactionPath),
+                            getDatabaseRoute!(transactionPath),
                             workTransaction
                         ).then(() => {
                             dialog.closeCurrent();
@@ -294,12 +293,33 @@ const CreateTransactionDialog = ({
                     setIsLoading(true)
 
                     Promise.all(addNewValues()).then(() => {
-                        // workTransaction.newTransactionPartner = transactionPartners?.find(partner => partner.uid === workTransaction.transactionExecutorUid)?.name || workTransaction.newTransactionPartner
-                        // workTransaction.newCategory = categories.find(category => category.uid === workTransaction.categoryUid)?.name || workTransaction.newCategory
-                        // workTransaction.newLabels = workTransaction.labels.map(labelUid => labels.find(label => label.uid === labelUid)?.name || "")
+                        let transactionPath = DatabaseRoutes.TRANSACTIONS
+
+                        if (workTransaction.repetition.executionType !== ExecutionType.LATER) {
+                            transactionPath = DatabaseRoutes.HISTORY_TRANSACTIONS
+                            workTransaction.history = true
+
+                            if (transaction.uid && !transaction.history) {
+                                getActiveDatabaseHelper().deleteDBItem(
+                                    getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS),
+                                    transaction
+                                )
+                            }
+                        } else {
+                            workTransaction.history = false
+
+                            if (transaction.uid && transaction.history) {
+                                getActiveDatabaseHelper().deleteDBItem(
+                                    getDatabaseRoute!(DatabaseRoutes.HISTORY_TRANSACTIONS),
+                                    transaction
+                                )
+                            }
+                        }
+
+                        workTransaction.accountUid = currentAccount.uid
 
                         getActiveDatabaseHelper().updateDBItem(
-                            getDatabaseRoute!(DatabaseRoutes.TRANSACTIONS),
+                            getDatabaseRoute!(transactionPath),
                             workTransaction
                         ).then(() => {
                             setIsLoading(false)

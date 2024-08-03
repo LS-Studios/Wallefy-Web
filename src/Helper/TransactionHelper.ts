@@ -241,9 +241,8 @@ export const executeTransaction = (
     return new Promise<void>((resolve, reject) => {
         updateAccountBalance(currentAccount.balance + getTransactionAmount(transaction, currentAccount.currencyCode)!);
 
-        const nextDate = new RepetitionHelper(transaction).calculateNextRepetitionDate(getDatabaseRoute);
-
         if (transaction.history) {
+            //Duplicate transaction to current date
             getActiveDatabaseHelper().addDBItem(
                 getDatabaseRoute(DatabaseRoutes.HISTORY_TRANSACTIONS),
                 {
@@ -258,19 +257,40 @@ export const executeTransaction = (
             ).then(() => {
                 resolve()
             })
-        } else if (nextDate) {
-            getActiveDatabaseHelper().addDBItem(
-                getDatabaseRoute(DatabaseRoutes.HISTORY_TRANSACTIONS),
-                {
+        } else {
+            const newTransactions = []
+            let previousDate = transaction.date;
+            let nextDate = new RepetitionHelper(transaction).calculateNextRepetitionDate(getDatabaseRoute);
+
+            while (nextDate && new Date(nextDate) <= new Date()) {
+                newTransactions.push({
                     ...transaction,
                     uid: "",
                     repetition: new RepetitionModel(
                         ExecutionType.PAST
                     ),
-                    date: formatDateToStandardString(new Date()),
+                    date: nextDate,
                     history: true
-                }
-            ).then(() => {
+                })
+                previousDate = nextDate;
+                nextDate = new RepetitionHelper(transaction).calculateNextRepetitionDate(getDatabaseRoute);
+            }
+
+            newTransactions.forEach((newTransaction) => {
+                getActiveDatabaseHelper().addDBItem(
+                    getDatabaseRoute(DatabaseRoutes.HISTORY_TRANSACTIONS),
+                    newTransaction
+                )
+            })
+
+            if (!nextDate && new Date(previousDate) <= new Date()) {
+                getActiveDatabaseHelper().deleteDBItem(
+                    getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
+                    transaction
+                ).then(() => {
+                    resolve()
+                })
+            } else {
                 getActiveDatabaseHelper().updateDBItem(
                     getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
                     {
@@ -280,14 +300,7 @@ export const executeTransaction = (
                 ).then(() => {
                     resolve()
                 })
-            })
-        } else {
-            getActiveDatabaseHelper().deleteDBItem(
-                getDatabaseRoute(DatabaseRoutes.TRANSACTIONS),
-                transaction
-            ).then(() => {
-                resolve()
-            })
+            }
         }
     })
 }

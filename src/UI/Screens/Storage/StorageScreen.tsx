@@ -87,6 +87,8 @@ const StorageScreen = ({
 };
 
 //TODO [] Implement Caching
+//TODO [] On mobile date picker dialog, month picker is not with 100%
+//TODO [] Implement encription, see EncriptionHelper
 //TODO [] Popup dialog to put the current balance and recent transactions
 //TODO [] Help screen with Totrial buttons (How to create public account, ...)
 //TODO [] Implement encription

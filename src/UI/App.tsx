@@ -28,9 +28,7 @@ import Spinner from "./Components/Spinner/Spinner";
 import {SpinnerType} from "../Data/EnumTypes/SpinnerType";
 import {getAuth, onAuthStateChanged} from "firebase/auth";
 import InvitationsScreen from "./Screens/Invitations/InvitationsScreen";
-import Joyride, {CallBackProps, STATUS, EVENTS, ACTIONS} from "react-joyride";
 import './App.scss';
-import {getJoyrideSteps} from "../Helper/JoyrideSteps";
 import {useTranslation} from "../CustomHooks/useTranslation";
 
 function App() {
@@ -71,8 +69,6 @@ function App() {
     //         }
     //     }
     // }
-
-
 
     useEffect(() => {
         onAuthStateChanged(getAuth(), (user) => {

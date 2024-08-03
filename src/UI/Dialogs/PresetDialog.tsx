@@ -94,11 +94,11 @@ function PresetDialog<T extends TransactionPresetModel | DebtPresetModel>({
                     break
                 case PresetQuestionType.PAST_DATE:
                     // @ts-ignore
-                    acc[question.answerKey] = preset.presetItem[question.answerKey] || formatDateToStandardString(new Date())
+                    acc[question.answerKey] = formatDateToStandardString(new Date())
                     break
                 case PresetQuestionType.FUTURE_DATE:
                     // @ts-ignore
-                    acc[question.answerKey] = preset.presetItem[question.answerKey] || formatDateToStandardString(new Date())
+                    acc[question.answerKey] = formatDateToStandardString(new Date())
                     break
                 case PresetQuestionType.TRANSACTION_PARTNER_USERS:
                     // @ts-ignore

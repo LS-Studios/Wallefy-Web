@@ -33,10 +33,12 @@ export const ToastProvider = ({ children }: PropsWithChildren) => {
         <ToastContext.Provider value={contextValue}>
             { children }
 
-            <div className="toastsWrapper">
-                {toasts.map((toast) => (
-                    <Toast key={toast.id} message={toast.message} close={() => close(toast.id)} />
-                ))}
+            <div className="toast-overlay">
+                <div className="toast-wrapper">
+                    {toasts.map((toast) => (
+                        <Toast key={toast.id} message={toast.message} close={() => close(toast.id)} />
+                    ))}
+                </div>
             </div>
         </ToastContext.Provider>
     );
