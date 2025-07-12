@@ -68,7 +68,6 @@ const Menu = ({
         }}>
             <div className="menu-app-title-container">
                 <div className="menu-app-title">
-                    <MdIcecream />
                     <span>Wallefy</span>
                 </div>
                 { screenScaleStep > 0 && <MdClose onClick={() => {

@@ -49,7 +49,7 @@ const BalanceCard = () => {
             debts,
             payedDebts,
             baseCurrency: currentAccount.currencyCode
-        }).then((balances) => {
+        }, "calculate-balances").then((balances) => {
             setBalances(balances)
         })
     }, [debts, payedDebts, currentAccount]);

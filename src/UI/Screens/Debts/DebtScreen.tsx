@@ -50,6 +50,7 @@ const DebtScreen = ({
         }
 
         runSortFilterGroup({
+            forHistory: true,
             translate,
             currentAccount,
             transactions: [...debts, ...payedDebts.map((payedDebt) => {
@@ -66,7 +67,7 @@ const DebtScreen = ({
             sortValue,
             filterValue,
             isDebtScreen: true
-        }).then((debtGroups) => {
+        }, "debt-screen-sort-filter-group").then((debtGroups) => {
             setDebtGroups(debtGroups)
         })
     }, [debts, payedDebts, currentAccount, sortValue, filterValue]);

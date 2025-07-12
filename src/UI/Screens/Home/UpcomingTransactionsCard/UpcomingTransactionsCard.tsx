@@ -39,7 +39,7 @@ const UpcomingTransactionsCard = () => {
             getDatabaseRoute: getDatabaseRoute,
             transactions: transactions,
             amount: 5
-        }).then((futureTransactions) => {
+        }, "calculate-next-5-transactions").then((futureTransactions) => {
             setNext5Transactions(futureTransactions)
         })
     }, [runTask, getDatabaseRoute, transactions]);

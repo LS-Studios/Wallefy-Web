@@ -13,6 +13,7 @@ import {DebtModel} from "../Data/DatabaseModels/DebtModel";
 import {DebtGroupModel} from "../Data/DataModels/DebtGroupModel";
 
 export type SortFilterGroupWorkerData = {
+    forHistory: boolean,
     translate: ((key: string) => string),
     currentAccount: AccountModel,
     transactions: (TransactionModel | DebtModel)[],
@@ -22,7 +23,7 @@ export type SortFilterGroupWorkerData = {
 }
 
 self.onmessage = (e: MessageEvent<string>) => {
-    const { translate, currentAccount, transactions, sortValue, filterValue, isDebtScreen }: SortFilterGroupWorkerData = JSON.parse(e.data)
+    const { forHistory, translate, currentAccount, transactions, sortValue, filterValue, isDebtScreen }: SortFilterGroupWorkerData = JSON.parse(e.data)
 
     let filteredTransactions = [...transactions]
 
@@ -38,6 +39,10 @@ self.onmessage = (e: MessageEvent<string>) => {
                 transactions.sort((a, b) => {
                     return new Date(a.date) > new Date(b.date) ? 1 : -1;
                 })
+
+                if (forHistory) {
+                    transactions.reverse()
+                }
                 break;
             case SortType.PRICE_HIGH_TO_LOW:
                 transactions.sort((a, b) => {

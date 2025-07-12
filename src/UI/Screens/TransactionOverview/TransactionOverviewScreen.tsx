@@ -80,7 +80,7 @@ const TransactionOverviewScreen = ({
             transactionsInRage: transactionsUntilDateRange,
             dateRange: dateRange,
             baseCurrency: currentAccount.currencyCode
-        }).then((balances) => {
+        }, "overview-balances-in-date-range").then((balances) => {
             setBalancesData(balances.map((balanceAtDate) => {
                 return new ChartDataModel(
                     "",

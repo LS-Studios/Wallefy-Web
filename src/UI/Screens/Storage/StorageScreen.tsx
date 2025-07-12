@@ -86,6 +86,7 @@ const StorageScreen = ({
     );
 };
 
+//TODO ICON
 //TODO [] Implement Caching
 //TODO [] On mobile date picker dialog, month picker is not with 100%
 //TODO [] Implement encription, see EncriptionHelper

@@ -142,7 +142,6 @@ const AuthenticationScreen = () => {
                         const account = accounts[0] as AccountModel | null | undefined
 
                         if (account) {
-                            console.log(settings)
                             getActiveDatabaseHelper(DatabaseType.ACE_BASE).setDBObject(DatabaseRoutes.SETTINGS, {
                                 ...settings,
                                 currentUserUid: user.uid,

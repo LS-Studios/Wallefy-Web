@@ -52,7 +52,7 @@ const CashCheckDialog = () => {
             debts,
             payedDebts,
             baseCurrency: currentAccount.currencyCode
-        }).then((cashChecks) => {
+        }, "calculate-cash-checks").then((cashChecks) => {
             setCashChecks(cashChecks)
         })
     }, [debts, payedDebts]);

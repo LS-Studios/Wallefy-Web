@@ -55,7 +55,7 @@ const useTransactionInDateRange = (dateRange: DateRangeModel) => {
             getDatabaseRoute,
             transactions: presetTransactions,
             date: dateRange.endDate
-        }).then((futureTransactions) => {
+        }, "transactions-in-date-range").then((futureTransactions) => {
             setTransactionsInDateRange((current: TransactionModel[]) => {
                 return [...current.filter((transaction) => transaction.history), ...futureTransactions.filter((transaction) => {
                     return new Date(transaction.date) >= new Date(dateRange.startDate)
@@ -98,7 +98,7 @@ const useTransactionInDateRange = (dateRange: DateRangeModel) => {
             getDatabaseRoute,
             transactions: presetTransactions,
             date: formatDateToStandardString(dateThreshold)
-        }).then((futureTransactions) => {
+        }, "transactions-in-date-range--future-3-months").then((futureTransactions) => {
             runBalancesAtDateInDateRange({
                 currentBalance: currentAccount.balance!,
                 transactionsInRage: futureTransactions,
@@ -107,7 +107,7 @@ const useTransactionInDateRange = (dateRange: DateRangeModel) => {
                     formatDateToStandardString(dateThreshold)
                 ),
                 baseCurrency: currentAccount.currencyCode
-            }).then((balances) => {
+            }, "transactions-in-date-range-future-3-months-balances").then((balances) => {
                 setTotalSavings(balances.length > 0 ? Math.min(...balances.map((balance) => balance.balance)) : 0)
             })
         })

@@ -5,6 +5,7 @@ import {RepetitionModel} from "../Data/DataModels/Reptition/RepetitionModel";
 import {DatabaseRoutes} from "./DatabaseRoutes";
 import {TransactionModel} from "../Data/DatabaseModels/TransactionModel";
 import {getActiveDatabaseHelper} from "./Database/ActiveDBHelper";
+import transaction from "../UI/Screens/Transactions/Transaction/Transaction";
 
 export class RepetitionHelper {
     transactionUid: string;

@@ -75,7 +75,6 @@ const ContentOverlay = ({
             <div className="content-overlay-header">
                 <div className="content-overlay-navigation">
                     {screenScaleStep > 0 && <div className="content-overlay-navigation-page-name">
-                        <MdIcecream/>
                         {screenScaleStep < 2 && <span>Wallefy</span>}
                     </div>}
                     {screenScaleStep === 0 && <div className="content-overlay-header-navigation-account"

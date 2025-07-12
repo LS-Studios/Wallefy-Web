@@ -31,8 +31,6 @@ export const calculateNFutureTransactions = (getDatabaseRoute: (databaseRoute: D
         let currentTransaction = transactionQueue.shift()!;
         let nextDate = new RepetitionHelper(currentTransaction).calculateNextRepetitionDate(getDatabaseRoute);
 
-        if (nextDate === null) continue;
-
         let nextTransaction = {
             ...currentTransaction,
             date: nextDate
@@ -43,7 +41,7 @@ export const calculateNFutureTransactions = (getDatabaseRoute: (databaseRoute: D
             future: true
         } as TransactionModel);
 
-        if (nextTransaction.repetition) {
+        if (nextTransaction.repetition && nextDate) {
             transactionQueue.push(nextTransaction);
         }
 
@@ -71,8 +69,6 @@ export const calculateFutureTransactionsUntilDate = (getDatabaseRoute: (database
         let currentTransaction = transactionQueue.shift()!;
         let nextDate = new RepetitionHelper(currentTransaction).calculateNextRepetitionDate(getDatabaseRoute);
 
-        if (nextDate === null) continue;
-
         let nextTransaction = {
             ...currentTransaction,
             date: nextDate
@@ -80,7 +76,7 @@ export const calculateFutureTransactionsUntilDate = (getDatabaseRoute: (database
 
         futureTransactions.push(currentTransaction);
 
-        if (nextTransaction.repetition && new Date(nextTransaction.date) <= new Date(date)) {
+        if (nextTransaction.repetition && new Date(nextTransaction.date) <= new Date(date) && nextDate) {
             transactionQueue.push(nextTransaction);
         }
 
@@ -100,16 +96,19 @@ export const calculateBalancesAtDateInDateRange = (currentBalance: number, trans
     //calculate past
     transactionsInRange.filter((transaction) => {
         return transaction.history
+    }).sort((a, b) => {
+        return new Date(a.date) > new Date(b.date) ? -1 : 1;
     }).forEach((transaction) => {
         balance -= getTransactionAmount(transaction, baseCurrency)!;
         balancesAtDateMap[transaction.date] = balance
     })
 
     balance = currentBalance;
-
     //calculate future
     transactionsInRange.filter((transaction) => {
         return !transaction.history
+    }).sort((a, b) => {
+        return new Date(a.date) > new Date(b.date) ? 1 : -1;
     }).forEach((transaction) => {
         balance += getTransactionAmount(transaction, baseCurrency)!;
         balancesAtDateMap[transaction.date] = balance
@@ -273,7 +272,10 @@ export const executeTransaction = (
                     history: true
                 })
                 previousDate = nextDate;
-                nextDate = new RepetitionHelper(transaction).calculateNextRepetitionDate(getDatabaseRoute);
+                nextDate = new RepetitionHelper({
+                    ...transaction,
+                    date: previousDate
+                }).calculateNextRepetitionDate(getDatabaseRoute);
             }
 
             newTransactions.forEach((newTransaction) => {

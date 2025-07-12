@@ -93,7 +93,7 @@ const TransactionsScreen = ({
             getDatabaseRoute: getDatabaseRoute,
             transactions: presetTransactions,
             amount: futureTransactionsAmount
-        }).then((futureTransactions) => {
+        }, "transaction-screen-load-more").then((futureTransactions) => {
             setIsLoadingMore(false)
             setFutureTransactions(futureTransactions)
         })
@@ -106,12 +106,13 @@ const TransactionsScreen = ({
         }
 
         runSortFilterGroup({
+            forHistory: currentTab === 0,
             translate: translate,
             currentAccount: currentAccount,
             transactions: transactions || [],
             sortValue: sortValue,
             filterValue: filterValue
-        }).then((transactionGroups) => {
+        }, "transaction-screen-sort-filter-group").then((transactionGroups) => {
             setTransactionGroups(transactionGroups)
         })
     }, [transactions, currentAccount, sortValue, filterValue]);
