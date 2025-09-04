@@ -66,8 +66,7 @@ With support for **German and English**, **light and dark themes**, and both **d
 ---
 
 ## 🌐 Links
-- [🌍 Official Website](https://example.com)  
-- [📖 Documentation](https://example.com/docs)  
+- [🌍 Official Website](https://example.com](https://wallefy-cc58b.web.app)
 
 ---
 
