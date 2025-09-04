@@ -2,7 +2,7 @@
 
 <!-- App Icon -->
 <p align="center">
-  <img src="icons/wallefy_icon.png" alt="App Icon" width="120"/>
+  <img src="src/WallefyIcon.png" alt="App Icon" width="120"/>
 </p>
 
 ## 📝 Description
